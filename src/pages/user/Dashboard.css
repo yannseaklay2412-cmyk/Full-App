@@ -1,0 +1,485 @@
+/* ── Page ── */
+.dash-page {
+  background: #0d1b3e;
+  min-height: 100vh;
+  color: #fff;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* ── Topbar ── */
+.dash-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  background: rgba(13, 27, 62, 0.95);
+  border-bottom: 1px solid rgba(78, 205, 196, 0.15);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+}
+
+.dash-logo {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.dash-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dash-nav-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.dash-nav-btn:hover {
+  background: rgba(78, 205, 196, 0.1);
+  border-color: rgba(78, 205, 196, 0.3);
+  color: #4ecdc4;
+}
+
+.dash-nav-btn.signout {
+  color: rgba(255, 99, 99, 0.8);
+  border-color: rgba(255, 99, 99, 0.2);
+}
+
+.dash-nav-btn.signout:hover {
+  background: rgba(255, 99, 99, 0.1);
+  border-color: rgba(255, 99, 99, 0.4);
+  color: #ff6363;
+}
+
+/* ── Content ── */
+.dash-content {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 36px 24px;
+}
+
+/* ── Welcome Banner ── */
+.dash-banner {
+  background: linear-gradient(135deg, rgba(78, 205, 196, 0.12), rgba(43, 181, 172, 0.06));
+  border: 1.5px solid rgba(78, 205, 196, 0.2);
+  border-radius: 20px;
+  padding: 36px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+.dash-banner::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: 120px;
+  width: 200px;
+  height: 200px;
+  background: rgba(78, 205, 196, 0.05);
+  border-radius: 50%;
+}
+
+.dash-banner-left {
+  flex: 1;
+}
+
+.dash-welcome-sub {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0 0 6px;
+  letter-spacing: 0.5px;
+}
+
+.dash-welcome-name {
+  font-size: 36px;
+  font-weight: 800;
+  margin: 0 0 10px;
+  letter-spacing: -0.5px;
+  color: #fff;
+}
+
+.dash-welcome-desc {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0 0 24px;
+  max-width: 420px;
+  line-height: 1.6;
+}
+
+.dash-banner-btns {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dash-banner-icon {
+  font-size: 80px;
+  opacity: 0.15;
+  flex-shrink: 0;
+}
+
+/* ── Buttons ── */
+.dash-btn-primary {
+  background: linear-gradient(135deg, #4ecdc4, #2bb5ac);
+  border: none;
+  color: #0d1b3e;
+  padding: 12px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 800;
+  transition: opacity 0.2s;
+}
+
+.dash-btn-primary:hover {
+  opacity: 0.88;
+}
+
+.dash-btn-primary.small {
+  padding: 9px 18px;
+  font-size: 13px;
+}
+
+.dash-btn-secondary {
+  background: transparent;
+  border: 1.5px solid rgba(78, 205, 196, 0.4);
+  color: #4ecdc4;
+  padding: 12px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.dash-btn-secondary:hover {
+  background: rgba(78, 205, 196, 0.1);
+}
+
+/* ── Stats ── */
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.dash-stat-card {
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1.5px solid transparent;
+}
+
+.dash-stat-card.confirmed {
+  background: rgba(78, 205, 196, 0.08);
+  border-color: rgba(78, 205, 196, 0.2);
+}
+
+.dash-stat-card.pending {
+  background: rgba(245, 200, 66, 0.08);
+  border-color: rgba(245, 200, 66, 0.2);
+}
+
+.dash-stat-card.cancelled {
+  background: rgba(255, 99, 99, 0.08);
+  border-color: rgba(255, 99, 99, 0.2);
+}
+
+.dash-stat-card.total {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dash-stat-num {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.dash-stat-card.confirmed .dash-stat-num { color: #4ecdc4; }
+.dash-stat-card.pending   .dash-stat-num { color: #f5c842; }
+.dash-stat-card.cancelled .dash-stat-num { color: #ff6363; }
+.dash-stat-card.total     .dash-stat-num { color: #fff; }
+
+.dash-stat-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+/* ── Main Grid ── */
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+/* ── Cards ── */
+.dash-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 24px;
+}
+
+.dash-card.full-width {
+  grid-column: 1 / -1;
+}
+
+.dash-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.dash-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 18px;
+  color: #fff;
+}
+
+.dash-card-header .dash-card-title {
+  margin: 0;
+}
+
+.dash-view-all {
+  background: transparent;
+  border: none;
+  color: #4ecdc4;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.dash-view-all:hover {
+  text-decoration: underline;
+}
+
+/* ── Empty State ── */
+.dash-empty {
+  text-align: center;
+  padding: 28px 0;
+  color: rgba(255, 255, 255, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+/* ── Appointment Cards ── */
+.dash-appt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dash-appt-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(78, 205, 196, 0.05);
+  border: 1px solid rgba(78, 205, 196, 0.15);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.dash-appt-icon {
+  font-size: 24px;
+  width: 42px;
+  height: 42px;
+  background: rgba(78, 205, 196, 0.1);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dash-appt-info {
+  flex: 1;
+}
+
+.dash-appt-doctor {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 2px;
+}
+
+.dash-appt-service {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0 0 6px;
+}
+
+.dash-appt-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.dash-cancel-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 99, 99, 0.3);
+  color: #ff6363;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.dash-cancel-btn:hover {
+  background: rgba(255, 99, 99, 0.1);
+}
+
+/* ── Quick Actions ── */
+.dash-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dash-action-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: all 0.2s;
+  color: #fff;
+}
+
+.dash-action-item:hover {
+  background: rgba(78, 205, 196, 0.07);
+  border-color: rgba(78, 205, 196, 0.25);
+}
+
+.dash-action-icon {
+  font-size: 20px;
+  width: 38px;
+  height: 38px;
+  background: rgba(78, 205, 196, 0.08);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dash-action-name {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 2px;
+}
+
+.dash-action-desc {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0;
+}
+
+.dash-action-arrow {
+  margin-left: auto;
+  color: rgba(78, 205, 196, 0.5);
+  font-size: 16px;
+}
+
+/* ── Tips ── */
+.dash-tips-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.dash-tip-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  transition: all 0.2s;
+}
+
+.dash-tip-card:hover {
+  background: rgba(78, 205, 196, 0.06);
+  border-color: rgba(78, 205, 196, 0.2);
+}
+
+.dash-tip-icon {
+  font-size: 28px;
+}
+
+.dash-tip-text {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .dash-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dash-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-tips-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dash-banner {
+    padding: 24px;
+  }
+
+  .dash-banner-icon {
+    display: none;
+  }
+
+  .dash-welcome-name {
+    font-size: 26px;
+  }
+
+  .dash-topbar {
+    padding: 14px 16px;
+  }
+
+  .dash-nav-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}
