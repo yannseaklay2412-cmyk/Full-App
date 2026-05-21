@@ -1,0 +1,145 @@
+:root {
+  --navy:       #0d1b3e;
+  --navy-light: #152347;
+  --navy-card:  #1a2d54;
+  --navy-border:#243560;
+  --teal:       #4ecdc4;
+  --teal-dim:   #3ab5ac;
+  --white:      #ffffff;
+  --text-muted: #8a9fc4;
+  --text-light: #c8d6f0;
+  --radius:     12px;
+  --radius-lg:  20px;
+}
+
+.doctor-detail {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--navy-light);
+  color: var(--white);
+  min-height: 100vh;
+  padding: 40px 60px;
+}
+
+/* BACK BUTTON */
+.back-btn {
+  background: transparent;
+  border: 1px solid var(--navy-border);
+  color: var(--text-light);
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-bottom: 32px;
+  transition: all 0.2s;
+}
+.back-btn:hover {
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+/* PROFILE HEADER */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  background: var(--navy-card);
+  border: 1px solid var(--navy-border);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  margin-bottom: 32px;
+}
+
+.profile-img {
+  width: 180px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  flex-shrink: 0;
+}
+
+.profile-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.profile-title {
+  font-size: 13px;
+  color: var(--teal);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+.profile-exp {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.btn-appointment {
+  background: var(--teal);
+  color: var(--navy);
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-appointment:hover {
+  background: var(--teal-dim);
+}
+
+/* DETAIL GRID */
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.detail-card h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--teal);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.detail-card p {
+  font-size: 14px;
+  color: var(--text-light);
+  line-height: 1.7;
+}
+
+.detail-card ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-card li {
+  font-size: 14px;
+  color: var(--text-light);
+}
+
+.not-found {
+  padding: 60px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 18px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .doctor-detail { padding: 24px; }
+  .profile-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+  .detail-grid { grid-template-columns: 1fr; }
+}
