@@ -1,20 +1,33 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../../config/supabaseClient'
 import './Dashboard.css'
 import { useAuth } from '../../context/AuthContext'
 
 export default function Dashboard() {
   const navigate = useNavigate()
   const [bookings, setBookings] = useState([])
-  const [userName, setUserName] = useState('User')
-  const { logout } = useAuth()
+  const [userName, setUserName] = useState('patient.name')
+  const { logout, user } = useAuth()
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('bookings') || '[]')
-    setBookings(saved)
-    const user = JSON.parse(localStorage.getItem('currentUser') || '{}')
-    if (user?.name) setUserName(user.name)
-  }, [])
+    if(!user)return
+    const fetchData = async () => {
+    const {data:patient}=await supabase
+      .from('patients')
+      .select('full_name')
+      .eq('email', user.email)
+      .maybeSingle()
+
+      if (patient)setUserName(patient.full_name)
+        const{data:bookingData}=await supabase
+          .from('bookings')
+          .select('*')
+          .eq('patientEmail', user.email)
+          if(bookingData)setBookings(bookingData)
+          }
+            fetchData()
+  }, [user])
 
   const confirmed  = bookings.filter(b => b.status === 'Confirmed').length
   const pending    = bookings.filter(b => b.status === 'Pending').length

@@ -6,7 +6,6 @@ import DoctorInfo from '../pages/user/DoctorInfo'
 
 import Home from '../pages/user/Home'
 import Login from '../pages/Login'
-import Register from '../pages/Register'
 import NotFound from '../pages/NotFound'
 
 import UserDashboard from '../pages/user/Dashboard'
@@ -30,7 +29,6 @@ export default function AppRoutes() {
       {/* Public */}
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
       <Route path="/doctor/:id" element={<DoctorInfo />} />
 
       {/* User routes */}

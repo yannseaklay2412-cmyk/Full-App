@@ -1,5 +1,5 @@
 
-
+import { supabase } from '../config/supabaseClient'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Login.css'
@@ -15,64 +15,153 @@ export default function Login() {
   const [loginLoading, setLoginLoading] = useState(false)
   const [showLoginPass, setShowLoginPass] = useState(false)
 
-  const [registerForm, setRegisterForm] = useState({ name: '', email: '', password: '', confirm: '' })
+  const [registerForm, setRegisterForm] = useState({ name: '', email: '', phonenumber: '', sex: '', password: '', confirm: '' })
   const [registerError, setRegisterError] = useState('')
   const [registerSuccess, setRegisterSuccess] = useState('')
   const [registerLoading, setRegisterLoading] = useState(false)
   const [showRegPass, setShowRegPass] = useState(false)
   const [showRegConfirm, setShowRegConfirm] = useState(false)
 
-  const handleLogin = async (e) => {
+const handleLogin = async (e) => {
   e.preventDefault()
   setLoginError('')
-  if (!loginForm.email || !loginForm.password) {
-    setLoginError('Please fill in all fields.'); return
-  }
   setLoginLoading(true)
+
   try {
-    const response = await api.post('/auth/login', {
-      email: loginForm.email,
-      password: loginForm.password
-    })
-    const { user, token } = response.data
-    login(user, token) // pass token if your AuthContext supports it
-    if (user.role === 'admin') {
-      navigate('/admin')
-    } else {
-      navigate('/dashboard')
+    // Validate inputs
+    if (!loginForm.email || !loginForm.password) {
+      setLoginError('Please fill in all fields.')
+      return
     }
+
+    // Attempt login
+    const result = await login(
+      loginForm.email,
+      loginForm.password
+    )
+
+    // Login failed
+    if (result.error) {
+      setLoginError(result.error)
+      return
+    }
+     if (result.role === 'admin') {
+  navigate('/admin')
+} else if (result.role === 'patient') {
+  navigate('/dashboard')
+} else {
+  setLoginError('No role assigned.')
+}
+    // Wait a moment for role state to update
+    
+
   } catch (error) {
-    setLoginError(error.response?.data?.message || 'Invalid email or password.')
+    console.error('Login Error:', error)
+    setLoginError(error.message || 'Login failed.')
   } finally {
     setLoginLoading(false)
   }
 }
 
- const handleRegister = async (e) => {
+const handleRegister = async (e) => {
   e.preventDefault()
+
   setRegisterError('')
   setRegisterSuccess('')
-  if (!registerForm.name || !registerForm.email || !registerForm.password || !registerForm.confirm) {
-    setRegisterError('Please fill in all fields.'); return
+
+  // Validate inputs
+  if (
+    !registerForm.name ||
+    !registerForm.email ||
+    !registerForm.phonenumber ||
+    !registerForm.sex ||
+    !registerForm.password ||
+    !registerForm.confirm
+  ) {
+    setRegisterError('Please fill in all fields.')
+    return
   }
+
+  // Check passwords match
   if (registerForm.password !== registerForm.confirm) {
-    setRegisterError('Passwords do not match.'); return
+    setRegisterError('Passwords do not match.')
+    return
   }
+
+  // Check password length
   if (registerForm.password.length < 6) {
-    setRegisterError('Password must be at least 6 characters.'); return
+    setRegisterError('Password must be at least 6 characters.')
+    return
   }
+
   setRegisterLoading(true)
+
   try {
-    await api.post('/auth/register', {
-      name: registerForm.name,
+    // Step 1 - Create auth account
+    const { data, error } = await supabase.auth.signUp({
       email: registerForm.email,
       password: registerForm.password
     })
-    setRegisterSuccess('Account created! Redirecting to sign in...')
-    setRegisterForm({ name: '', email: '', password: '', confirm: '' })
-    setTimeout(() => { setTab('signin'); setRegisterSuccess('') }, 1800)
+
+    if (error) {
+      setRegisterError(error.message)
+      return
+    }
+
+    const userId = data.user.id
+
+    // Step 2 - Create profile
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert({
+        id: userId,
+        email: registerForm.email,
+        role: 'patient'
+      })
+
+    if (profileError) {
+      setRegisterError(profileError.message)
+      return
+    }
+
+    // Step 3 - Create patient record
+    const { error: patientError } = await supabase
+      .from('patients')
+      .insert({
+        id: userId,
+        full_name: registerForm.name,
+        email: registerForm.email,
+        phone: registerForm.phonenumber,
+        sex: registerForm.sex
+      })
+
+    if (patientError) {
+      setRegisterError(patientError.message)
+      return
+    }
+
+    // Step 4 - Success
+    setRegisterSuccess(
+      'Account created successfully! Please check your email to verify your account.'
+    )
+
+    setRegisterForm({
+      name: '',
+      email: '',
+      phonenumber: '',
+      sex: '',
+      password: '',
+      confirm: ''
+    })
+
+    setTimeout(() => {
+      setTab('signin')
+      setRegisterSuccess('')
+    }, 2000)
+
   } catch (error) {
-    setRegisterError(error.response?.data?.message || 'Registration failed. Try again.')
+    console.error('Registration Error:', error)
+    setRegisterError(error.message || 'Registration failed.')
   } finally {
     setRegisterLoading(false)
   }
@@ -242,22 +331,48 @@ export default function Login() {
                       className="auth-input"
                     />
                   </div>
+                    <div className="auth-field">
+                      <label>Email Address</label>
+                      <input
+                        type="email"
+                        placeholder="you@example.com"
+                        value={registerForm.email}
+                        onChange={e => setRegisterForm({ ...registerForm, email: e.target.value })}
+                        className="auth-input"
+                      />
+                    </div>
+                    <div className="auth-field">
+                      <label>Phone Number</label>
+                      <input
+                        type="tel"
+                        placeholder="Enter your phone number"
+                        value={registerForm.phonenumber}
+                        onChange={e => setRegisterForm({ ...registerForm, phonenumber: e.target.value })}
+                        className="auth-input"
+                      />
+                    </div>
+                    
                   <div className="auth-field">
-                    <label>Email Address</label>
-                    <input
-                      type="email"
-                      placeholder="you@example.com"
-                      value={registerForm.email}
-                      onChange={e => setRegisterForm({ ...registerForm, email: e.target.value })}
+                    <label>Sex</label>
+                    <select
+                      name="sex"
+                      placeholder="Select your sex"
+                      value={registerForm.sex}
+                      onChange={e => setRegisterForm({ ...registerForm, sex: e.target.value })}
                       className="auth-input"
-                    />
+                    >  
+                      <option value="">Select your sex</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                    </select>
                   </div>
+                  
                   <div className="auth-field">
                     <label>Password</label>
                     <div className="auth-pass-wrap">
                       <input
                         type={showRegPass ? 'text' : 'password'}
-                        placeholder="Min. 6 characters"
+                        placeholder="Min. 4 characters"
                         value={registerForm.password}
                         onChange={e => setRegisterForm({ ...registerForm, password: e.target.value })}
                         className="auth-input"
