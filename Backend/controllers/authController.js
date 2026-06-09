@@ -1,44 +1,89 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import db from '../config/db.js';
+
 
 // REGISTER
 const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { full_name, email, phone, sex, password } = req.body;
 
     // Validate inputs
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: 'All fields (name, email, password) are required.' });
+    if (!full_name || !email || !phone || !sex || !password) {
+      return res.status(400).json({ 
+        message: 'All fields (name, email, phonenumber, sex, password) are required.' 
+      });
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return res.status(400).json({ message: 'Invalid email format.' });
+      return res.status(400).json({ 
+        message: 'Invalid email format.' 
+      });
+    }
+
+    // Validate phone number format
+    const phoneRegex = /^\d{9,10}$/;
+    if (!phoneRegex.test(phone)) {
+      return res.status(400).json({ 
+        message: 'Invalid phone number format. Please enter a 9-10 digit number.' 
+      });
+    }
+
+    // Validate sex value
+    const validSexes = ['male', 'female'];
+    if (!validSexes.includes(sex)) {
+      return res.status(400).json({ 
+        message: 'Invalid sex value. Please select either "male" or "female".' 
+      });
     }
 
     // Validate password length
     if (password.length < 6) {
-      return res.status(400).json({ message: 'Password must be at least 6 characters long.' });
+      return res.status(400).json({ 
+        message: 'Password must be at least 6 characters long.' 
+      });
     }
+
+    // Step 1 - Create auth account in Supabase
+    const { data, error } = await supabase.auth.signUp({
+      email: email,
+      password: password
+    })
 
     // Check if email already exists
-    const [existing] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
-    if (existing.length > 0) {
-      return res.status(400).json({ message: 'Email already registered.' });
+    if (error && error.message === 'User already registered') {
+      return res.status(400).json({ 
+        message: 'Email already registered.' 
+      });
     }
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    if (error) {
+      return res.status(400).json({ 
+        message: error.message 
+      });
+    }
 
-    // Insert new user
-    await db.query(
-      'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-      [name, email, hashedPassword]
-    );
+    // Step 2 - Insert patient profile
+    const { error: profileError } = await supabase
+      .from('patients')
+      .insert({
+        id: data.user.id,
+        full_name: full_name,
+        email: email,
+        phone: phone,
+        sex: sex
+      })
 
-    res.status(201).json({ message: 'Account created successfully.' });
+    if (profileError) {
+      return res.status(500).json({ 
+        message: 'Server error.' 
+      });
+    }
+
+    // Step 3 - Success
+    res.status(201).json({ 
+      message: 'Account created successfully.' 
+    });
+
   } catch (err) {
     console.error('Registration error:', err);
     res.status(500).json({ message: 'Server error.' });
@@ -47,60 +92,88 @@ const register = async (req, res) => {
 
 // LOGIN
 const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: req.body.email,
+    password: req.body.password
+  })
 
-    // Validate inputs
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required.' });
-    }
-
-    // Find user by email
-    const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
-    if (rows.length === 0) {
-      return res.status(401).json({ message: 'Invalid email or password.' });
-    }
-
-    const user = rows[0];
-
-    // Check password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid email or password.' });
-    }
-
-    // Create token
-    const token = jwt.sign(
-      { id: user.id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' }
-    );
-
-    res.json({
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
-    });
-  } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ message: 'Server error.' });
+  if (error) {
+    return res.status(401).json({ message: 'Invalid email or password.' })
   }
-};
 
+  // Check role
+  const { data: admin } = await supabase
+    .from('admins')
+    .select('id')
+    .eq('id', data.user.id)
+    .single()
+
+  if (admin) {
+    return res.status(200).json({ user: data.user, role: 'admin' })
+  }
+
+  const { data: patient } = await supabase
+    .from('patients')
+    .select('id')
+    .eq('id', data.user.id)
+    .single()
+
+  if (patient) {
+    return res.status(200).json({ user: data.user, role: 'patient' })
+  }
+
+  return res.status(404).json({ message: 'Account not found.' })
+}
 // LOGOUT
 const logout = async (req, res) => {
   try {
-    // JWT logout is typically handled client-side by removing the token
-    // This endpoint can be used for server-side token blacklist if needed
-    res.json({ message: 'Logged out successfully.' });
+    
+    // Sign out from Supabase
+    const { error } = await supabase.auth.signOut()
+
+    if (error) {
+      return res.status(500).json({ 
+        message: 'Server error.' 
+      });
+    }
+
+    // Success
+    res.json({ 
+      message: 'Logged out successfully.' 
+    });
+
   } catch (err) {
     console.error('Logout error:', err);
     res.status(500).json({ message: 'Server error.' });
   }
 };
+// Step 1 - Send reset email
+const handleForgotPassword = async () => {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: 'https://yourapp.com/reset-password'
+  })
 
-export { register, login, logout };
+  if (error) {
+    alert(error.message)
+    return
+  }
+
+  alert('Check your email for the reset link!')
+}
+
+// Step 2 - On reset-password page
+const handleResetPassword = async () => {
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword
+  })
+
+  if (error) {
+    alert(error.message)
+    return
+  }
+
+  alert('Password updated successfully!')
+  redirect('/login')
+}
+
+export { register, login, logout, handleForgotPassword, handleResetPassword };
