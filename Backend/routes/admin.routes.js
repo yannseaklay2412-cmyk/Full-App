@@ -1,31 +1,18 @@
-// routes/admin.routes.js
-const express = require('express')
-const router = express.Router()
-const { getAllUsers, getUserById, updateUser, deleteUser, getAllBookings, updateBookingStatus, getDashboard } = require('../controllers/admin.controller')
-const { protect, adminOnly } = require('../middleware/auth.middleware')
+import { Router } from 'express'
+import { getAllBookings, updateBookingStatus } from '../controllers/booking.controller.js'
+import { getAllPatients, getPatientById } from '../controllers/user.controller.js'
+import { protect, adminOnly } from '../middleware/auth.middleware.js'
 
-// All admin routes require auth + admin role
+const router = Router()
+
 router.use(protect, adminOnly)
 
-// GET  /api/admin/dashboard
-router.get('/dashboard', getDashboard)
+// Bookings
+router.get('/bookings',              getAllBookings)
+router.put('/bookings/:id/status',   updateBookingStatus)
 
-// GET  /api/admin/users
-router.get('/users', getAllUsers)
+// Patients
+router.get('/patients',              getAllPatients)
+router.get('/patients/:id',          getPatientById)
 
-// GET  /api/admin/users/:id
-router.get('/users/:id', getUserById)
-
-// PUT  /api/admin/users/:id
-router.put('/users/:id', updateUser)
-
-// DELETE /api/admin/users/:id
-router.delete('/users/:id', deleteUser)
-
-// GET  /api/admin/bookings
-router.get('/bookings', getAllBookings)
-
-// PUT  /api/admin/bookings/:id/status
-router.put('/bookings/:id/status', updateBookingStatus)
-
-module.exports = router
+export default router

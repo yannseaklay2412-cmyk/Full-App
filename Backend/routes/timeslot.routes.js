@@ -1,28 +1,16 @@
-// routes/timeslot.routes.js
-const express = require('express')
-const router = express.Router()
-const { getAllSlots, getAvailableSlots, getSlotById, createSlot, generateSlots, updateSlot, deleteSlot } = require('../controllers/timeslot.controller')
-const { protect, adminOnly } = require('../middleware/auth.middleware')
+import { Router } from 'express'
+import { getTimeslots, getAllTimeslots, createTimeslot, updateTimeslot, deleteTimeslot } from '../controllers/timeslot.controller.js'
+import { protect, adminOnly } from '../middleware/auth.middleware.js'
 
-// GET /api/timeslots?date=YYYY-MM-DD       — Public
-router.get('/', getAllSlots)
+const router = Router()
 
-// GET /api/timeslots/available?date=...    — Public
-router.get('/available', getAvailableSlots)
+// Public — patients can view timeslots
+router.get('/', getTimeslots)
 
-// GET /api/timeslots/:id                   — Public
-router.get('/:id', getSlotById)
+// Admin only
+router.get('/all',    protect, adminOnly, getAllTimeslots)
+router.post('/',      protect, adminOnly, createTimeslot)
+router.put('/:id',    protect, adminOnly, updateTimeslot)
+router.delete('/:id', protect, adminOnly, deleteTimeslot)
 
-// POST /api/timeslots                      — Admin only
-router.post('/', protect, adminOnly, createSlot)
-
-// POST /api/timeslots/generate             — Admin only
-router.post('/generate', protect, adminOnly, generateSlots)
-
-// PUT /api/timeslots/:id                   — Admin only
-router.put('/:id', protect, adminOnly, updateSlot)
-
-// DELETE /api/timeslots/:id               — Admin only
-router.delete('/:id', protect, adminOnly, deleteSlot)
-
-module.exports = router
+export default router

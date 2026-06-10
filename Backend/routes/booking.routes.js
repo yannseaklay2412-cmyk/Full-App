@@ -1,25 +1,21 @@
-// routes/booking.routes.js
-const express = require('express')
-const router = express.Router()
-const { getMyBookings, getBookingById, createBooking, cancelBooking, rescheduleBooking } = require('../controllers/booking.controller')
-const { protect } = require('../middleware/auth.middleware')
+import { Router } from 'express'
+import { getMyBookings, getBookingById, createBooking, cancelBooking } from '../controllers/booking.controller.js'
+import { protect, patientOnly } from '../middleware/auth.middleware.js'
 
-// All booking routes require authentication
+const router = Router()
+
 router.use(protect)
 
-// GET  /api/bookings
-router.get('/', getMyBookings)
+// GET  /api/bookings        — get my bookings
+router.get('/',          patientOnly, getMyBookings)
 
-// GET  /api/bookings/:id
-router.get('/:id', getBookingById)
+// GET  /api/bookings/:id    — get booking by id
+router.get('/:id',       getBookingById)
 
-// POST /api/bookings
-router.post('/', createBooking)
+// POST /api/bookings        — create booking
+router.post('/',         patientOnly, createBooking)
 
-// PUT  /api/bookings/:id/cancel
+// PUT  /api/bookings/:id/cancel — cancel booking
 router.put('/:id/cancel', cancelBooking)
 
-// PUT  /api/bookings/:id/reschedule
-router.put('/:id/reschedule', rescheduleBooking)
-
-module.exports = router
+export default router

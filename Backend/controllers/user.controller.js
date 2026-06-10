@@ -1,64 +1,30 @@
-// controllers/user.controller.js
-const UserModel = require('../models/user.model')
+import * as patientService from '../services/patient.service.js'
 
-// GET /api/users/me
-const getMyProfile = async (req, res, next) => {
+export const getMyProfile = async (req, res, next) => {
   try {
-    const data = await UserModel.getById(req.user.id)
+    const data = await patientService.getMyProfile(req.user.email)
     res.status(200).json({ success: true, data })
   } catch (err) { next(err) }
 }
 
-// PUT /api/users/me
-const updateMyProfile = async (req, res, next) => {
+export const updateMyProfile = async (req, res, next) => {
   try {
-    const { name, phone } = req.body
-    const data = await UserModel.update(req.user.id, { name, phone })
+    const data = await patientService.updateProfile(req.user.email, req.body)
     res.status(200).json({ success: true, message: 'Profile updated', data })
   } catch (err) { next(err) }
 }
 
-// PUT /api/users/me/password
-const changePassword = async (req, res, next) => {
+// Admin
+export const getAllPatients = async (req, res, next) => {
   try {
-    const { newPassword } = req.body
-    await UserModel.changePassword(newPassword)
-    res.status(200).json({ success: true, message: 'Password changed' })
-  } catch (err) { next(err) }
-}
-
-// ── Admin ─────────────────────────────────────────────────
-
-// GET /api/admin/users
-const getAllUsers = async (req, res, next) => {
-  try {
-    const data = await UserModel.getAll()
+    const data = await patientService.getAllPatients()
     res.status(200).json({ success: true, data })
   } catch (err) { next(err) }
 }
 
-// GET /api/admin/users/:id
-const getUserById = async (req, res, next) => {
+export const getPatientById = async (req, res, next) => {
   try {
-    const data = await UserModel.getById(req.params.id)
+    const data = await patientService.getPatientById(req.params.id)
     res.status(200).json({ success: true, data })
   } catch (err) { next(err) }
 }
-
-// PUT /api/admin/users/:id
-const updateUser = async (req, res, next) => {
-  try {
-    const data = await UserModel.update(req.params.id, req.body)
-    res.status(200).json({ success: true, message: 'User updated', data })
-  } catch (err) { next(err) }
-}
-
-// DELETE /api/admin/users/:id
-const deleteUser = async (req, res, next) => {
-  try {
-    await UserModel.remove(req.params.id)
-    res.status(200).json({ success: true, message: 'User deleted' })
-  } catch (err) { next(err) }
-}
-
-module.exports = { getMyProfile, updateMyProfile, changePassword, getAllUsers, getUserById, updateUser, deleteUser }

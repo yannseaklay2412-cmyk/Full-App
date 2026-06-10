@@ -1,19 +1,15 @@
-// routes/user.routes.js
-const express = require('express')
-const router = express.Router()
-const { getMyProfile, updateMyProfile, changePassword } = require('../controllers/user.controller')
-const { protect } = require('../middleware/auth.middleware')
+import { Router } from 'express'
+import { getMyProfile, updateMyProfile } from '../controllers/user.controller.js'
+import { protect, patientOnly } from '../middleware/auth.middleware.js'
 
-// All routes require authentication
-router.use(protect)
+const router = Router()
 
-// GET  /api/users/me
-router.get('/me', getMyProfile)
+router.use(protect, patientOnly)
 
-// PUT  /api/users/me
-router.put('/me', updateMyProfile)
+// GET  /api/users/me  — get my profile
+router.get('/me',  getMyProfile)
 
-// PUT  /api/users/me/password
-router.put('/me/password', changePassword)
+// PUT  /api/users/me  — update my profile
+router.put('/me',  updateMyProfile)
 
-module.exports = router
+export default router
