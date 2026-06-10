@@ -1,63 +1,77 @@
-import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'  // ✅ FIX: Import useAuth
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
+import { supabase } from '../../config/supabaseClient'
 import './MyBookings.css'
 
 const STATUS_COLORS = {
-  Confirmed: { bg: 'rgba(78,205,196,0.12)', color: '#4ecdc4', border: '#4ecdc4' },
-  Pending:   { bg: 'rgba(245,200,66,0.12)',  color: '#f5c842', border: '#f5c842' },
-  Cancelled: { bg: 'rgba(255,99,99,0.12)',   color: '#ff6363', border: '#ff6363' },
+  confirmed: { bg: 'rgba(78,205,196,0.12)', color: '#4ecdc4', border: '#4ecdc4' },
+  pending:   { bg: 'rgba(245,200,66,0.12)',  color: '#f5c842', border: '#f5c842' },
+  cancelled: { bg: 'rgba(255,99,99,0.12)',   color: '#ff6363', border: '#ff6363' },
+  done:      { bg: 'rgba(100,200,100,0.12)', color: '#64c864', border: '#64c864' },
 }
 
 export default function MyBookings() {
   const navigate = useNavigate()
-  const location = useLocation()
-  const { user } = useAuth()  // ✅ FIX: Get current logged in user
+  const { user } = useAuth()
 
-  // Accept a new booking passed from Book.jsx via navigate state
-  const incoming = location.state?.appointment
+  const [bookings, setBookings] = useState([])
+  const [filter, setFilter]     = useState('All')
+  const [loading, setLoading]   = useState(true)
 
-  const [bookings, setBookings] = useState(() => {
-    const all = JSON.parse(localStorage.getItem('bookings') || '[]')
+  useEffect(() => {
+    if (!user) return
+    const fetchBookings = async () => {
+      setLoading(true)
 
-    // ✅ FIX: Filter only current user's bookings
-    const saved = all.filter(b => b.email === user?.email)
+      // Step 1 — get patient by email
+      const { data: patient } = await supabase
+        .from('patients')
+        .select('id')
+        .eq('email', user.email)
+        .maybeSingle()
 
-    if (incoming) {
-      const exists = saved.find(
-        (b) => b.date === incoming.date && b.time === incoming.time && b.doctorName === incoming.doctorName
-      )
-      if (!exists) {
-        const newBooking = { ...incoming, id: Date.now(), status: 'Confirmed' }
-        const updatedAll = [newBooking, ...all]
-        localStorage.setItem('bookings', JSON.stringify(updatedAll))
-        return [newBooking, ...saved]
-      }
+      if (!patient) { setLoading(false); return }
+
+      // Step 2 — fetch appointments using patient_id
+      const { data } = await supabase
+        .from('appointments')
+        .select(`
+          id,
+          status,
+          notes,
+          created_at,
+          dentists ( dentist_name, specialty ),
+          services:appointment_services ( services ( service_name, price ) )
+        `)
+        .eq('patient_id', patient.id)
+        .order('created_at', { ascending: false })
+
+      if (data) setBookings(data)
+      setLoading(false)
     }
-    return saved
-  })
+    fetchBookings()
+  }, [user])
 
-  const [filter, setFilter] = useState('All')
+  const handleCancel = async (id) => {
+    const { error } = await supabase
+      .from('appointments')
+      .update({ status: 'cancelled' })
+      .eq('id', id)
 
-  const handleCancel = (id) => {
-    // ✅ FIX: Update only in local state
-    const updatedLocal = bookings.map((b) =>
-      b.id === id ? { ...b, status: 'Cancelled' } : b
-    )
-    setBookings(updatedLocal)
-
-    // ✅ FIX: Merge with ALL bookings (other users stay untouched)
-    const all = JSON.parse(localStorage.getItem('bookings') || '[]')
-    const merged = all.map(b => b.id === id ? { ...b, status: 'Cancelled' } : b)
-    localStorage.setItem('bookings', JSON.stringify(merged))
+    if (!error) {
+      setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b))
+    }
   }
 
-  const filtered = filter === 'All' ? bookings : bookings.filter((b) => b.status === filter)
+  const filtered = filter === 'All'
+    ? bookings
+    : bookings.filter(b => b.status === filter.toLowerCase())
 
   return (
     <div className="mybookings-page">
 
-      {/* Top bar */}
+      {/* Topbar */}
       <div className="mb-topbar">
         <button className="mb-back" onClick={() => navigate('/dashboard')}>← Dashboard</button>
         <div className="mb-logo">🦷 SMILLY</div>
@@ -76,7 +90,7 @@ export default function MyBookings() {
 
         {/* Filter tabs */}
         <div className="mb-filters">
-          {['All', 'Confirmed', 'Pending', 'Cancelled'].map((f) => (
+          {['All', 'Pending', 'Confirmed', 'Done', 'Cancelled'].map(f => (
             <button
               key={f}
               className={`mb-filter ${filter === f ? 'active' : ''}`}
@@ -84,35 +98,39 @@ export default function MyBookings() {
             >
               {f}
               <span className="mb-filter-count">
-                {f === 'All' ? bookings.length : bookings.filter((b) => b.status === f).length}
+                {f === 'All'
+                  ? bookings.length
+                  : bookings.filter(b => b.status === f.toLowerCase()).length}
               </span>
             </button>
           ))}
         </div>
 
-        {/* Booking list */}
-        {filtered.length === 0 ? (
+        {/* Loading */}
+        {loading ? (
+          <div className="mb-empty"><p>Loading appointments...</p></div>
+        ) : filtered.length === 0 ? (
           <div className="mb-empty">
             <span className="mb-empty-icon">🦷</span>
             <p>No {filter !== 'All' ? filter.toLowerCase() : ''} appointments found.</p>
-            <button className="btn-newbook" onClick={() => navigate('/book')}>
-              Book Now
-            </button>
+            <button className="btn-newbook" onClick={() => navigate('/book')}>Book Now</button>
           </div>
         ) : (
           <div className="mb-list">
-            {filtered.map((b) => {
-              const style = STATUS_COLORS[b.status] || STATUS_COLORS.Pending
+            {filtered.map(b => {
+              const style = STATUS_COLORS[b.status] || STATUS_COLORS.pending
+              const serviceName = b.services?.[0]?.services?.service_name || '—'
+              const servicePrice = b.services?.[0]?.services?.price || '—'
               return (
                 <div className="mb-card" key={b.id}>
                   <div className="mb-card-left">
                     <div className="mb-card-icon">🦷</div>
                     <div className="mb-card-info">
-                      <p className="mb-doctor">{b.doctorName || b.doctor}</p>
-                      <p className="mb-service">{b.service}</p>
+                      <p className="mb-doctor">{b.dentists?.dentist_name || '—'}</p>
+                      <p className="mb-service">{serviceName}</p>
                       <div className="mb-meta">
-                        <span>📅 {b.date}</span>
-                        <span>🕐 {b.time}</span>
+                        <span>💰 ${servicePrice}</span>
+                        <span>📝 {b.notes || 'No notes'}</span>
                       </div>
                     </div>
                   </div>
@@ -123,7 +141,7 @@ export default function MyBookings() {
                     >
                       {b.status}
                     </span>
-                    {b.status !== 'Cancelled' && (
+                    {b.status !== 'cancelled' && b.status !== 'done' && (
                       <button className="btn-cancel" onClick={() => handleCancel(b.id)}>
                         Cancel
                       </button>

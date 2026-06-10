@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import PrivateRoute from './PrivateRoute'
 import AdminRoute from './AdminRoute'
 import DoctorInfo from '../pages/user/DoctorInfo'
+import History from '../pages/user/Historyy'
 
 
 import Home from '../pages/user/Home'
@@ -37,6 +38,7 @@ export default function AppRoutes() {
         <Route path="/book" element={<Book />} />
         <Route path="/my-bookings" element={<MyBookings />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/history" element={<History />} /> 
       </Route>
 
       {/* Admin routes */}

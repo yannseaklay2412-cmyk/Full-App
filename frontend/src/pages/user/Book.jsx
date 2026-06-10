@@ -1,119 +1,167 @@
-
-
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { supabase } from '../../config/supabaseClient'
 import './Book.css'
-import { DataStorage } from '../../seeders/data' // ✅ seeder import
 
-const SERVICES = [
-  { id: 1, label: 'General Check-up',    icon: '🔍', duration: '30 min' },
-  { id: 2, label: 'Teeth Cleaning',      icon: '🦷', duration: '45 min' },
-  { id: 3, label: 'Teeth Whitening',     icon: '✨', duration: '60 min' },
-  { id: 4, label: 'Braces Consultation', icon: '📋', duration: '45 min' },
-  { id: 5, label: 'Root Canal',          icon: '🩺', duration: '90 min' },
-  { id: 6, label: 'Tooth Extraction',    icon: '⚕️',  duration: '60 min' },
-]
-
-const ALL_TIME_SLOTS = [
-  '08:00 AM','08:30 AM','09:00 AM','09:30 AM',
-  '10:00 AM','10:30 AM','11:00 AM','11:30 AM',
-  '01:00 PM','01:30 PM','02:00 PM','02:30 PM',
-  '03:00 PM','03:30 PM','04:00 PM','04:30 PM',
-  '05:00 PM','05:30 PM',
-]
-
-// ✅ use seeder instead of hardcoded defaults
-const DEFAULT_DENTISTS = DataStorage.dentists
-
-const STEPS = ['Dentist', 'Service', 'Date & Time', 'Confirm']
+const STEPS = ['Dentist', 'Service', 'Date & Time', 'Your Info', 'Confirm']
 
 export default function Book() {
   const navigate = useNavigate()
   const { user } = useAuth()
 
   const [step, setStep]               = useState(0)
-  const [dentists, setDentists]       = useState([])
-  const [dentist, setDentist]         = useState(null)
-  const [service, setService]         = useState(null)
-  const [date, setDate]               = useState('')
-  const [time, setTime]               = useState(null)
-  const [submitted, setSubmitted]     = useState(false)
-  const [allSlots, setAllSlots]       = useState([])
-  const [allBookings, setAllBookings] = useState([])
+  const [showSuccess, setShowSuccess] = useState(false)
+
+  const [dentists, setDentists]           = useState([])
+  const [services, setServices]           = useState([])
+  const [timeslots, setTimeslots]         = useState([])
+  const [bookedSlotIds, setBookedSlotIds] = useState([])
+
+  const [dentist, setDentist]   = useState(null)
+  const [service, setService]   = useState(null)
+  const [date, setDate]         = useState('')
+  const [timeslot, setTimeslot] = useState(null)
+
+  const [patientInfo, setPatientInfo] = useState({
+    full_name: '', phone: '', sex: '',
+    date_of_birth: '', address: '', notes: '',
+  })
+
+  const today = new Date().toISOString().split('T')[0]
 
   useEffect(() => {
-    const savedDentists = JSON.parse(localStorage.getItem('dentists') || '[]')
-    const savedSlots    = JSON.parse(localStorage.getItem('slots')    || '[]')
-    const savedBookings = JSON.parse(localStorage.getItem('bookings') || '[]')
-    setDentists(savedDentists.length > 0 ? savedDentists : DEFAULT_DENTISTS)
-    setAllSlots(savedSlots)
-    setAllBookings(savedBookings)
+    const fetchDentists = async () => {
+      const { data } = await supabase
+        .from('dentists')
+        .select('id, dentist_name, specialty')
+      if (data) setDentists(data)
+    }
+    fetchDentists()
   }, [])
 
-  useEffect(() => { setTime(null) }, [dentist, date])
-
-  const today   = new Date().toISOString().split('T')[0]
-  const canNext = [!!dentist, !!service, !!date && !!time, true][step]
-
-  const isAvailable = (t) => {
-    if (!dentist || !date) return false
-    return !isBooked(t)
-  }
-
-  const isBooked = (t) => {
-    if (!dentist || !date) return false
-    return allBookings.some(
-      b => b.dentistId === dentist.id && b.date === date && b.time === t && b.status !== 'Cancelled'
-    )
-  }
-
-  const getSlotState = (t) => {
-    if (isBooked(t))    return 'booked'
-    if (isAvailable(t)) return 'available'
-    return 'unavailable'
-  }
-
-  const hasAnyAvailable = date && ALL_TIME_SLOTS.some(t => isAvailable(t))
-
-  const handleSubmit = () => {
-    const appointment = {
-      id:           Date.now(),
-      dentistId:    dentist.id,
-      dentistName:  dentist.name,
-      doctorName:   dentist.name,
-      dentistTitle: dentist.title || '',
-      service:      service.label,
-      date,
-      time,
-      status:       'Pending',
-      userName:     user?.name  || '',
-      userEmail:    user?.email || '',
-      email:        user?.email || '',
+  useEffect(() => {
+    const fetchServices = async () => {
+      const { data } = await supabase
+        .from('services')
+        .select('id, service_name, description, price, duration_minutes, icon')
+        .eq('is_active', true)
+      if (data) setServices(data)
     }
-    const existing = JSON.parse(localStorage.getItem('bookings') || '[]')
-    localStorage.setItem('bookings', JSON.stringify([appointment, ...existing]))
-    setSubmitted(true)
+    fetchServices()
+  }, [])
+
+  useEffect(() => {
+    if (!dentist || !date) return
+    setTimeslot(null)
+    const fetchTimeslots = async () => {
+      // 1. Get time templates for this dentist
+      const { data: slots } = await supabase
+        .from('timeslots')
+        .select('id, start_time, end_time')
+        .eq('dentist_id', dentist.id)
+        .order('start_time')
+      if (slots) setTimeslots(slots)
+
+      // 2. Get booked slot ids for selected date
+      const { data: booked } = await supabase
+        .from('appointment_timeslots')
+        .select('timeslot_id')
+        .eq('date', date)
+      if (booked) setBookedSlotIds(booked.map(b => b.timeslot_id))
+    }
+    fetchTimeslots()
+  }, [dentist, date])
+
+  useEffect(() => { setTimeslot(null); setDate('') }, [dentist])
+
+  const canNext = [
+    !!dentist,
+    !!service,
+    !!date && !!timeslot,
+    !!(patientInfo.full_name && patientInfo.phone && patientInfo.sex && patientInfo.date_of_birth),
+    true,
+  ][step]
+
+  const handleInfoChange = (e) => {
+    setPatientInfo(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  if (submitted) {
-    return (
-      <div className="book-page">
-        <div className="book-topbar">
-          <div className="book-logo">🦷 SMILLY</div>
-        </div>
-        <div className="book-content book-success">
-          <div className="book-success-icon">🎉</div>
-          <h2 className="book-success-title">Appointment <span className="teal">Confirmed!</span></h2>
-          <p className="book-success-sub">Your appointment with {dentist.name} has been booked for {date} at {time}.</p>
-          <div className="book-btn-row">
-            <button className="book-btn-back" onClick={() => navigate('/dashboard')}>Dashboard</button>
-            <button className="book-btn-next" onClick={() => navigate('/my-bookings')}>View My Bookings</button>
-          </div>
-        </div>
-      </div>
-    )
+  const handleSubmit = async () => {
+    // 1. Check if patient already exists — don't overwrite registration name ✅
+    let patient
+    const { data: existingPatient } = await supabase
+      .from('patients')
+      .select('id')
+      .eq('email', user.email)
+      .maybeSingle()
+
+    if (existingPatient) {
+      // Already registered — just use existing id
+      patient = existingPatient
+    } else {
+      // New patient — insert once
+      const { data: newPatient, error: insertError } = await supabase
+        .from('patients')
+        .insert({
+          email:         user.email,
+          full_name:     patientInfo.full_name,
+          phone:         patientInfo.phone,
+          sex:           patientInfo.sex,
+          date_of_birth: patientInfo.date_of_birth,
+          address:       patientInfo.address,
+        })
+        .select()
+        .single()
+      if (insertError) { console.error(insertError); return }
+      patient = newPatient
+    }
+
+    // 2. Insert appointment
+    const { data: appt, error: apptError } = await supabase
+      .from('appointments')
+      .insert({
+        patient_id: patient.id,
+        dentist_id: dentist.id,
+        status:     'pending',
+        notes:      patientInfo.notes,
+      })
+      .select()
+      .single()
+    if (apptError) { console.error(apptError); return }
+
+    // 3. Link appointment to timeslot + date
+    const { error: linkError } = await supabase
+      .from('appointment_timeslots')
+      .insert({
+        appointment_id: appt.id,
+        timeslot_id:    timeslot.id,
+        date:           date,
+      })
+    if (linkError) { console.error(linkError); return }
+
+    // 4. Link appointment to service
+    const { error: serviceError } = await supabase
+      .from('appointment_services')
+      .insert({
+        appointment_id: appt.id,
+        service_id:     service.id,
+      })
+    if (serviceError) { console.error(serviceError); return }
+
+    setShowSuccess(true)
   }
+
+  const Avatar = ({ name, size = 56 }) => (
+    <div style={{
+      width: size, height: size, borderRadius: '50%',
+      background: 'linear-gradient(135deg, #0d9488, #0f766e)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: '#fff', fontWeight: 700, fontSize: size * 0.4, flexShrink: 0,
+    }}>
+      {name?.charAt(0).toUpperCase()}
+    </div>
+  )
 
   return (
     <div className="book-page">
@@ -128,6 +176,7 @@ export default function Book() {
           <p className="book-sub">Choose your dentist, service, and preferred time.</p>
         </div>
 
+        {/* Stepper */}
         <div className="book-stepper">
           {STEPS.map((label, i) => (
             <div key={i} className="book-step-item">
@@ -140,24 +189,21 @@ export default function Book() {
           ))}
         </div>
 
+        {/* Step 1 — Dentist */}
         {step === 0 && (
           <>
             <p className="book-section-label">Select a Dentist</p>
             {dentists.length === 0 ? (
-              <p className="book-slot-hint">No dentists available. Please check back later.</p>
+              <p className="book-slot-hint">Loading dentists...</p>
             ) : (
               <div className="book-dentist-grid">
-                {dentists.map((d) => (
-                  <div key={d.id} className={`book-dentist-card ${dentist?.id === d.id ? 'selected' : ''}`} onClick={() => setDentist(d)}>
-                    <div className="book-dentist-avatar-wrap">
-                      {d.photo ? (
-                        <img src={d.photo} alt={d.name} className="book-dentist-avatar" />
-                      ) : (
-                        <div className="book-dentist-avatar-placeholder">{d.name?.charAt(0).toUpperCase()}</div>
-                      )}
-                    </div>
-                    <p className="book-dentist-name">{d.name}</p>
-                    <p className="book-dentist-specialty">{d.title}</p>
+                {dentists.map(d => (
+                  <div key={d.id}
+                    className={`book-dentist-card ${dentist?.id === d.id ? 'selected' : ''}`}
+                    onClick={() => setDentist(d)}>
+                    <Avatar name={d.dentist_name} />
+                    <p className="book-dentist-name">{d.dentist_name}</p>
+                    <p className="book-dentist-specialty">{d.specialty}</p>
                   </div>
                 ))}
               </div>
@@ -165,104 +211,181 @@ export default function Book() {
           </>
         )}
 
+        {/* Step 2 — Service */}
         {step === 1 && (
           <>
             <p className="book-section-label">Select a Service</p>
-            <div className="book-service-list">
-              {SERVICES.map((s) => (
-                <div key={s.id} className={`book-service-card ${service?.id === s.id ? 'selected' : ''}`} onClick={() => setService(s)}>
-                  <div className="book-service-icon">{s.icon}</div>
-                  <div>
-                    <p className="book-service-name">{s.label}</p>
-                    <p className="book-service-duration">⏱ {s.duration}</p>
-                  </div>
-                  {service?.id === s.id && <span className="book-service-check">✓</span>}
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {step === 2 && (
-          <>
-            <p className="book-section-label">Select a Date</p>
-            <input type="date" min={today} value={date} onChange={(e) => setDate(e.target.value)} className="book-date-input" />
-            <p className="book-section-label">Select a Time Slot</p>
-            <div className="book-slot-legend">
-              <div className="book-slot-legend-item"><div className="book-slot-legend-dot dot-available" /><span>Available</span></div>
-              <div className="book-slot-legend-item"><div className="book-slot-legend-dot dot-booked" /><span>Already Booked</span></div>
-              <div className="book-slot-legend-item"><div className="book-slot-legend-dot dot-unavailable" /><span>Unavailable</span></div>
-            </div>
-            {!date ? (
-              <p className="book-slot-hint">Please select a date first to see available slots.</p>
+            {services.length === 0 ? (
+              <p className="book-slot-hint">Loading services...</p>
             ) : (
-              <>
-                <div className="book-time-grid">
-                  {ALL_TIME_SLOTS.map((t) => {
-                    const state      = getSlotState(t)
-                    const isSelected = time === t
-                    return (
-                      <div key={t} className={`book-time-slot slot-${state} ${isSelected ? 'selected' : ''}`}
-                        onClick={() => state === 'available' && setTime(t)}
-                        title={state === 'booked' ? 'Already booked' : state === 'unavailable' ? 'Not available on this date' : 'Click to select'}>
-                        <span className="book-slot-time">{t}</span>
-                        {state === 'booked'                    && <span className="book-slot-tag tag-booked">Taken</span>}
-                        {state === 'unavailable'               && <span className="book-slot-tag tag-unavailable">–</span>}
-                        {state === 'available' && isSelected   && <span className="book-slot-tag tag-selected">✓</span>}
-                      </div>
-                    )
-                  })}
-                </div>
-                {!hasAnyAvailable && (
-                  <p className="book-slot-hint">No slots available on this date for {dentist?.name}. Please try another date.</p>
-                )}
-              </>
+              <div className="book-service-list">
+                {services.map(s => (
+                  <div key={s.id}
+                    className={`book-service-card ${service?.id === s.id ? 'selected' : ''}`}
+                    onClick={() => setService(s)}>
+                    <div className="book-service-icon">{s.icon || '🦷'}</div>
+                    <div>
+                      <p className="book-service-name">{s.service_name}</p>
+                      <p className="book-service-duration">⏱ {s.duration_minutes} min</p>
+                      {s.description && <p className="book-service-duration">{s.description}</p>}
+                    </div>
+                    <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+                      <p style={{ fontWeight: 600, color: '#0d9488' }}>${s.price}</p>
+                      {service?.id === s.id && <span className="book-service-check">✓</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </>
         )}
 
+        {/* Step 3 — Date & Time */}
+        {step === 2 && (
+          <>
+            <p className="book-section-label">Select a Date</p>
+            <input type="date" min={today} value={date}
+              onChange={e => setDate(e.target.value)} className="book-date-input" />
+            <p className="book-section-label">Select a Time Slot</p>
+            {!date ? (
+              <p className="book-slot-hint">Please select a date first.</p>
+            ) : timeslots.length === 0 ? (
+              <p className="book-slot-hint">No slots available. Please try another date.</p>
+            ) : (
+              <div className="book-time-grid">
+                {timeslots.map(t => {
+                  const isBooked   = bookedSlotIds.includes(t.id)
+                  const isSelected = timeslot?.id === t.id
+                  return (
+                    <div key={t.id}
+                      className={`book-time-slot ${isBooked ? 'slot-booked' : 'slot-available'} ${isSelected ? 'selected' : ''}`}
+                      onClick={() => !isBooked && setTimeslot(t)}>
+                      <span className="book-slot-time">{t.start_time} – {t.end_time}</span>
+                      {isBooked && <span className="book-slot-tag tag-booked">Taken</span>}
+                      {isSelected && !isBooked && <span className="book-slot-tag tag-selected">✓</span>}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Step 4 — Patient Info */}
         {step === 3 && (
+          <>
+            <p className="book-section-label">Your Information</p>
+            <div className="book-info-form">
+              <div className="book-info-group">
+                <label>Full Name <span className="required">*</span></label>
+                <input name="full_name" value={patientInfo.full_name} onChange={handleInfoChange}
+                  placeholder="Enter your full name" className="book-info-input" />
+              </div>
+              <div className="book-info-row">
+                <div className="book-info-group">
+                  <label>Phone Number <span className="required">*</span></label>
+                  <input name="phone" value={patientInfo.phone} onChange={handleInfoChange}
+                    placeholder="+1 234 567 8900" className="book-info-input" />
+                </div>
+                <div className="book-info-group">
+                  <label>Date of Birth <span className="required">*</span></label>
+                  <input type="date" name="date_of_birth" value={patientInfo.date_of_birth}
+                    onChange={handleInfoChange} className="book-info-input" />
+                </div>
+              </div>
+              <div className="book-info-group">
+                <label>Sex <span className="required">*</span></label>
+                <select name="sex" value={patientInfo.sex} onChange={handleInfoChange} className="book-info-input">
+                  <option value="">Select...</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div className="book-info-group">
+                <label>Address</label>
+                <input name="address" value={patientInfo.address} onChange={handleInfoChange}
+                  placeholder="Your address (optional)" className="book-info-input" />
+              </div>
+              <div className="book-info-group">
+                <label>Notes / Special Requests</label>
+                <textarea name="notes" value={patientInfo.notes} onChange={handleInfoChange}
+                  placeholder="Any special requests..." className="book-info-textarea" rows={4} />
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Step 5 — Confirm */}
+        {step === 4 && (
           <>
             <p className="book-section-label">Review your Appointment</p>
             <div className="book-confirm-card">
               <div className="book-confirm-doctor">
-                {dentist?.photo ? (
-                  <img src={dentist.photo} alt={dentist.name} className="book-confirm-avatar" />
-                ) : (
-                  <div className="book-confirm-avatar-placeholder">{dentist?.name?.charAt(0).toUpperCase()}</div>
-                )}
+                <Avatar name={dentist?.dentist_name} size={48} />
                 <div>
-                  <p className="book-confirm-doctor-name">{dentist?.name}</p>
-                  <p className="book-confirm-doctor-title">{dentist?.title}</p>
+                  <p className="book-confirm-doctor-name">{dentist?.dentist_name}</p>
+                  <p className="book-confirm-doctor-title">{dentist?.specialty}</p>
                 </div>
               </div>
               <div className="book-confirm-divider" />
               {[
-                { label: 'Patient',  value: user?.name || 'You' },
-                { label: 'Service',  value: `${service?.icon} ${service?.label}` },
-                { label: 'Duration', value: service?.duration },
+                { label: 'Patient',  value: patientInfo.full_name },
+                { label: 'Phone',    value: patientInfo.phone },
+                { label: 'Service',  value: `${service?.icon || '🦷'} ${service?.service_name}` },
+                { label: 'Duration', value: `${service?.duration_minutes} min` },
+                { label: 'Price',    value: `$${service?.price}` },
                 { label: 'Date',     value: date },
-                { label: 'Time',     value: time },
-                { label: 'Status',   value: 'Confirmed' },
+                { label: 'Time',     value: `${timeslot?.start_time} – ${timeslot?.end_time}` },
+                { label: 'Notes',    value: patientInfo.notes || '—' },
+                { label: 'Status',   value: '⏳ Pending confirmation' },
               ].map((row, i) => (
                 <div key={i} className="book-confirm-row">
                   <span className="book-confirm-label">{row.label}</span>
-                  <span className={`book-confirm-value ${row.label === 'Status' ? 'book-confirm-status' : ''}`}>{row.value}</span>
+                  <span className={`book-confirm-value ${row.label === 'Status' ? 'book-confirm-status' : ''}`}>
+                    {row.value}
+                  </span>
                 </div>
               ))}
             </div>
           </>
         )}
 
+        {/* Nav Buttons */}
         <div className="book-btn-row">
-          {step > 0 && <button className="book-btn-back" onClick={() => setStep(step - 1)}>← Back</button>}
-          {step < 3 ? (
-            <button className="book-btn-next" disabled={!canNext} onClick={() => canNext && setStep(step + 1)}>Next →</button>
+          {step > 0 && (
+            <button className="book-btn-back" onClick={() => setStep(step - 1)}>← Back</button>
+          )}
+          {step < 4 ? (
+            <button className="book-btn-next" disabled={!canNext}
+              onClick={() => canNext && setStep(step + 1)}>Next →</button>
           ) : (
             <button className="book-btn-next" onClick={handleSubmit}>Confirm Booking ✓</button>
           )}
         </div>
+
       </div>
+
+      {/* Success Popup */}
+      {showSuccess && (
+        <div className="success-overlay">
+          <div className="success-modal">
+            <div className="success-icon-wrap"><span>✓</span></div>
+            <p className="success-title">Booking submitted!</p>
+            <p className="success-sub">Pending confirmation from our team.</p>
+            <div className="success-detail">
+              <div className="success-row"><span>Dentist</span><span>{dentist?.dentist_name}</span></div>
+              <div className="success-row"><span>Service</span><span>{service?.service_name}</span></div>
+              <div className="success-row"><span>Date</span><span>{date}</span></div>
+              <div className="success-row"><span>Time</span><span>{timeslot?.start_time} – {timeslot?.end_time}</span></div>
+            </div>
+            <span className="success-badge">⏳ Pending confirmation</span>
+            <button className="success-btn" onClick={() => navigate('/dashboard')}>Go to Dashboard</button>
+            <button className="success-btn-ghost" onClick={() => navigate('/my-bookings')}>View My Bookings</button>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

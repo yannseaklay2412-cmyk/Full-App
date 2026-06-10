@@ -563,3 +563,72 @@
   font-size: 15px;
   margin-bottom: 32px;
 }
+/* ── Patient Info Form ── */
+.book-info-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 560px;
+}
+
+.book-info-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.book-info-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.book-info-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #a0aec0;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.required { color: #fc8181; margin-left: 2px; }
+
+.book-info-input {
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  outline: none;
+  transition: border 0.15s;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.book-info-input:focus { border-color: #0d9488; }
+
+.book-info-textarea {
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  outline: none;
+  resize: vertical;
+  min-height: 90px;
+  font-family: inherit;
+  transition: border 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.book-info-textarea:focus { border-color: #0d9488; }
+
+.book-info-divider {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  margin: 0.5rem 0;
+}

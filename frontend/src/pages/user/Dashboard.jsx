@@ -6,49 +6,73 @@ import { useAuth } from '../../context/AuthContext'
 
 export default function Dashboard() {
   const navigate = useNavigate()
-  const [bookings, setBookings] = useState([])
-  const [userName, setUserName] = useState('patient.name')
   const { logout, user } = useAuth()
 
-  useEffect(() => {
-    if(!user)return
-    const fetchData = async () => {
-    const {data:patient}=await supabase
-      .from('patients')
-      .select('full_name')
-      .eq('email', user.email)
-      .maybeSingle()
+  const [userName,        setUserName]        = useState('')
+  const [bookings,        setBookings]        = useState([])
+  const [historyBookings, setHistoryBookings] = useState([])
 
-      if (patient)setUserName(patient.full_name)
-        const{data:bookingData}=await supabase
-          .from('bookings')
-          .select('*')
-          .eq('patientEmail', user.email)
-          if(bookingData)setBookings(bookingData)
-          }
-            fetchData()
+  useEffect(() => {
+    if (!user) return
+    const fetchData = async () => {
+
+      // 1. Get patient name + id
+      const { data: patient } = await supabase
+        .from('patients')
+        .select('id, full_name')
+        .eq('email', user.email)
+        .maybeSingle()
+
+      if (!patient) return
+      setUserName(patient.full_name)
+
+      // 2. Fetch all appointments
+      const { data: apptData } = await supabase
+        .from('appointments')
+        .select(`
+          id, status, notes, created_at,
+          dentists ( dentist_name ),
+          appointment_services ( services ( service_name, price ) )
+        `)
+        .eq('patient_id', patient.id)
+        .order('created_at', { ascending: false })
+
+      if (apptData) setBookings(apptData)
+
+      // 3. Fetch history (done only, last 2)
+      const { data: historyData } = await supabase
+        .from('appointments')
+        .select(`
+          id, status, created_at,
+          dentists ( dentist_name ),
+          appointment_services ( services ( service_name, price ) )
+        `)
+        .eq('patient_id', patient.id)
+        .eq('status', 'done')
+        .order('created_at', { ascending: false })
+        .limit(2)
+
+      if (historyData) setHistoryBookings(historyData)
+    }
+    fetchData()
   }, [user])
 
-  const confirmed  = bookings.filter(b => b.status === 'Confirmed').length
-  const pending    = bookings.filter(b => b.status === 'Pending').length
-  const cancelled  = bookings.filter(b => b.status === 'Cancelled').length
+  const confirmed = bookings.filter(b => b.status === 'confirmed').length
+  const pending   = bookings.filter(b => b.status === 'pending').length
+  const cancelled = bookings.filter(b => b.status === 'cancelled').length
 
   const upcoming = bookings
-    .filter(b => b.status === 'Confirmed' && b.date >= new Date().toISOString().split('T')[0])
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .slice(0, 2)
+    .filter(b => b.status === 'confirmed')
+    .slice(0, 3)
 
-  const tips = [
-    { icon: '🪥', tip: 'Brush twice a day for 2 minutes each time.' },
-    { icon: '🧵', tip: 'Floss daily to remove plaque between teeth.' },
-    { icon: '💧', tip: 'Drink plenty of water to keep your mouth clean.' },
-    { icon: '🍎', tip: 'Eat crunchy fruits & veggies to clean teeth naturally.' },
-  ]
-
-  const handleCancel = (id) => {
-    const updated = bookings.map(b => b.id === id ? { ...b, status: 'Cancelled' } : b)
-    setBookings(updated)
-    localStorage.setItem('bookings', JSON.stringify(updated))
+  const handleCancel = async (id) => {
+    const { error } = await supabase
+      .from('appointments')
+      .update({ status: 'cancelled' })
+      .eq('id', id)
+    if (!error) {
+      setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b))
+    }
   }
 
   return (
@@ -58,10 +82,10 @@ export default function Dashboard() {
       <div className="dash-topbar">
         <div className="dash-logo">🦷 SMILLY</div>
         <div className="dash-nav">
-           <button className="dash-nav-btn" onClick={() => navigate('/')}>Home</button>
+          <button className="dash-nav-btn" onClick={() => navigate('/')}>Home</button>
           <button className="dash-nav-btn" onClick={() => navigate('/book')}>Book</button>
           <button className="dash-nav-btn" onClick={() => navigate('/my-bookings')}>My Bookings</button>
-          <button className="dash-nav-btn signout" onClick={() =>  { logout(); navigate('/') }}>Sign Out</button>
+          <button className="dash-nav-btn signout" onClick={() => { logout(); navigate('/') }}>Sign Out</button>
         </div>
       </div>
 
@@ -70,22 +94,18 @@ export default function Dashboard() {
         {/* Welcome Banner */}
         <div className="dash-banner">
           <div className="dash-banner-left">
-            <p className="dash-welcome-sub">Welcome back 👋</p>
+            <p className="dash-welcome-sub">Welcome 👋</p>
             <h1 className="dash-welcome-name">{userName}</h1>
             <p className="dash-welcome-desc">Ready for your next visit? Book an appointment or check your upcoming schedule.</p>
             <div className="dash-banner-btns">
-              <button className="dash-btn-primary" onClick={() => navigate('/book')}>
-                + Book Appointment
-              </button>
-              <button className="dash-btn-secondary" onClick={() => navigate('/my-bookings')}>
-                My Bookings
-              </button>
+              <button className="dash-btn-primary" onClick={() => navigate('/book')}>+ Book Appointment</button>
+              <button className="dash-btn-secondary" onClick={() => navigate('/my-bookings')}>My Bookings</button>
             </div>
           </div>
           <div className="dash-banner-icon">🦷</div>
         </div>
 
-        {/* Stats Row */}
+        {/* Stats */}
         <div className="dash-stats">
           <div className="dash-stat-card confirmed">
             <span className="dash-stat-num">{confirmed}</span>
@@ -105,46 +125,67 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Main Grid */}
-        <div className="dash-grid">
+        {/* Upcoming Appointments */}
+        <div className="dash-card">
+          <div className="dash-card-header">
+            <h2 className="dash-card-title">📅 Upcoming Appointments</h2>
+            <button className="dash-view-all" onClick={() => navigate('/my-bookings')}>View all →</button>
+          </div>
+          {upcoming.length === 0 ? (
+            <div className="dash-empty">
+              <p>No upcoming appointments.</p>
+              <button className="dash-btn-primary small" onClick={() => navigate('/book')}>Book Now</button>
+            </div>
+          ) : (
+            <div className="dash-appt-list">
+              {upcoming.map(b => (
+                <div className="dash-appt-card" key={b.id}>
+                  <div className="dash-appt-icon">🦷</div>
+                  <div className="dash-appt-info">
+                    <p className="dash-appt-doctor">{b.dentists?.dentist_name}</p>
+                    <p className="dash-appt-service">{b.appointment_services?.[0]?.services?.service_name}</p>
+                    <div className="dash-appt-meta">
+                      <span>🗓 {new Date(b.created_at).toLocaleDateString()}</span>
+                      <span>📌 {b.status}</span>
+                    </div>
+                  </div>
+                  <button className="dash-cancel-btn" onClick={() => handleCancel(b.id)}>Cancel</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-          {/* Upcoming Appointments */}
+        {/* Appointment History */}
+        <div className="dash-grid">
           <div className="dash-card">
             <div className="dash-card-header">
-              <h2 className="dash-card-title">📅 Upcoming Appointments</h2>
-              <button className="dash-view-all" onClick={() => navigate('/my-bookings')}>View all →</button>
+              <h2 className="dash-card-title">📝 Appointment History</h2>
+              <button className="dash-view-all" onClick={() => navigate('/history')}>View all →</button>
             </div>
-
-            {upcoming.length === 0 ? (
+            {historyBookings.length === 0 ? (
               <div className="dash-empty">
-                <p>No upcoming appointments.</p>
-                <button className="dash-btn-primary small" onClick={() => navigate('/book')}>
-                  Book Now
-                </button>
+                <p>No appointment history yet.</p>
               </div>
             ) : (
               <div className="dash-appt-list">
-                {upcoming.map(b => (
+                {historyBookings.map(b => (
                   <div className="dash-appt-card" key={b.id}>
-                    <div className="dash-appt-icon">🦷</div>
                     <div className="dash-appt-info">
-                      <p className="dash-appt-doctor">{b.doctorName}</p>
-                      <p className="dash-appt-service">{b.service}</p>
+                      <p className="dash-appt-doctor">{b.dentists?.dentist_name}</p>
+                      <p className="dash-appt-service">{b.appointment_services?.[0]?.services?.service_name}</p>
                       <div className="dash-appt-meta">
-                        <span>📅 {b.date}</span>
-                        <span>🕐 {b.time}</span>
+                        <span>🗓 {new Date(b.created_at).toLocaleDateString()}</span>
+                        <span>💰 ${b.appointment_services?.[0]?.services?.price}</span>
                       </div>
                     </div>
-                    <button className="dash-cancel-btn" onClick={() => handleCancel(b.id)}>
-                      Cancel
-                    </button>
                   </div>
                 ))}
               </div>
             )}
           </div>
-
         </div>
+
       </div>
     </div>
   )
