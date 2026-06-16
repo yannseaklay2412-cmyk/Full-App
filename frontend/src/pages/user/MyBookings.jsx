@@ -74,7 +74,13 @@ export default function MyBookings() {
       {/* Topbar */}
       <div className="mb-topbar">
         <button className="mb-back" onClick={() => navigate('/dashboard')}>← Dashboard</button>
-        <div className="mb-logo">🦷 SMILLY</div>
+        <div className="nav-logo">
+          <span className="logo-icon">🦷</span>
+          <div style={{ marginLeft: '15px', fontFamily: 'Poppins' }}>
+            <span style={{ color: '#1e1e1e' }}>Tooth</span>
+            <span style={{ color: '#2ec4b6' }}>Time</span>
+          </div>
+        </div>      
       </div>
 
       <div className="mb-content">

@@ -80,8 +80,13 @@ export default function Dashboard() {
 
       {/* Topbar */}
       <div className="dash-topbar">
-        <div className="dash-logo">🦷 SMILLY</div>
-        <div className="dash-nav">
+        <div className="nav-logo">
+          <span className="logo-icon">🦷</span>
+          <div style={{ marginLeft: '15px', fontFamily: 'Poppins' }}>
+            <span style={{ color: '#1e1e1e' }}>Tooth</span>
+            <span style={{ color: '#2ec4b6' }}>Time</span>
+          </div>
+        </div>            <div className="dash-nav">
           <button className="dash-nav-btn" onClick={() => navigate('/')}>Home</button>
           <button className="dash-nav-btn" onClick={() => navigate('/book')}>Book</button>
           <button className="dash-nav-btn" onClick={() => navigate('/my-bookings')}>My Bookings</button>

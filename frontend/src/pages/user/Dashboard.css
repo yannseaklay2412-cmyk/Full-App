@@ -159,7 +159,7 @@
 
 .dash-btn-secondary {
   background: #ffffff;
-  border: 1.5px solid #0a0a0a;
+  border: 2px solid #2bb5ac;
   color: #2bb5ac;
   padding: 12px 24px;
   border-radius: 10px;
@@ -194,7 +194,7 @@
 
 .dash-stat-card.confirmed {
   background: #f0faf9;
-  border-color: #5614d1;
+  border-color: #10d4c1;
 }
 
 .dash-stat-card.pending {

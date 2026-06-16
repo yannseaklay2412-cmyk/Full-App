@@ -167,8 +167,14 @@ export default function Book() {
     <div className="book-page">
       <div className="book-topbar">
         <button className="book-back-btn" onClick={() => navigate('/dashboard')}>← Dashboard</button>
-        <div className="book-logo">🦷 SMILLY</div>
-      </div>
+        <div className="nav-logo">
+          <div className="logo-icon">🦷</div>
+          <div style={{ marginLeft: '15px', fontFamily: 'Poppins' }}>
+            <span style={{ color: '#1e1e1e' }}>Tooth</span>
+            <span style={{ color: '#2ec4b6' }}>Time</span>
+          </div>
+        </div>      
+        </div>
 
       <div className="book-content">
         <div className="book-header">
@@ -294,7 +300,7 @@ export default function Book() {
                 </div>
               </div>
               <div className="book-info-group">
-                <label>Sex <span className="required">*</span></label>
+                <label>Gender <span className="required">*</span></label>
                 <select name="sex" value={patientInfo.sex} onChange={handleInfoChange} className="book-info-input">
                   <option value="">Select...</option>
                   <option value="male">Male</option>

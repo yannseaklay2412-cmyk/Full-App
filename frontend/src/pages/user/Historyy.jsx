@@ -44,18 +44,17 @@ export default function History() {
 
   return (
     <div className="history-page">
-
       {/* Topbar */}
-      <div className="dash-topbar">
-        <div className="dash-logo">🦷 SMILLY</div>
-        <div className="dash-nav">
-          <button className="dash-nav-btn" onClick={() => navigate('/')}>Home</button>
-          <button className="dash-nav-btn" onClick={() => navigate('/book')}>Book</button>
-          <button className="dash-nav-btn" onClick={() => navigate('/my-bookings')}>My Bookings</button>
-          <button className="dash-nav-btn" onClick={() => navigate('/dashboard')}>Dashboard</button>
-        </div>
+      <div className="mb-topbar">
+        <button className="mb-back" onClick={() => navigate('/dashboard')}>← Dashboard</button>
+        <div className="nav-logo">
+          <span className="logo-icon">🦷</span>
+          <div style={{ marginLeft: '15px', fontFamily: 'Poppins' }}>
+            <span style={{ color: '#1e1e1e' }}>Tooth</span>
+            <span style={{ color: '#2ec4b6' }}>Time</span>
+          </div>
+        </div>      
       </div>
-
       <div className="history-content">
         <h2 className="history-title">📝 Appointment History</h2>
 
@@ -64,7 +63,7 @@ export default function History() {
         ) : historyBookings.length === 0 ? (
           <div className="history-empty">
             <p>No completed appointments yet.</p>
-            <button onClick={() => navigate('/book')}>Book Now</button>
+            <button className="mb-back" onClick={() => navigate('/book')}>Book Now</button>
           </div>
         ) : (
           <table className="history-table">

@@ -1,6 +1,6 @@
 .history-page {
   min-height: 100vh;
-  background: #f8f9fa;
+  background: #c1f6ee;
 }
 
 .history-content {
@@ -13,7 +13,7 @@
   font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 24px;
-  color: #1a1a2e;
+  color: #1a2c2e;
 }
 
 .history-table {

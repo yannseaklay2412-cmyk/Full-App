@@ -1,38 +1,53 @@
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import './DoctorInfo.css'
-
-import doctor1 from '../../assets/images/download (2).png'
-import doctor2 from '../../assets/images/download (3).png'
-import doctor3 from '../../assets/images/download.png'
+import { supabase } from '../../config/supabaseClient'
 
 export default function DoctorDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [doctor, setDoctor] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  const stored = JSON.parse(localStorage.getItem('dentists') || '[]')
+  useEffect(() => {
+    const fetchDoctor = async () => {
+      const { data, error } = await supabase
+        .from('dentists')
+        .select('*')
+        .eq('id', id)
+        .single()
 
-  const doctors = stored.map(d => {
-    if (d.id === 1 && !d.photo?.startsWith('data:')) return { ...d, photo: doctor1 }
-    if (d.id === 2 && !d.photo?.startsWith('data:')) return { ...d, photo: doctor2 }
-    if (d.id === 3 && !d.photo?.startsWith('data:')) return { ...d, photo: doctor3 }
-    return d
-  })
+      if (error) {
+        console.error('Error fetching doctor:', error)
+        setDoctor(null)
+      } else {
+        setDoctor(data)
+      }
+      setLoading(false)
+    }
 
-  // ✅ FIX 1: use String() instead of parseInt() so Date.now() ids work too
-  const doctor = doctors.find(d => String(d.id) === String(id))
+    fetchDoctor()
+  }, [id])
 
-  if (!doctor) return <div className="not-found">Doctor not found.</div>
+  if (loading) {
+    return <div className="not-found">Loading...</div>
+  }
 
-  // ✅ FIX 2: handle specialties as either array or comma-string
+  if (!doctor) {
+    return <div className="not-found">Doctor not found.</div>
+  }
+
+  // specialties can be an array, a comma-separated string, or empty
   const specialties = Array.isArray(doctor.specialties)
     ? doctor.specialties
     : typeof doctor.specialties === 'string' && doctor.specialties
       ? doctor.specialties.split(',').map(s => s.trim()).filter(Boolean)
-      : []
+      : doctor.specialty
+        ? [doctor.specialty]
+        : []
 
   return (
     <div className="doctor-detail">
-
       {/* BACK BUTTON */}
       <button className="back-btn" onClick={() => navigate(-1)}>
         ← Back
@@ -40,27 +55,35 @@ export default function DoctorDetail() {
 
       {/* PROFILE HEADER */}
       <div className="profile-header">
-        <img src={doctor.photo} alt={doctor.name} className="profile-img" />
+        <img
+          src={doctor.photo || 'https://via.placeholder.com/180x200?text=Dentist'}
+          alt={doctor.dentist_name}
+          className="profile-img"
+        />
         <div className="profile-info">
-          <h1 className="profile-name">{doctor.name}</h1>
-          <p className="profile-title">{doctor.title}</p>
-          <p className="profile-exp">{doctor.exp}</p>
+          <h1 className="profile-name">{doctor.dentist_name}</h1>
+          <p className="profile-title">{doctor.specialty}</p>
+          <p className="profile-exp">{doctor.background}</p>
+          <p className="profile-exp">{doctor.phone}</p>
+          {doctor.telegram && (
+            <p className="profile-exp">Telegram: {doctor.telegram}</p>
+          )}
+          <button className="btn-appointment" onClick={() => navigate('/book')}>
+            Book Appointment
+          </button>
         </div>
       </div>
 
       {/* DETAILS */}
       <div className="detail-grid">
-
         <div className="detail-card">
           <h3>About</h3>
           <p>{doctor.about || 'No information provided.'}</p>
         </div>
-
         <div className="detail-card">
           <h3>Education</h3>
           <p>{doctor.education || 'No information provided.'}</p>
         </div>
-
         <div className="detail-card">
           <h3>Specialties</h3>
           {specialties.length > 0 ? (
@@ -73,12 +96,10 @@ export default function DoctorDetail() {
             <p>No specialties listed.</p>
           )}
         </div>
-
         <div className="detail-card">
           <h3>Schedule</h3>
           <p>🕐 {doctor.schedule || 'No schedule available.'}</p>
         </div>
-
       </div>
     </div>
   )

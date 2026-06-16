@@ -1,25 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
 
 :root {
-  --navy:       #0d1b3e;
-  --navy-light: #152347;
-  --navy-card:  #1a2d54;
-  --navy-border:#243560;
-  --teal:       #4ecdc4;
-  --teal-dim:   #3ab5ac;
-  --white:      #ffffff;
-  --text-muted: #8a9fc4;
-  --text-light: #c8d6f0;
-  --radius:     12px;
-  --radius-lg:  20px;
+  --primary: #2ec4b6;
+  --primary-dark: #25a89c;
+  --primary-light: #c1f6ee;
+  --bg: #f5f9f8;
+  --white: #ffffff;
+  --text: #1e1e1e;
+  --muted: #6b7280;
+  --radius: 14px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 .mybookings-page {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--navy-light);
-  color: var(--white);
+  font-family: 'Poppins', sans-serif;
+  background: var(--primary-light);
+  color: var(--text);
   min-height: 100vh;
 }
 
@@ -28,32 +25,32 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 60px;
-  background: var(--navy);
-  border-bottom: 1px solid var(--navy-border);
+  padding: 18px 60px;
+  background: var(--white);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
 .mb-back {
-  background: transparent;
-  border: 1px solid var(--navy-border);
-  color: var(--text-light);
-  padding: 8px 18px;
-  border-radius: 8px;
+  background: #e6f7f5;
+  border: none;
+  color: var(--primary);
+  padding: 10px 18px;
+  border-radius: 10px;
   font-size: 13px;
   cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Poppins', sans-serif;
   transition: all 0.2s;
 }
-.mb-back:hover { border-color: var(--teal); color: var(--teal); }
+.mb-back:hover { background: var(--primary-light); }
 
 .mb-logo {
   font-size: 18px;
   font-weight: 700;
-  font-family: 'Playfair Display', serif;
-  color: var(--teal);
+  font-family: 'Poppins', sans-serif;
+  color: var(--text);
 }
 
 /* CONTENT */
@@ -75,32 +72,33 @@
 }
 
 .mb-title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 30px;
   font-weight: 800;
+  color: var(--text);
 }
-.teal { color: var(--teal); }
+.teal { color: var(--primary); }
 
 .mb-sub {
   font-size: 13px;
-  color: var(--text-muted);
+  color: var(--muted);
   margin-top: 6px;
 }
 
 .btn-newbook {
-  background: var(--teal);
+  background: var(--primary);
   border: none;
-  color: var(--navy);
+  color: var(--white);
   padding: 10px 24px;
   border-radius: 10px;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Poppins', sans-serif;
   transition: background 0.2s, transform 0.1s;
   white-space: nowrap;
 }
-.btn-newbook:hover { background: var(--teal-dim); transform: translateY(-1px); }
+.btn-newbook:hover { background: var(--primary-dark); transform: translateY(-1px); }
 
 /* FILTERS */
 .mb-filters {
@@ -110,33 +108,33 @@
 }
 
 .mb-filter {
-  background: transparent;
-  border: 1px solid var(--navy-border);
-  color: var(--text-muted);
+  background: var(--white);
+  border: 1px solid rgba(0,0,0,0.08);
+  color: var(--muted);
   padding: 8px 18px;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Poppins', sans-serif;
   transition: all 0.2s;
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.mb-filter:hover { border-color: var(--teal); color: var(--white); }
-.mb-filter.active { border-color: var(--teal); color: var(--white); background: rgba(78,205,196,0.1); }
+.mb-filter:hover { border-color: var(--primary); color: var(--text); }
+.mb-filter.active { border-color: var(--primary); color: var(--primary-dark); background: var(--primary-light); }
 
 .mb-filter-count {
-  background: var(--navy-border);
-  color: var(--text-light);
+  background: rgba(0,0,0,0.06);
+  color: var(--muted);
   font-size: 11px;
   padding: 2px 7px;
   border-radius: 20px;
 }
 .mb-filter.active .mb-filter-count {
-  background: var(--teal);
-  color: var(--navy);
+  background: var(--primary);
+  color: var(--white);
 }
 
 /* BOOKING LIST */
@@ -147,19 +145,20 @@
 }
 
 .mb-card {
-  background: var(--navy-card);
-  border: 1px solid var(--navy-border);
-  border-radius: var(--radius-lg);
+  background: var(--white);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: var(--radius);
   padding: 20px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.04);
   transition: transform 0.2s, box-shadow 0.2s;
 }
 .mb-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.07);
 }
 
 .mb-card-left {
@@ -170,11 +169,11 @@
 
 .mb-card-icon {
   font-size: 28px;
-  background: var(--navy);
-  border: 1px solid var(--navy-border);
+  background: var(--primary-light);
+  border: 1px solid rgba(46,196,182,0.2);
   width: 52px;
   height: 52px;
-  border-radius: var(--radius);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -184,13 +183,13 @@
 .mb-doctor {
   font-size: 15px;
   font-weight: 600;
-  color: var(--white);
+  color: var(--text);
   margin-bottom: 3px;
 }
 
 .mb-service {
   font-size: 13px;
-  color: var(--teal);
+  color: var(--primary);
   margin-bottom: 8px;
 }
 
@@ -198,7 +197,7 @@
   display: flex;
   gap: 16px;
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--muted);
 }
 
 .mb-card-right {
@@ -220,13 +219,13 @@
 
 .btn-cancel {
   background: transparent;
-  border: 1px solid var(--navy-border);
-  color: var(--text-muted);
+  border: 1px solid rgba(0,0,0,0.1);
+  color: var(--muted);
   padding: 6px 16px;
   border-radius: 8px;
   font-size: 12px;
   cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Poppins', sans-serif;
   transition: all 0.2s;
 }
 .btn-cancel:hover { border-color: #ff6363; color: #ff6363; }
@@ -239,7 +238,7 @@
   justify-content: center;
   gap: 16px;
   padding: 80px 24px;
-  color: var(--text-muted);
+  color: var(--muted);
   font-size: 14px;
 }
 .mb-empty-icon { font-size: 48px; opacity: 0.4; }

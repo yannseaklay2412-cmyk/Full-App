@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Home.css'
 import { useAuth } from '../../context/AuthContext'
+import { supabase } from '../../config/supabaseClient'
 
-import heroImage from '../../assets/images/download (1).png'
+import heroImage from '../../assets/images/dentist.png'
 import service1 from '../../assets/images/service1.jpg'
 import service2 from '../../assets/images/service2.jpg'
 import service3 from '../../assets/images/service3.jpg'
@@ -27,10 +28,28 @@ export default function Home() {
   const { user } = useAuth()
   const [active, setActive] = useState('home')
   const [menuOpen, setMenuOpen] = useState(false)
-  const [specialists, setSpecialists] = useState(() => {
-    const stored = localStorage.getItem('dentists')
-    return stored ? JSON.parse(stored) : []})
-   const scrollToSection = (id) => {
+  const [specialists, setSpecialists] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  // Fetch dentists from Supabase
+  useEffect(() => {
+    const fetchDentists = async () => {
+      const { data, error } = await supabase
+        .from('dentists')
+        .select('*')
+
+      if (error) {
+        console.error('Error fetching dentists:', error)
+      } else {
+        setSpecialists(data || [])
+      }
+      setLoading(false)
+    }
+
+    fetchDentists()
+  }, [])
+
+  const scrollToSection = (id) => {
     const section = document.getElementById(id)
     if (section) {
       section.scrollIntoView({ behavior: 'smooth' })
@@ -88,7 +107,10 @@ export default function Home() {
       <nav className="navbar">
         <div className="nav-logo">
           <span className="logo-icon">🦷</span>
-          <div style={{ marginLeft: '15px', fontFamily: 'Playfair Display' }}>SMILLY</div>
+          <div style={{ marginLeft: '15px', fontFamily: 'Poppins' }}>
+            <span style={{ color: '#1e1e1e' }}>Tooth</span>
+            <span style={{ color: '#2ec4b6' }}>Time</span>
+          </div>
         </div>
         <ul className="nav-links">
           <li>
@@ -163,19 +185,30 @@ export default function Home() {
       <section className="specialists" id="specialists">
         <h2 className="section-title">Our <span className="highlight">Specialists</span></h2>
         <p className="section-sub">A dedicated team of caring professionals for treatments you can trust.</p>
-        <div className="cards-grid">
-          {specialists.map((s, i) => (
-            <div className="specialist-card" key={i}>
-              <img src={s.photo} alt={s.name} className="img" />
-              <h3 className="card-name">{s.name}</h3>
-              <p className="card-title">{s.title}</p>
-              <p className="card-desc">{s.exp}</p>
-              <button className="btn-view" onClick={() => navigate(`/doctor/${s.id}`)}>
-                View
-              </button>
-            </div>
-          ))}
-        </div>
+
+        {loading ? (
+          <p className="section-sub">Loading specialists...</p>
+        ) : specialists.length === 0 ? (
+          <p className="section-sub">No specialists available yet.</p>
+        ) : (
+          <div className="cards-grid">
+            {specialists.map((s) => (
+              <div className="specialist-card" key={s.id}>
+                <img
+                  src={s.photo || 'https://via.placeholder.com/300x200?text=Dentist'}
+                  alt={s.dentist_name}
+                  className="img"
+                />
+                <h3 className="card-name">{s.dentist_name}</h3>
+                <p className="card-title">{s.specialty}</p>
+                <p className="card-desc">{s.phone}</p>
+                <button className="btn-view" onClick={() => navigate(`/doctor/${s.id}`)}>
+                  View
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
     
