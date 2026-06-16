@@ -9,11 +9,11 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   // Check role from database
-  const checkRole = async (userId) => {
+  const checkRole = async (userEmail) => {
   const { data, error } = await supabase
     .from('profiles')
     .select('role')
-    .eq('id', userId)
+    .eq('email', userEmail)
     .maybeSingle()
 
   if (error || !data) {
@@ -30,7 +30,7 @@ export function AuthProvider({ children }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setUser(session.user)
-        checkRole(session.user.id)
+        checkRole(session.user.email)
       }
       setLoading(false)
     })
@@ -40,7 +40,7 @@ export function AuthProvider({ children }) {
       async (event, session) => {
         if (session) {
           setUser(session.user)
-          await checkRole(session.user.id)
+          await checkRole(session.user.email)
         } else {
           setUser(null)
           setRole(null)
@@ -54,22 +54,22 @@ export function AuthProvider({ children }) {
   }, [])
 
   // Login
-  const login = async (email, password) => {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password
+ const login = async (email, password) => {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) return { error: error.message }
+
+  const role = await checkRole(data.user.email)
+
+  const res = await fetch('http://localhost:5000/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password })
   })
+  const backendData = await res.json()
 
-  if (error) {
-    return { error: error.message }
-  }
+  localStorage.setItem('token', backendData.token)
 
-  const role = await checkRole(data.user.id)
-
-  return {
-    data,
-    role
-  }
+  return { data, role }
 }
 
   // Logout

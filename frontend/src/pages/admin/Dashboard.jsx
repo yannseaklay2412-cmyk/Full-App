@@ -164,33 +164,6 @@ export default function AdminDashboard() {
             </div>
 
             <div className="ad-card">
-              <div className="ad-card-header">
-                <h3>Booking Status</h3>
-                <span className="ad-view-all" onClick={() => navigate('/admin/appointments')}>Details</span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {[
-                  { label: 'Confirmed', count: stats.confirmed, color: '#4ecdc4' },
-                  { label: 'Pending',   count: stats.pending,   color: '#f5c842' },
-                  { label: 'Cancelled', count: stats.cancelled, color: '#ff6b6b' },
-                ].map(s => (
-                  <div key={s.label}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                      <span style={{ fontSize: 13, color: '#0d1b3e', fontWeight: 500 }}>{s.label}</span>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: s.color }}>{s.count} <span style={{ color: '#8a9fc4', fontWeight: 400 }}>/ {stats.total}</span></span>
-                    </div>
-                    <div style={{ height: 8, background: '#f0f2f5', borderRadius: 99, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: stats.total > 0 ? `${Math.round((s.count / stats.total) * 100)}%` : '0%', background: s.color, borderRadius: 99, transition: 'width 0.8s ease' }}></div>
-                    </div>
-                    <p style={{ fontSize: 11, color: '#8a9fc4', marginTop: 4 }}>
-                      {stats.total > 0 ? Math.round((s.count / stats.total) * 100) : 0}% of total bookings
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="ad-card">
               <div className="ad-card-header"><h3>Recent Activity</h3></div>
               {bookings.length === 0 ? (
                 <div className="ad-empty">No activity yet</div>
@@ -214,82 +187,8 @@ export default function AdminDashboard() {
                 </div>
               )}
             </div>
-
-            <div className="ad-card">
-              <div className="ad-card-header"><h3>Quick Actions</h3></div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10 }}>
-                {[
-                  { label: 'Appointments', sub: `${stats.pending} pending`,   path: '/admin/appointments', color: '#4ecdc4' },
-                  { label: 'Dentists',     sub: `${dentists.length} doctors`, path: '/admin/dentists',     color: '#7c3aed' },
-                  { label: 'Patients',     sub: `${stats.users} registered`,  path: '/admin/users',        color: '#f5c842' },
-                  { label: 'Schedule',     sub: 'Manage slots',               path: '/admin/schedule',     color: '#ff6b6b' },
-                  { label: 'Reports',      sub: 'View stats',                 path: '/admin/reports',      color: '#4ecdc4' },
-                ].map((q, i) => (
-                  <div key={i} onClick={() => navigate(q.path)}
-                    style={{ background: '#f8f9fc', borderRadius: 10, padding: 14, cursor: 'pointer', transition: 'all 0.2s', border: '1px solid #f0f2f5' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = '#f0f2f5'; e.currentTarget.style.borderColor = q.color + '60' }}
-                    onMouseLeave={e => { e.currentTarget.style.background = '#f8f9fc'; e.currentTarget.style.borderColor = '#f0f2f5' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: q.color }}></div>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: '#0d1b3e' }}>{q.label}</span>
-                    </div>
-                    <p style={{ fontSize: 11, color: '#8a9fc4', paddingLeft: 14 }}>{q.sub}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
 
-          <div className="ad-col-mid">
-            <div className="ad-card ad-card-full">
-              <div className="ad-calendar-title">Calendar</div>
-              <div className="ad-cal-nav">
-                <button onClick={() => setCurrentMonth(new Date(year, month - 1, 1))} className="ad-cal-arrow">‹</button>
-                <span className="ad-cal-month">{monthName}</span>
-                <button onClick={() => setCurrentMonth(new Date(year, month + 1, 1))} className="ad-cal-arrow">›</button>
-              </div>
-              <div className="ad-cal-grid">
-                {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => (
-                  <div key={d} className="ad-cal-day-label">{d}</div>
-                ))}
-                {calendarDays.map((day, i) => {
-                  if (!day) return <div key={i}></div>
-                  const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
-                  const hasBooking = bookedDates.includes(dateStr)
-                  const isToday = day === todayDate && month === todayMonth && year === todayYear
-                  return (
-                    <div key={i} className={`ad-cal-day ${isToday ? 'today' : ''} ${hasBooking ? 'booked' : ''}`}>
-                      {day}
-                      {hasBooking && !isToday && <span className="ad-cal-dot"></span>}
-                    </div>
-                  )
-                })}
-              </div>
-              <div className="ad-cal-legend">
-                <div className="ad-legend-item"><div className="ad-legend-dot" style={{ background: '#0d1b3e' }}></div><span>Today</span></div>
-                <div className="ad-legend-item"><div className="ad-legend-dot" style={{ background: '#4ecdc4' }}></div><span>Booked</span></div>
-              </div>
-            </div>
-
-            <div className="ad-card" style={{ marginTop: 20 }}>
-              <div className="ad-card-header"><h3>Top Dentist</h3></div>
-              {(() => {
-                const byDentist = bookings.reduce((acc, b) => { acc[b.dentistName] = (acc[b.dentistName] || 0) + 1; return acc }, {})
-                const sorted = Object.entries(byDentist).sort((a,b) => b[1]-a[1]).slice(0,3)
-                if (sorted.length === 0) return <div className="ad-empty">No data yet</div>
-                return sorted.map(([name, count], i) => (
-                  <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < sorted.length - 1 ? '1px solid #f0f2f5' : 'none' }}>
-                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: ['#4ecdc420','#7c3aed20','#f5c84220'][i], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: ['#4ecdc4','#7c3aed','#f5c842'][i], flexShrink: 0 }}>{i + 1}</div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: '#0d1b3e' }}>{name}</p>
-                      <p style={{ fontSize: 11, color: '#8a9fc4' }}>{count} appointments</p>
-                    </div>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: '#4ecdc4' }}>{count}</span>
-                  </div>
-                ))
-              })()}
-            </div>
-          </div>
 
           <div className="ad-col-right">
             <div className="ad-card ad-card-full">
