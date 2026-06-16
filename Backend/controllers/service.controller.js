@@ -2,8 +2,7 @@ import * as serviceService from '../services/service.service.js'
 
 export const getAllServices = async (req, res, next) => {
   try {
-    const activeOnly = req.query.active === 'true'
-    const data = await serviceService.getAllServices(activeOnly)
+    const data = await serviceService.getAllServices()
     res.status(200).json({ success: true, data })
   } catch (err) { next(err) }
 }

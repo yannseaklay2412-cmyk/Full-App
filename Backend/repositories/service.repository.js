@@ -1,12 +1,10 @@
 import { supabase } from '../config/supabase.js'
 
-export const getAll = async (activeOnly = false) => {
-  let query = supabase
+export const getAll = async () => {
+  const { data, error } = await supabase
     .from('services')
-    .select('id, service_name, description, price, duration_minutes, icon, is_active')
+    .select('id, service_name, description, price, duration_minutes')
     .order('service_name')
-  if (activeOnly) query = query.eq('is_active', true)
-  const { data, error } = await query
   if (error) throw error
   return data
 }
@@ -14,7 +12,7 @@ export const getAll = async (activeOnly = false) => {
 export const getById = async (id) => {
   const { data, error } = await supabase
     .from('services')
-    .select('*')
+    .select('id, service_name, description, price, duration_minutes')
     .eq('id', id)
     .single()
   if (error) throw error

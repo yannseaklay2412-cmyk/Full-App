@@ -45,8 +45,8 @@ export const login = async ({ email, password }) => {
   if (error) throw { status: 401, message: 'Invalid email or password' }
 
   // Check role
-  const { data: admin } = await supabase
-    .from('admins').select('id').eq('id', data.user.id).maybeSingle()
+  const { data: user } = await supabase
+    .from('profiles').select('role').eq('email', data.user.email).maybeSingle()
 
   const role = admin ? 'admin' : 'patient'
 

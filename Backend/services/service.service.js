@@ -1,13 +1,7 @@
 import * as serviceRepo from '../repositories/service.repository.js'
 
-export const getAllServices = async (activeOnly = false) => {
-  return serviceRepo.getAll(activeOnly)
-}
-
-export const getServiceById = async (id) => {
-  const service = await serviceRepo.getById(id)
-  if (!service) throw { status: 404, message: 'Service not found' }
-  return service
+export const getAllServices = async () => {
+  return serviceRepo.getAll()
 }
 
 export const createService = async (serviceData) => {

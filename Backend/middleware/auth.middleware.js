@@ -1,29 +1,41 @@
-import jwt from 'jsonwebtoken'
-import { jwtConfig } from '../config/jwt.js'
+import { supabase } from '../config/supabase.js'
 
-export const protect = (req, res, next) => {
+export const protect = async (req, res, next) => {
   const authHeader = req.headers.authorization
   if (!authHeader || !authHeader.startsWith('Bearer '))
     return res.status(401).json({ success: false, message: 'No token provided' })
 
   const token = authHeader.split(' ')[1]
-  try {
-    const decoded = jwt.verify(token, jwtConfig.secret)
-    req.user = decoded
-    next()
-  } catch {
+
+  // ✅ Verify Supabase token instead of JWT
+  const { data, error } = await supabase.auth.getUser(token)
+  if (error || !data.user)
     return res.status(401).json({ success: false, message: 'Invalid or expired token' })
-  }
+
+  req.user = data.user
+  next()
 }
 
-export const adminOnly = (req, res, next) => {
-  if (req.user?.role !== 'admin')
+export const adminOnly = async (req, res, next) => {
+  const { data } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('email', req.user.email)
+    .maybeSingle()
+
+  if (data?.role !== 'admin')
     return res.status(403).json({ success: false, message: 'Admin access required' })
   next()
 }
 
-export const patientOnly = (req, res, next) => {
-  if (req.user?.role !== 'patient')
+export const patientOnly = async (req, res, next) => {
+  const { data } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('email', req.user.email)
+    .maybeSingle()
+
+  if (data?.role !== 'patient')
     return res.status(403).json({ success: false, message: 'Patient access required' })
   next()
 }

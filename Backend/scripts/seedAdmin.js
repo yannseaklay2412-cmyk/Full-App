@@ -1,45 +1,35 @@
-import bcrypt from 'bcryptjs';
-import db from '../config/db.js';
-import dotenv from 'dotenv';
+import { createClient } from '@supabase/supabase-js';
 
-dotenv.config();
+// Debug - remove after fix
+console.log('URL:', process.env.SUPABASE_URL);
+console.log('KEY:', process.env.SUPABASE_SERVICE_KEY);
+console.log('EMAIL:', process.env.ADMIN_EMAIL);
+console.log('PASSWORD:', process.env.ADMIN_PASSWORD);
 
-const seedAdmin = async () => {
-  try {
-    const adminEmail = process.env.ADMIN_EMAIL;
-    const adminPassword = process.env.ADMIN_PASSWORD;
-    const adminName = process.env.ADMIN_NAME || 'Administrator';
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
 
-    if (!adminEmail || !adminPassword) {
-      console.error(' Missing ADMIN_EMAIL or ADMIN_PASSWORD in .env file');
-      process.exit(1);
-    }
+const { data, error } = await supabase.auth.signUp({
+  email: process.env.ADMIN_EMAIL,
+  password: process.env.ADMIN_PASSWORD
+});
 
-    console.log(' Checking if admin exists...');
-    const existing = await db.query('SELECT * FROM users WHERE email = $1', [adminEmail]);
-    if (existing.rows.length > 0) {
-      console.log('⚠️  Admin already exists!');
-      process.exit(0);
-    }
+if (error) {
+  console.error('❌ Error creating admin auth user:', error.message);
+} else {
+  const { error: insertError } = await supabase
+    .from('admin')
+    .insert({
+      admin_name: 'Admin',
+      email: process.env.ADMIN_EMAIL,
+      telegram: null,
+    });
 
-    console.log(' Hashing password...');
-    const hashedPassword = await bcrypt.hash(adminPassword, 10);
-
-    console.log(' Creating admin user...');
-    await db.query(
-      'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4)',
-      [adminName, adminEmail, hashedPassword, 'admin']
-    );
-
+  if (insertError) {
+    console.error(' Error inserting admin record:', insertError.message);
+  } else {
     console.log(' Admin created successfully!');
-    console.log(` Email: ${adminEmail}`);
-    console.log(` Name: ${adminName}`);
-    console.log(` Role: admin`);
-    process.exit(0);
-  } catch (err) {
-    console.error(' Error creating admin:', err.message);
-    process.exit(1);
   }
-};
-
-seedAdmin();
+}
