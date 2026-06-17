@@ -62,10 +62,15 @@ const getDashboard = async (req, res, next) => {
       supabase.from('services').select('*', { count: 'exact', head: true }).eq('is_active', true),
     ])
 
+    if (users.error) throw { status: 500, message: `Failed to fetch users: ${users.error.message}` }
+    if (bookings.error) throw { status: 500, message: `Failed to fetch bookings: ${bookings.error.message}` }
+    if (services.error) throw { status: 500, message: `Failed to fetch services: ${services.error.message}` }
+
     const revenue = await supabase
       .from('bookings')
       .select('service:services(price)')
       .in('status', ['confirmed', 'done'])
+    if (revenue.error) throw { status: 500, message: `Failed to fetch revenue: ${revenue.error.message}` }
 
     const totalRevenue = revenue.data?.reduce((sum, b) => sum + (b.service?.price || 0), 0) || 0
     const counts = bookings.data || []

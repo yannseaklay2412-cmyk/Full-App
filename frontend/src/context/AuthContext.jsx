@@ -60,14 +60,26 @@ export function AuthProvider({ children }) {
 
   const role = await checkRole(data.user.email)
 
-  const res = await fetch('http://localhost:5000/api/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
-  })
-  const backendData = await res.json()
+  try {
+    const res = await fetch('http://localhost:5000/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    })
 
-  localStorage.setItem('token', backendData.token)
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}))
+      return { error: errBody.message || `Backend login failed (${res.status})` }
+    }
+
+    const backendData = await res.json()
+    if (backendData.token) {
+      localStorage.setItem('token', backendData.token)
+    }
+  } catch (fetchErr) {
+    console.error('Backend login request failed:', fetchErr)
+    return { error: 'Unable to reach the server. Please try again later.' }
+  }
 
   return { data, role }
 }

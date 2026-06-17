@@ -18,6 +18,7 @@ export default function MyBookings() {
   const [bookings, setBookings] = useState([])
   const [filter, setFilter]     = useState('All')
   const [loading, setLoading]   = useState(true)
+  const [error, setError]       = useState('')
 
   useEffect(() => {
     if (!user) return
@@ -25,16 +26,17 @@ export default function MyBookings() {
       setLoading(true)
 
       // Step 1 — get patient by email
-      const { data: patient } = await supabase
+      const { data: patient, error: patientError } = await supabase
         .from('patients')
         .select('id')
         .eq('email', user.email)
         .maybeSingle()
 
+      if (patientError) { setError('Failed to load patient data.'); setLoading(false); return }
       if (!patient) { setLoading(false); return }
 
       // Step 2 — fetch appointments using patient_id
-      const { data } = await supabase
+      const { data, error: apptError } = await supabase
         .from('appointments')
         .select(`
           id,
@@ -47,6 +49,7 @@ export default function MyBookings() {
         .eq('patient_id', patient.id)
         .order('created_at', { ascending: false })
 
+      if (apptError) { setError('Failed to load appointments.'); setLoading(false); return }
       if (data) setBookings(data)
       setLoading(false)
     }
@@ -59,9 +62,11 @@ export default function MyBookings() {
       .update({ status: 'cancelled' })
       .eq('id', id)
 
-    if (!error) {
-      setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b))
+    if (error) {
+      setError('Failed to cancel appointment. Please try again.')
+      return
     }
+    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b))
   }
 
   const filtered = filter === 'All'
@@ -111,6 +116,11 @@ export default function MyBookings() {
             </button>
           ))}
         </div>
+
+        {/* Error */}
+        {error && (
+          <p style={{ color: '#ff6363', textAlign: 'center', margin: '12px 0', fontSize: 14 }}>{error}</p>
+        )}
 
         {/* Loading */}
         {loading ? (
