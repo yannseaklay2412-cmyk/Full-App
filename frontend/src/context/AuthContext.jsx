@@ -60,7 +60,8 @@ export function AuthProvider({ children }) {
 
   const role = await checkRole(data.user.email)
 
-  const res = await fetch('http://localhost:5000/api/auth/login', {
+  const apiBase = import.meta.env.VITE_API_BASE_URL || '/api'
+  const res = await fetch(`${apiBase}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password })

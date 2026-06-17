@@ -1,11 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Debug - remove after fix
-console.log('URL:', process.env.SUPABASE_URL);
-console.log('KEY:', process.env.SUPABASE_SERVICE_KEY);
-console.log('EMAIL:', process.env.ADMIN_EMAIL);
-console.log('PASSWORD:', process.env.ADMIN_PASSWORD);
-
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
