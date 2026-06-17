@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../config/supabaseClient'
 import './MyBookings.css'
+import Logo from '../../components/common/Logo'
+import { usePatientBookings } from '../../hooks/usePatientBookings'
 
 const STATUS_COLORS = {
   confirmed: { bg: 'rgba(78,205,196,0.12)', color: '#4ecdc4', border: '#4ecdc4' },
@@ -15,43 +17,8 @@ export default function MyBookings() {
   const navigate = useNavigate()
   const { user } = useAuth()
 
-  const [bookings, setBookings] = useState([])
-  const [filter, setFilter]     = useState('All')
-  const [loading, setLoading]   = useState(true)
-
-  useEffect(() => {
-    if (!user) return
-    const fetchBookings = async () => {
-      setLoading(true)
-
-      // Step 1 — get patient by email
-      const { data: patient } = await supabase
-        .from('patients')
-        .select('id')
-        .eq('email', user.email)
-        .maybeSingle()
-
-      if (!patient) { setLoading(false); return }
-
-      // Step 2 — fetch appointments using patient_id
-      const { data } = await supabase
-        .from('appointments')
-        .select(`
-          id,
-          status,
-          notes,
-          created_at,
-          dentists ( dentist_name, specialty ),
-          services:appointment_services ( services ( service_name, price ) )
-        `)
-        .eq('patient_id', patient.id)
-        .order('created_at', { ascending: false })
-
-      if (data) setBookings(data)
-      setLoading(false)
-    }
-    fetchBookings()
-  }, [user])
+  const { bookings, loading, updateLocalStatus } = usePatientBookings(user)
+  const [filter, setFilter] = useState('All')
 
   const handleCancel = async (id) => {
     const { error } = await supabase
@@ -59,9 +26,7 @@ export default function MyBookings() {
       .update({ status: 'cancelled' })
       .eq('id', id)
 
-    if (!error) {
-      setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b))
-    }
+    if (!error) updateLocalStatus(id, 'cancelled')
   }
 
   const filtered = filter === 'All'
@@ -74,13 +39,7 @@ export default function MyBookings() {
       {/* Topbar */}
       <div className="mb-topbar">
         <button className="mb-back" onClick={() => navigate('/dashboard')}>← Dashboard</button>
-        <div className="nav-logo">
-          <span className="logo-icon">🦷</span>
-          <div style={{ marginLeft: '15px', fontFamily: 'Poppins' }}>
-            <span style={{ color: '#1e1e1e' }}>Tooth</span>
-            <span style={{ color: '#2ec4b6' }}>Time</span>
-          </div>
-        </div>      
+        <Logo />      
       </div>
 
       <div className="mb-content">
