@@ -1,50 +1,14 @@
-import { supabase } from '../config/supabase.js'
+import { createRepository } from './baseRepository.js'
 
-export const getAll = async () => {
-  const { data, error } = await supabase
-    .from('services')
-    .select('id, service_name, description, price, duration_minutes')
-    .order('service_name')
-  if (error) throw error
-  return data
-}
+const selectFields = 'id, service_name, description, price, duration_minutes'
 
-export const getById = async (id) => {
-  const { data, error } = await supabase
-    .from('services')
-    .select('id, service_name, description, price, duration_minutes')
-    .eq('id', id)
-    .single()
-  if (error) throw error
-  return data
-}
+const base = createRepository('services', {
+  selectFields,
+  orderBy: 'service_name',
+})
 
-export const create = async (serviceData) => {
-  const { data, error } = await supabase
-    .from('services')
-    .insert(serviceData)
-    .select()
-    .single()
-  if (error) throw error
-  return data
-}
-
-export const update = async (id, updates) => {
-  const { data, error } = await supabase
-    .from('services')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single()
-  if (error) throw error
-  return data
-}
-
-export const remove = async (id) => {
-  const { error } = await supabase
-    .from('services')
-    .delete()
-    .eq('id', id)
-  if (error) throw error
-  return { message: 'Service deleted' }
-}
+export const getAll = base.getAll
+export const getById = base.getById
+export const create = base.create
+export const update = base.update
+export const remove = base.remove

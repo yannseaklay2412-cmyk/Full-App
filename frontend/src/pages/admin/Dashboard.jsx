@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Dashboard.css'
-import { DataStorage } from '../../seeders/data' // ✅ seeder import
+import { DataStorage } from '../../seeders/data'
+import { STATUS_COLORS, SIDEBAR_ITEMS } from '../../constants/admin'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -56,16 +57,7 @@ export default function AdminDashboard() {
   for (let i = 0; i < firstDay; i++) calendarDays.push(null)
   for (let d = 1; d <= daysInMonth; d++) calendarDays.push(d)
 
-  const statusColor = { pending: '#f5c842', confirmed: '#4ecdc4', cancelled: '#ff6b6b' }
 
-  const sidebarItems = [
-    { label: 'Dashboard',   path: '/admin'              },
-    { label: 'Schedule',    path: '/admin/schedule'     },
-    { label: 'Employees',   path: '/admin/dentists'     },
-    { label: 'Appointment', path: '/admin/appointments' },
-    { label: 'Record',      path: '/admin/users'        },
-    { label: 'Setting',     path: '/admin/reports'      },
-  ]
 
   return (
     <div className="ad-wrap">
@@ -82,7 +74,7 @@ export default function AdminDashboard() {
           <p className="ad-sidebar-sub">Home / Overview</p>
         </div>
         <nav className="ad-sidebar-nav">
-          {sidebarItems.map(item => (
+          {SIDEBAR_ITEMS.map(item => (
             <div key={item.path} className={`ad-nav-item ${window.location.pathname === item.path ? 'active' : ''}`} onClick={() => navigate(item.path)}>
               {item.label}
             </div>
@@ -157,7 +149,7 @@ export default function AdminDashboard() {
                       <p className="ad-appt-time">{b.date} · {b.time}</p>
                     </div>
                     <span className="ad-appt-type">{b.dentistTitle || 'Check Up'}</span>
-                    <span className="ad-appt-status" style={{ color: statusColor[b.status], borderColor: statusColor[b.status] }}>{b.status}</span>
+                    <span className="ad-appt-status" style={{ color: STATUS_COLORS[b.status], borderColor: STATUS_COLORS[b.status] }}>{b.status}</span>
                   </div>
                 ))}
               </div>
@@ -179,7 +171,7 @@ export default function AdminDashboard() {
                         <p style={{ fontSize: 13, fontWeight: 600, color: '#0d1b3e', marginBottom: 2 }}>{b.userName} booked with {b.dentistName}</p>
                         <p style={{ fontSize: 11, color: '#8a9fc4' }}>{b.date} · {b.time}</p>
                       </div>
-                      <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 99, border: `1px solid ${statusColor[b.status]}`, color: statusColor[b.status], fontWeight: 600, textTransform: 'capitalize', alignSelf: 'flex-start', flexShrink: 0 }}>
+                      <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 99, border: `1px solid ${STATUS_COLORS[b.status]}`, color: STATUS_COLORS[b.status], fontWeight: 600, textTransform: 'capitalize', alignSelf: 'flex-start', flexShrink: 0 }}>
                         {b.status}
                       </span>
                     </div>
@@ -226,12 +218,12 @@ export default function AdminDashboard() {
                 if (todayBookings.length === 0) return <div className="ad-empty">No appointments today</div>
                 return todayBookings.map(b => (
                   <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #f0f2f5' }}>
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: statusColor[b.status], flexShrink: 0 }}></div>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: STATUS_COLORS[b.status], flexShrink: 0 }}></div>
                     <div style={{ flex: 1 }}>
                       <p style={{ fontSize: 12, fontWeight: 600, color: '#0d1b3e' }}>{b.userName}</p>
                       <p style={{ fontSize: 11, color: '#8a9fc4' }}>{b.time}</p>
                     </div>
-                    <span style={{ fontSize: 10, color: statusColor[b.status], fontWeight: 600, textTransform: 'capitalize' }}>{b.status}</span>
+                    <span style={{ fontSize: 10, color: STATUS_COLORS[b.status], fontWeight: 600, textTransform: 'capitalize' }}>{b.status}</span>
                   </div>
                 ))
               })()}

@@ -1,50 +1,14 @@
-import { supabase } from '../config/supabase.js'
+import { createRepository } from './baseRepository.js'
 
-export const getAll = async () => {
-  const { data, error } = await supabase
-    .from('dentists')
-    .select('id, dentist_name, specialty, phone, background, age')
-    .order('dentist_name')
-  if (error) throw error
-  return data
-}
+const selectFields = 'id, dentist_name, specialty, phone, background, age'
 
-export const getById = async (id) => {
-  const { data, error } = await supabase
-    .from('dentists')
-    .select('*')
-    .eq('id', id)
-    .single()
-  if (error) throw error
-  return data
-}
+const base = createRepository('dentists', {
+  selectFields,
+  orderBy: 'dentist_name',
+})
 
-export const create = async (dentistData) => {
-  const { data, error } = await supabase
-    .from('dentists')
-    .insert(dentistData)
-    .select()
-    .single()
-  if (error) throw error
-  return data
-}
-
-export const update = async (id, updates) => {
-  const { data, error } = await supabase
-    .from('dentists')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single()
-  if (error) throw error
-  return data
-}
-
-export const remove = async (id) => {
-  const { error } = await supabase
-    .from('dentists')
-    .delete()
-    .eq('id', id)
-  if (error) throw error
-  return { message: 'Dentist deleted' }
-}
+export const getAll = base.getAll
+export const getById = base.getById
+export const create = base.create
+export const update = base.update
+export const remove = base.remove

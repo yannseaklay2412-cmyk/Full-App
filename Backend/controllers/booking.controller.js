@@ -1,44 +1,32 @@
 import * as bookingService from '../services/booking.service.js'
+import asyncHandler from '../utils/asyncHandler.js'
 
-export const getMyBookings = async (req, res, next) => {
-  try {
-    const data = await bookingService.getMyBookings(req.user.email)
-    res.status(200).json({ success: true, data })
-  } catch (err) { next(err) }
-}
+export const getMyBookings = asyncHandler(async (req, res) => {
+  const data = await bookingService.getMyBookings(req.user.email)
+  res.status(200).json({ success: true, data })
+})
 
-export const getBookingById = async (req, res, next) => {
-  try {
-    const data = await bookingService.getBookingById(req.params.id)
-    res.status(200).json({ success: true, data })
-  } catch (err) { next(err) }
-}
+export const getBookingById = asyncHandler(async (req, res) => {
+  const data = await bookingService.getBookingById(req.params.id)
+  res.status(200).json({ success: true, data })
+})
 
-export const createBooking = async (req, res, next) => {
-  try {
-    const data = await bookingService.createBooking(req.user.email, req.body)
-    res.status(201).json({ success: true, message: 'Booking created', data })
-  } catch (err) { next(err) }
-}
+export const createBooking = asyncHandler(async (req, res) => {
+  const data = await bookingService.createBooking(req.user.email, req.body)
+  res.status(201).json({ success: true, message: 'Booking created', data })
+})
 
-export const cancelBooking = async (req, res, next) => {
-  try {
-    const data = await bookingService.cancelBooking(req.params.id)
-    res.status(200).json({ success: true, message: 'Booking cancelled', data })
-  } catch (err) { next(err) }
-}
+export const cancelBooking = asyncHandler(async (req, res) => {
+  const data = await bookingService.cancelBooking(req.params.id)
+  res.status(200).json({ success: true, message: 'Booking cancelled', data })
+})
 
-// Admin
-export const getAllBookings = async (req, res, next) => {
-  try {
-    const data = await bookingService.getAllBookings(req.query)
-    res.status(200).json({ success: true, data })
-  } catch (err) { next(err) }
-}
+export const getAllBookings = asyncHandler(async (req, res) => {
+  const data = await bookingService.getAllBookings(req.query)
+  res.status(200).json({ success: true, data })
+})
 
-export const updateBookingStatus = async (req, res, next) => {
-  try {
-    const data = await bookingService.updateBookingStatus(req.params.id, req.body.status)
-    res.status(200).json({ success: true, message: `Booking marked as ${req.body.status}`, data })
-  } catch (err) { next(err) }
-}
+export const updateBookingStatus = asyncHandler(async (req, res) => {
+  const data = await bookingService.updateBookingStatus(req.params.id, req.body.status)
+  res.status(200).json({ success: true, message: `Booking marked as ${req.body.status}`, data })
+})

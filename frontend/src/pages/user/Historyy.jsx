@@ -1,59 +1,20 @@
-import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../../config/supabaseClient'
 import { useAuth } from '../../context/AuthContext'
 import './History.css'
+import Logo from '../../components/common/Logo'
+import { usePatientBookings } from '../../hooks/usePatientBookings'
 
 export default function History() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const [historyBookings, setHistoryBookings] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (!user) return
-    const fetchHistory = async () => {
-      setLoading(true)
-
-      // Step 1 — get patient id
-      const { data: patient } = await supabase
-        .from('patients')
-        .select('id')
-        .eq('email', user.email)
-        .maybeSingle()
-
-      if (!patient) { setLoading(false); return }
-
-      // Step 2 — fetch done appointments
-      const { data } = await supabase
-        .from('appointments')
-        .select(`
-          id, status, created_at,
-          dentists ( dentist_name ),
-          appointment_services ( services ( service_name, price ) )
-        `)
-        .eq('patient_id', patient.id)
-        .eq('status', 'done')
-        .order('created_at', { ascending: false })
-
-      if (data) setHistoryBookings(data)
-      setLoading(false)
-    }
-    fetchHistory()
-  }, [user])
+  const { bookings: historyBookings, loading } = usePatientBookings(user, { statusFilter: 'done' })
 
   return (
     <div className="history-page">
       {/* Topbar */}
       <div className="mb-topbar">
         <button className="mb-back" onClick={() => navigate('/dashboard')}>← Dashboard</button>
-        <div className="nav-logo">
-          <span className="logo-icon">🦷</span>
-          <div style={{ marginLeft: '15px', fontFamily: 'Poppins' }}>
-            <span style={{ color: '#1e1e1e' }}>Tooth</span>
-            <span style={{ color: '#2ec4b6' }}>Time</span>
-          </div>
-        </div>      
+        <Logo />      
       </div>
       <div className="history-content">
         <h2 className="history-title">📝 Appointment History</h2>

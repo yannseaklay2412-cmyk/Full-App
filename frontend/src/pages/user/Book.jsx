@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../config/supabaseClient'
 import './Book.css'
+import Logo from '../../components/common/Logo'
 
 const STEPS = ['Dentist', 'Service', 'Date & Time', 'Your Info', 'Confirm']
 
@@ -167,13 +168,7 @@ export default function Book() {
     <div className="book-page">
       <div className="book-topbar">
         <button className="book-back-btn" onClick={() => navigate('/dashboard')}>← Dashboard</button>
-        <div className="nav-logo">
-          <div className="logo-icon">🦷</div>
-          <div style={{ marginLeft: '15px', fontFamily: 'Poppins' }}>
-            <span style={{ color: '#1e1e1e' }}>Tooth</span>
-            <span style={{ color: '#2ec4b6' }}>Time</span>
-          </div>
-        </div>      
+        <Logo />      
         </div>
 
       <div className="book-content">
