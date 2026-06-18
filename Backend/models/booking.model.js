@@ -42,22 +42,25 @@ const create = async ({ user_id, service_id, timeslot_id, note }) => {
   if (error) throw error
 
   // 2. Mark slot as booked
-  await supabase.from('time_slots').update({ status: 'booked' }).eq('id', timeslot_id)
+  const { error: slotError } = await supabase.from('time_slots').update({ status: 'booked' }).eq('id', timeslot_id)
+  if (slotError) throw slotError
 
   // 3. Send notification
-  await supabase.from('notifications').insert([{
+  const { error: notifError } = await supabase.from('notifications').insert([{
     user_id,
     booking_id: booking.id,
     title: 'Booking Received',
     message: 'Your appointment request has been received and is pending confirmation.'
   }])
+  if (notifError) console.error('Failed to send booking notification:', notifError)
 
   return booking
 }
 
 const cancel = async (bookingId) => {
-  const { data: booking } = await supabase
+  const { data: booking, error: fetchError } = await supabase
     .from('bookings').select('timeslot_id, user_id').eq('id', bookingId).single()
+  if (fetchError) throw fetchError
 
   const { data, error } = await supabase
     .from('bookings')
@@ -66,21 +69,26 @@ const cancel = async (bookingId) => {
   if (error) throw error
 
   // Free timeslot + notify
-  await supabase.from('time_slots').update({ status: 'available' }).eq('id', booking.timeslot_id)
-  await supabase.from('notifications').insert([{
+  const { error: slotError } = await supabase.from('time_slots').update({ status: 'available' }).eq('id', booking.timeslot_id)
+  if (slotError) throw slotError
+
+  const { error: notifError } = await supabase.from('notifications').insert([{
     user_id: booking.user_id, booking_id: bookingId,
     title: 'Booking Cancelled', message: 'Your appointment has been cancelled.'
   }])
+  if (notifError) console.error('Failed to send cancel notification:', notifError)
 
   return data
 }
 
 const reschedule = async (bookingId, newTimeslotId) => {
-  const { data: booking } = await supabase
+  const { data: booking, error: fetchError } = await supabase
     .from('bookings').select('timeslot_id, user_id').eq('id', bookingId).single()
+  if (fetchError) throw fetchError
 
   // Free old slot
-  await supabase.from('time_slots').update({ status: 'available' }).eq('id', booking.timeslot_id)
+  const { error: freeError } = await supabase.from('time_slots').update({ status: 'available' }).eq('id', booking.timeslot_id)
+  if (freeError) throw freeError
 
   const { data, error } = await supabase
     .from('bookings')
@@ -89,18 +97,22 @@ const reschedule = async (bookingId, newTimeslotId) => {
   if (error) throw error
 
   // Book new slot + notify
-  await supabase.from('time_slots').update({ status: 'booked' }).eq('id', newTimeslotId)
-  await supabase.from('notifications').insert([{
+  const { error: bookError } = await supabase.from('time_slots').update({ status: 'booked' }).eq('id', newTimeslotId)
+  if (bookError) throw bookError
+
+  const { error: notifError } = await supabase.from('notifications').insert([{
     user_id: booking.user_id, booking_id: bookingId,
     title: 'Booking Rescheduled', message: 'Your appointment has been rescheduled.'
   }])
+  if (notifError) console.error('Failed to send reschedule notification:', notifError)
 
   return data
 }
 
 const updateStatus = async (bookingId, status) => {
-  const { data: booking } = await supabase
+  const { data: booking, error: fetchError } = await supabase
     .from('bookings').select('user_id').eq('id', bookingId).single()
+  if (fetchError) throw fetchError
 
   const { data, error } = await supabase
     .from('bookings').update({ status }).eq('id', bookingId).select().single()
@@ -112,11 +124,12 @@ const updateStatus = async (bookingId, status) => {
     done: 'Your appointment is complete. Thank you for visiting ToothTime!'
   }
   if (messages[status]) {
-    await supabase.from('notifications').insert([{
+    const { error: notifError } = await supabase.from('notifications').insert([{
       user_id: booking.user_id, booking_id: bookingId,
       title: `Booking ${status.charAt(0).toUpperCase() + status.slice(1)}`,
       message: messages[status]
     }])
+    if (notifError) console.error('Failed to send status notification:', notifError)
   }
   return data
 }

@@ -9,6 +9,7 @@ export default function History() {
   const { user } = useAuth()
   const [historyBookings, setHistoryBookings] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError]     = useState('')
 
   useEffect(() => {
     if (!user) return
@@ -16,16 +17,17 @@ export default function History() {
       setLoading(true)
 
       // Step 1 — get patient id
-      const { data: patient } = await supabase
+      const { data: patient, error: patientErr } = await supabase
         .from('patients')
         .select('id')
         .eq('email', user.email)
         .maybeSingle()
 
+      if (patientErr) { setError('Failed to load patient data.'); setLoading(false); return }
       if (!patient) { setLoading(false); return }
 
       // Step 2 — fetch done appointments
-      const { data } = await supabase
+      const { data, error: histErr } = await supabase
         .from('appointments')
         .select(`
           id, status, created_at,
@@ -36,6 +38,7 @@ export default function History() {
         .eq('status', 'done')
         .order('created_at', { ascending: false })
 
+      if (histErr) { setError('Failed to load appointment history.'); setLoading(false); return }
       if (data) setHistoryBookings(data)
       setLoading(false)
     }
@@ -57,6 +60,10 @@ export default function History() {
       </div>
       <div className="history-content">
         <h2 className="history-title">📝 Appointment History</h2>
+
+        {error && (
+          <p style={{ color: '#ff6363', textAlign: 'center', margin: '12px 0', fontSize: 14 }}>{error}</p>
+        )}
 
         {loading ? (
           <p>Loading...</p>

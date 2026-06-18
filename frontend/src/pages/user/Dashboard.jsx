@@ -11,23 +11,25 @@ export default function Dashboard() {
   const [userName,        setUserName]        = useState('')
   const [bookings,        setBookings]        = useState([])
   const [historyBookings, setHistoryBookings] = useState([])
+  const [error,           setError]           = useState('')
 
   useEffect(() => {
     if (!user) return
     const fetchData = async () => {
 
       // 1. Get patient name + id
-      const { data: patient } = await supabase
+      const { data: patient, error: patientErr } = await supabase
         .from('patients')
         .select('id, full_name')
         .eq('email', user.email)
         .maybeSingle()
 
+      if (patientErr) { setError('Failed to load profile.'); return }
       if (!patient) return
       setUserName(patient.full_name)
 
       // 2. Fetch all appointments
-      const { data: apptData } = await supabase
+      const { data: apptData, error: apptErr } = await supabase
         .from('appointments')
         .select(`
           id, status, notes, created_at,
@@ -37,10 +39,11 @@ export default function Dashboard() {
         .eq('patient_id', patient.id)
         .order('created_at', { ascending: false })
 
+      if (apptErr) { setError('Failed to load appointments.'); return }
       if (apptData) setBookings(apptData)
 
       // 3. Fetch history (done only, last 2)
-      const { data: historyData } = await supabase
+      const { data: historyData, error: histErr } = await supabase
         .from('appointments')
         .select(`
           id, status, created_at,
@@ -52,6 +55,7 @@ export default function Dashboard() {
         .order('created_at', { ascending: false })
         .limit(2)
 
+      if (histErr) console.error('Failed to load history:', histErr)
       if (historyData) setHistoryBookings(historyData)
     }
     fetchData()
@@ -70,9 +74,11 @@ export default function Dashboard() {
       .from('appointments')
       .update({ status: 'cancelled' })
       .eq('id', id)
-    if (!error) {
-      setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b))
+    if (error) {
+      setError('Failed to cancel appointment.')
+      return
     }
+    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b))
   }
 
   return (
@@ -95,6 +101,10 @@ export default function Dashboard() {
       </div>
 
       <div className="dash-content">
+
+        {error && (
+          <p style={{ color: '#ff6363', textAlign: 'center', margin: '12px 0', fontSize: 14 }}>{error}</p>
+        )}
 
         {/* Welcome Banner */}
         <div className="dash-banner">

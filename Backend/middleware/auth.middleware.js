@@ -17,24 +17,28 @@ export const protect = async (req, res, next) => {
 }
 
 export const adminOnly = async (req, res, next) => {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('profiles')
     .select('role')
     .eq('email', req.user.email)
     .maybeSingle()
 
+  if (error)
+    return res.status(500).json({ success: false, message: 'Failed to verify role' })
   if (data?.role !== 'admin')
     return res.status(403).json({ success: false, message: 'Admin access required' })
   next()
 }
 
 export const patientOnly = async (req, res, next) => {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('profiles')
     .select('role')
     .eq('email', req.user.email)
     .maybeSingle()
 
+  if (error)
+    return res.status(500).json({ success: false, message: 'Failed to verify role' })
   if (data?.role !== 'patient')
     return res.status(403).json({ success: false, message: 'Patient access required' })
   next()
