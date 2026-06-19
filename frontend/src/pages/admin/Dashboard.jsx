@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import './Dashboard.css'
-import { DataStorage } from '../../seeders/data' // ✅ seeder import
-
+import './Dashboard.css' 
+import { DataStorage } from '../../seeders/data' 
 export default function AdminDashboard() {
   const navigate = useNavigate()
   const [stats, setStats]       = useState({ users: 0, total: 0, pending: 0, confirmed: 0, cancelled: 0 })
@@ -10,6 +9,7 @@ export default function AdminDashboard() {
   const [dentists, setDentists] = useState([])
   const [bookings, setBookings] = useState([])
   const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [selectedDentist, setSelectedDentist] = useState(null)
 
   useEffect(() => {
     const users = JSON.parse(localStorage.getItem('users')    || '[]')
@@ -17,14 +17,13 @@ export default function AdminDashboard() {
     const dents = JSON.parse(localStorage.getItem('dentists') || '[]')
 
     if (dents.length === 0) {
-      // ✅ use seeder instead of hardcoded defaults
+    
       const defaults = DataStorage.dentists
       localStorage.setItem('dentists', JSON.stringify(defaults))
       setDentists(defaults)
     } else {
       setDentists(dents)
     }
-
     setBookings(bks)
     setStats({
       users:     users.length,
@@ -35,12 +34,11 @@ export default function AdminDashboard() {
     })
 
     const today = new Date().toISOString().split('T')[0]
-    setUpcoming(
-      [...bks]
-        .filter(b => b.date >= today && b.status !== 'cancelled')
-        .sort((a, b) => a.date.localeCompare(b.date))
-        .slice(0, 4)
-    )
+setUpcoming(
+  [...bks]
+    .filter(b => b.date === today && b.status !== 'cancelled')
+    .sort((a, b) => a.time.localeCompare(b.time))
+)
   }, [])
 
   const year        = currentMonth.getFullYear()
@@ -64,8 +62,18 @@ export default function AdminDashboard() {
     { label: 'Employees',   path: '/admin/dentists'     },
     { label: 'Appointment', path: '/admin/appointments' },
     { label: 'Record',      path: '/admin/users'        },
-    { label: 'Setting',     path: '/admin/reports'      },
+    { label: 'Setting',     path: '/admin/AdminSetting'      },
   ]
+
+  const dentistAppointments = selectedDentist
+    ? bookings.filter(b => b.dentistId === selectedDentist.id)
+    : []
+
+  const sortedDentists = [...dentists].sort((a, b) => {
+    const countA = bookings.filter(bk => bk.dentistId === a.id).length
+    const countB = bookings.filter(bk => bk.dentistId === b.id).length
+    return countB - countA
+  })
 
   return (
     <div className="ad-wrap">
@@ -139,12 +147,12 @@ export default function AdminDashboard() {
           <div className="ad-col-left">
             <div className="ad-card">
               <div className="ad-card-header">
-                <h3>Upcoming Appointments</h3>
+                <h3>Today Appointments</h3>
                 <span className="ad-view-all" onClick={() => navigate('/admin/appointments')}>View All</span>
               </div>
               <div className="ad-appt-list">
                 {upcoming.length === 0 ? (
-                  <div className="ad-empty">No upcoming appointments</div>
+                  <div className="ad-empty">Today appointments</div>
                 ) : upcoming.map(b => (
                   <div key={b.id} className="ad-appt-row">
                     <div className="ad-appt-avatar">
@@ -196,9 +204,14 @@ export default function AdminDashboard() {
                 <h3>Employees</h3>
                 <span className="ad-view-all" onClick={() => navigate('/admin/dentists')}>View All</span>
               </div>
-              <div className="ad-emp-list">
-                {dentists.slice(0, 3).map((d, i) => (
-                  <div key={d.id} className={`ad-emp-card ${i % 2 === 0 ? 'dark' : 'light'}`}>
+              <div className="ad-emp-list" style={{ maxHeight: 420, overflowY: 'auto' }}>
+                {sortedDentists.map((d, i) => (
+                  <div
+                    key={d.id}
+                    className={`ad-emp-card ${i % 2 === 0 ? 'dark' : 'light'}`}
+                    onClick={() => setSelectedDentist(d)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <div className="ad-emp-avatar">
                       {d.photo ? (
                         <img src={d.photo} alt={d.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 10 }} />
@@ -209,36 +222,87 @@ export default function AdminDashboard() {
                       )}
                     </div>
                     <div className="ad-emp-info">
-                      <p className="ad-emp-name">{d.name}</p>
-                      <p className="ad-emp-title">{d.title}</p>
-                      <p className="ad-emp-desc">{d.exp}</p>
-                    </div>
+                        <p className="ad-emp-name">{d.name}</p>
+                        <p className="ad-emp-title">{d.title}</p>
+                        <p className="ad-emp-desc">
+                          {bookings.filter(b => b.dentistId === d.id).length} appointments
+                        </p>
+                      </div>
                   </div>
                 ))}
               </div>
             </div>
-
-            <div className="ad-card" style={{ marginTop: 20 }}>
-              <div className="ad-card-header"><h3>Today</h3></div>
-              {(() => {
-                const today = new Date().toISOString().split('T')[0]
-                const todayBookings = bookings.filter(b => b.date === today)
-                if (todayBookings.length === 0) return <div className="ad-empty">No appointments today</div>
-                return todayBookings.map(b => (
-                  <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #f0f2f5' }}>
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: statusColor[b.status], flexShrink: 0 }}></div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: 12, fontWeight: 600, color: '#0d1b3e' }}>{b.userName}</p>
-                      <p style={{ fontSize: 11, color: '#8a9fc4' }}>{b.time}</p>
-                    </div>
-                    <span style={{ fontSize: 10, color: statusColor[b.status], fontWeight: 600, textTransform: 'capitalize' }}>{b.status}</span>
-                  </div>
-                ))
-              })()}
-            </div>
           </div>
         </div>
       </div>
+
+      {/* ── DOCTOR APPOINTMENTS MODAL ── */}
+      {selectedDentist && (
+        <div
+          onClick={() => setSelectedDentist(null)}
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(13,27,62,0.45)', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: '#fff', borderRadius: 14, width: '100%', maxWidth: 480,
+              maxHeight: '80vh', display: 'flex', flexDirection: 'column',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.2)', overflow: 'hidden'
+            }}
+          >
+            <div style={{ padding: '18px 22px', borderBottom: '1px solid #f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0d1b3e', marginBottom: 2 }}>{selectedDentist.name}</h3>
+                <p style={{ fontSize: 12, color: '#8a9fc4' }}>{selectedDentist.title}</p>
+              </div>
+              <button
+                onClick={() => setSelectedDentist(null)}
+                style={{ background: '#f5f6fa', border: 'none', borderRadius: 8, width: 30, height: 30, cursor: 'pointer', fontSize: 16, color: '#8a9fc4' }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div style={{ padding: '12px 22px', overflow: 'auto', flex: 1 }}>
+              {dentistAppointments.length === 0 ? (
+                <div style={{ padding: '32px 0', textAlign: 'center', color: '#8a9fc4', fontSize: 13 }}>
+                  No appointments for this doctor yet
+                </div>
+              ) : (
+                [...dentistAppointments]
+                  .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
+                  .map((b, i, arr) => (
+                    <div
+                      key={b.id}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '12px 0', borderBottom: i < arr.length - 1 ? '1px solid #f0f2f5' : 'none'
+                      }}
+                    >
+                      <div>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: '#0d1b3e', marginBottom: 2 }}>{b.userName}</p>
+                        <p style={{ fontSize: 11, color: '#8a9fc4' }}>{b.date} · {b.time}</p>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: 11, padding: '3px 10px', borderRadius: 99,
+                          border: `1px solid ${statusColor[b.status] || '#8a9fc4'}`,
+                          color: statusColor[b.status] || '#8a9fc4', fontWeight: 600, textTransform: 'capitalize'
+                        }}
+                      >
+                        {b.status}
+                      </span>
+                    </div>
+                  ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

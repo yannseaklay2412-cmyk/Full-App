@@ -23,7 +23,6 @@ export default function Appointments() {
     setBookings(updated)
   }
 
-  // ✅ FIX: All status checks now use Capital letters
   const filtered = bookings
     .filter(b => filter === 'All' || b.status === filter)
     .filter(b =>
@@ -45,15 +44,13 @@ export default function Appointments() {
     { label: 'Record',      path: '/admin/users'        },
     { label: 'Setting',     path: '/admin/reports'      },
   ]
-
-  // ✅ FIX: Stats now use Capital letters
   const stats = {
     total:     bookings.length,
     pending:   bookings.filter(b => b.status === 'Pending').length,
     confirmed: bookings.filter(b => b.status === 'Confirmed').length,
     cancelled: bookings.filter(b => b.status === 'Cancelled').length,
   }
-
+  
   return (
     <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'DM Sans', sans-serif", background: '#f0f2f5' }}>
 

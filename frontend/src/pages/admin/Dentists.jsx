@@ -265,23 +265,23 @@ export default function Dentists() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <div>
                       <label style={labelStyle}>Full Name *</label>
-                      <input value={dentistForm.dentist_name} onChange={e => setDentistForm({ ...dentistForm, dentist_name: e.target.value })} placeholder="Dr. John Smith" style={inputStyle} />
+                      <input required value={dentistForm.dentist_name} onChange={e => setDentistForm({ ...dentistForm, dentist_name: e.target.value })} placeholder="Dr. John Smith" style={inputStyle} />
                     </div>
                     <div>
                       <label style={labelStyle}>Specialty *</label>
-                      <input value={dentistForm.specialty} onChange={e => setDentistForm({ ...dentistForm, specialty: e.target.value })} placeholder="Orthodontist" style={inputStyle} />
+                      <input required value={dentistForm.specialty} onChange={e => setDentistForm({ ...dentistForm, specialty: e.target.value })} placeholder="Orthodontist" style={inputStyle} />
                     </div>
                     <div>
                       <label style={labelStyle}>Phone</label>
-                      <input value={dentistForm.phone} onChange={e => setDentistForm({ ...dentistForm, phone: e.target.value })} placeholder="+855 12 345 678" style={inputStyle} />
+                      <input required value={dentistForm.phone} onChange={e => setDentistForm({ ...dentistForm, phone: e.target.value })} placeholder="+855 12 345 678" style={inputStyle} />
                     </div>
                     <div>
                       <label style={labelStyle}>Telegram</label>
-                      <input value={dentistForm.telegram} onChange={e => setDentistForm({ ...dentistForm, telegram: e.target.value })} placeholder="@username" style={inputStyle} />
+                      <input required value={dentistForm.telegram} onChange={e => setDentistForm({ ...dentistForm, telegram: e.target.value })} placeholder="@username" style={inputStyle} />
                     </div>
                     <div>
                       <label style={labelStyle}>Age</label>
-                      <input type="number" value={dentistForm.age} onChange={e => setDentistForm({ ...dentistForm, age: e.target.value })} placeholder="35" style={inputStyle} />
+                      <input required type="number" value={dentistForm.age} onChange={e => setDentistForm({ ...dentistForm, age: e.target.value })} placeholder="35" style={inputStyle} />
                     </div>
                     <div style={{ gridColumn: '1 / -1' }}>
                       <label style={labelStyle}>Background / About</label>
