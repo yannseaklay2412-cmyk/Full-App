@@ -1,26 +1,47 @@
-import * as patientRepo from '../repositories/patient.repository.js'
+import * as patientRepository from '../repositories/patient.repository.js'
 
 export const getMyProfile = async (email) => {
-  const patient = await patientRepo.getByEmail(email)
-  if (!patient) throw { status: 404, message: 'Patient not found' }
-  return patient
+  const result = await patientRepository.findByEmail(email)
+  if (!result) {
+    const err = new Error('Patient not found')
+    err.status = 404
+    throw err
+  }
+  return result
 }
 
+export const updateProfile = async (email, body) => {
+  const result = await patientRepository.updateByEmail(email, body)
+  if (!result) {
+    const err = new Error('Patient not found')
+    err.status = 404
+    throw err
+  }
+  return result
+}
+
+// ── Admin ─────────────────────────────────────────────────────────────────
+
 export const getAllPatients = async () => {
-  return patientRepo.getAll()
+  return await patientRepository.findAll()
 }
 
 export const getPatientById = async (id) => {
-  const patient = await patientRepo.getById(id)
-  if (!patient) throw { status: 404, message: 'Patient not found' }
+  const patient = await patientRepository.findById(id)
+  if (!patient) {
+    const err = new Error('Patient not found')
+    err.status = 404
+    throw err
+  }
   return patient
 }
 
-export const updateProfile = async (email, updates) => {
-  const patient = await patientRepo.getByEmail(email)
-  if (!patient) throw { status: 404, message: 'Patient not found' }
-
-  // Prevent updating email or id
-  const { id, email: _email, ...safeUpdates } = updates
-  return patientRepo.update(patient.id, safeUpdates)
+export const banPatient = async (id) => {
+  const existing = await patientRepository.findById(id)
+  if (!existing) {
+    const err = new Error('Patient not found')
+    err.status = 404
+    throw err
+  }
+  return await patientRepository.banById(id)
 }

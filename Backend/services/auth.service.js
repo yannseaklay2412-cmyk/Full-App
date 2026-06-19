@@ -38,6 +38,10 @@ export const register = async ({ full_name, email, phone, sex, password }) => {
 }
 
 export const login = async ({ email, password }) => {
+  const patient = await patientRepo.findByEmail(email)
+  if(patient?.is_banned){
+    throw{ status : 403,message:'Your account has been banned'}
+  }
   if (!email || !password)
     throw { status: 400, message: 'Email and password are required' }
 
