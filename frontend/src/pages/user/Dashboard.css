@@ -193,8 +193,8 @@
 }
 
 .dash-stat-card.confirmed {
-  background: #f0faf9;
-  border-color: #10d4c1;
+  background: #cdf9f4;
+  border-color: #0aa999;
 }
 
 .dash-stat-card.pending {
@@ -208,7 +208,7 @@
 }
 
 .dash-stat-card.total {
-  background: #f5f7fa;
+  background: #cfd5dd;
   border-color: #0e0e0f;
 }
 

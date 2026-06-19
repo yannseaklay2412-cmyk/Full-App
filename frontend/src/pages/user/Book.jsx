@@ -42,10 +42,15 @@ export default function Book() {
 
   useEffect(() => {
     const fetchServices = async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('services')
-        .select('id, service_name, description, price, duration_minutes, icon')
-        .eq('is_active', true)
+        // .select('id, service_name, description, price,duration_minutes')
+        .select('*')
+        // .eq('is_active', true)
+        // .order('id')
+      console.log('services data:', data)
+      console.log('services error:', error)
+      // if (error) { console.error(error); return }
       if (data) setServices(data)
     }
     fetchServices()

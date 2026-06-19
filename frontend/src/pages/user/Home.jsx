@@ -14,14 +14,14 @@ import service6 from '../../assets/images/service6.jpg'
 import mapBg from '../../assets/images/map.jpg'
 
 
-const services = [
-  { name: 'Tooth Decay Treatment', desc: 'Fluoride treatments, Fillings, Crowns, Root canals, Tooth extractions.', img: service1 },
-  { name: 'Periodontal Disease',   desc: 'Clean out bacteria and prevent bone & tissue destruction.', img: service2 },
-  { name: 'Pediatric Dentistry',   desc: 'Special care for children, making first visits comfortable.', img: service3 },
-  { name: 'Preventive Dentistry',  desc: 'Keep teeth healthy and avoid cavities, gum disease, enamel wear.', img: service4 },
-  { name: 'Dental Whitening',      desc: 'Safe, painless whitening for outstanding results.', img: service5 },
-  { name: 'Dental Implants',       desc: 'Artificial tooth root surgically placed to secure replacement teeth.', img: service6 },
-]
+// const services = [
+//   { name: 'Tooth Decay Treatment', desc: 'Fluoride treatments, Fillings, Crowns, Root canals, Tooth extractions.', img: service1 },
+//   { name: 'Periodontal Disease',   desc: 'Clean out bacteria and prevent bone & tissue destruction.', img: service2 },
+//   { name: 'Pediatric Dentistry',   desc: 'Special care for children, making first visits comfortable.', img: service3 },
+//   { name: 'Preventive Dentistry',  desc: 'Keep teeth healthy and avoid cavities, gum disease, enamel wear.', img: service4 },
+//   { name: 'Dental Whitening',      desc: 'Safe, painless whitening for outstanding results.', img: service5 },
+//   { name: 'Dental Implants',       desc: 'Artificial tooth root surgically placed to secure replacement teeth.', img: service6 },
+// ]
 
 export default function Home() {
   const navigate = useNavigate()
@@ -29,6 +29,7 @@ export default function Home() {
   const [active, setActive] = useState('home')
   const [menuOpen, setMenuOpen] = useState(false)
   const [specialists, setSpecialists] = useState([])
+  const [services, setServices] = useState([])
   const [loading, setLoading] = useState(true)
 
   // Fetch dentists from Supabase
@@ -47,6 +48,22 @@ export default function Home() {
     }
 
     fetchDentists()
+  }, [])
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      const { data, error } = await supabase
+        .from('services')
+        // .select('id, service_name, description, price,duration_minutes')
+        .select('*')
+        // .eq('is_active', true)
+        // .order('id')
+      console.log('services data:', data)
+      console.log('services error:', error)
+      // if (error) { console.error(error); return }
+      if (data) setServices(data)
+    }
+    fetchServices()
   }, [])
 
   const scrollToSection = (id) => {
@@ -211,20 +228,25 @@ export default function Home() {
         )}
       </section>
 
-    
+      {/* SERVICES */}
       <section className="services" id="services">
         <h2 className="section-title">Our <span className="highlight">Services</span></h2>
-        <p className="section-sub">Expert treatments for every patient, from preventive care to smile transformations.</p>
+        <p className="section-sub">Expert treatments for every patient.</p>
         <div className="services-grid">
           {services.map((s, i) => (
-            <div className="service-card" key={i}>
-              <div className="service-img-bg" style={{ backgroundImage: `url(${s.img})` }}></div>
-              <div className="service-hover-overlay"></div>
+            <div className="service-card" key={s.id}>
+              <div
+                className="service-img-bg"
+                style={{ backgroundImage: `url(${[service1,service2,service3,service4,service5,service6][i] || service1})` }}
+              />
+              <div className="service-hover-overlay" />
               <div className="service-content">
+                {/* <div className="service-icon-wrap">{s.icon || '👩‍⚕️'}</div> */}
                 <div className="service-icon-wrap">👩‍⚕️</div>
-                <div className="service-divider"></div>
-                <h3 className="service-name">{s.name}</h3>
-                <p className="service-desc">{s.desc}</p>
+                
+                <div className="service-divider" />
+                <h3 className="service-name">{s.service_name}</h3>  {/* ✅ was s.name */}
+                <p className="service-desc">{s.description}</p>      {/* ✅ was s.desc */}
               </div>
             </div>
           ))}
