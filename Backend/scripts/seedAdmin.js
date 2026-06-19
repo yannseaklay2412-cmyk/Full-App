@@ -17,7 +17,7 @@ const { data, error } = await supabase.auth.signUp({
 });
 
 if (error) {
-  console.error('❌ Error creating admin auth user:', error.message);
+  console.error(' Error creating admin auth user:', error.message);
 } else {
   const { error: insertError } = await supabase
     .from('admin')

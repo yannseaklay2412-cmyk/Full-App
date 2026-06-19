@@ -1,0 +1,245 @@
+.as-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'DM Sans', sans-serif;
+  padding: 24px;
+  background: #7c5cbf;
+  position: relative;
+  overflow: hidden;
+}
+
+.as-blob1 {
+  position: absolute;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  background: #9b7dd4;
+  top: -80px;
+  left: -80px;
+  opacity: 0.5;
+}
+
+.as-blob2 {
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: #5a3fa0;
+  bottom: -60px;
+  right: -60px;
+  opacity: 0.5;
+}
+
+.as-card {
+  background: linear-gradient(145deg, #f3eeff 0%, #ece4ff 60%, #e0d4fc 100%);
+  border-radius: 28px;
+  width: 100%;
+  max-width: 400px;
+  padding: 36px 32px;
+  box-shadow: 0 16px 48px rgba(40, 20, 100, 0.25);
+  position: relative;
+  z-index: 1;
+  border: 1.5px solid rgba(180, 150, 255, 0.3);
+}
+
+.as-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.as-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #7c5cbf;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 22px;
+}
+
+.as-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #2a1a5e;
+  margin-bottom: 2px;
+}
+
+.as-subtitle {
+  font-size: 12px;
+  color: #9b8ec4;
+}
+
+.as-message {
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+
+.as-message-error {
+  background: rgba(220, 53, 69, 0.08);
+  border: 1px solid rgba(220, 53, 69, 0.25);
+  color: #c0392b;
+}
+
+.as-message-success {
+  background: rgba(108, 92, 231, 0.1);
+  border: 1px solid rgba(108, 92, 231, 0.3);
+  color: #6c5ce7;
+}
+
+.as-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.as-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+
+.as-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #5a3fa0;
+  transition: color 0.2s;
+}
+
+.as-field:focus-within .as-label {
+  color: #7c5cbf;
+}
+
+.as-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.as-icon {
+  position: absolute;
+  left: 14px;
+  font-size: 17px;
+  color: #b0a0d8;
+  transition: color 0.2s;
+  pointer-events: none;
+}
+
+.as-field:focus-within .as-icon {
+  color: #7c5cbf;
+}
+
+.as-input {
+  width: 100%;
+  border: 2px solid rgba(180, 150, 255, 0.35);
+  border-radius: 14px;
+  padding: 12px 14px 12px 42px;
+  font-size: 14px;
+  color: #2a1a5e;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  background: rgba(255, 255, 255, 0.7);
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s, transform 0.15s;
+}
+
+.as-input:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(124, 92, 191, 0.5);
+}
+
+.as-input:focus {
+  border-color: #7c5cbf;
+  background: #fff;
+  box-shadow: 0 4px 18px rgba(124, 92, 191, 0.18), 0 0 0 3px rgba(124, 92, 191, 0.10);
+  transform: translateY(-2px);
+}
+
+.as-input::placeholder {
+  color: #c0b0e0;
+}
+
+.as-hint {
+  font-size: 11px;
+  color: #9b8ec4;
+  padding-left: 4px;
+}
+
+.as-divider {
+  height: 1px;
+  background: rgba(124, 92, 191, 0.15);
+  margin: 4px 0;
+}
+
+.as-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.as-btn {
+  border: none;
+  border-radius: 14px;
+  padding: 11px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.15s;
+}
+
+.as-btn:active {
+  transform: scale(0.97);
+}
+
+.as-btn-secondary {
+  background: rgba(255, 255, 255, 0.6);
+  color: #7c5cbf;
+  border: 1.5px solid rgba(124, 92, 191, 0.25);
+}
+
+.as-btn-secondary:hover {
+  background: #fff;
+}
+
+.as-btn-primary {
+  background: #7c5cbf;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(124, 92, 191, 0.35);
+}
+
+.as-btn-primary:hover {
+  background: #6a4db0;
+  box-shadow: 0 6px 20px rgba(124, 92, 191, 0.45);
+  transform: translateY(-1px);
+}
+.as-forgot {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: #7c5cbf;
+  cursor: pointer;
+  padding: 2px 0;
+  text-align: left;
+  font-family: 'DM Sans', sans-serif;
+  text-decoration: underline;
+  margin-top: 2px;
+}
+
+.as-forgot:hover {
+  color: #5a3fa0;
+}
+
+.as-forgot:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

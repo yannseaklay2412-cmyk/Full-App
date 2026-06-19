@@ -30,9 +30,9 @@ export const getPatientById = async (req, res, next) => {
   } catch (err) { next(err) }
 }
 
-export const deletePatient = async (req, res, next) => {
+export const banPatient = async (req, res, next) => {
   try {
-    await patientService.deletePatient(req.params.id)
-    res.status(200).json({ success: true, message: 'Patient deleted successfully' })
+    await patientService.banPatient(req.params.id)
+    res.status(200).json({ success: true, message: 'Patient banned successfully' })
   } catch (err) { next(err) }
 }

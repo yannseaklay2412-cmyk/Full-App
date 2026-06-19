@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import morgan from 'morgan'
 import { notFound, errorHandler } from './middleware/error.middleware.js'
+import patientRoutes from './routes/patient.routes.js'
 
 import authRoutes     from './routes/auth.routes.js'
 import userRoutes     from './routes/user.routes.js'
@@ -25,6 +26,7 @@ app.get('/health', (req, res) => {
 
 // ── API Routes ────────────────────────────────────────────
 app.use('/api/auth',      authRoutes)
+app.use('/api/patients', patientRoutes)
 app.use('/api/users',     userRoutes)
 app.use('/api/bookings',  bookingRoutes)
 app.use('/api/dentists',  dentistRoutes)
