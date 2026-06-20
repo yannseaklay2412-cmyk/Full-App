@@ -58,9 +58,6 @@ export default function Home() {
         .select('*')
         // .eq('is_active', true)
         // .order('id')
-      console.log('services data:', data)
-      console.log('services error:', error)
-      // if (error) { console.error(error); return }
       if (data) setServices(data)
     }
     fetchServices()
@@ -210,18 +207,47 @@ export default function Home() {
         ) : (
           <div className="cards-grid">
             {specialists.map((s) => (
-              <div className="specialist-card" key={s.id}>
-                <img
-                  src={s.photo || 'https://via.placeholder.com/300x200?text=Dentist'}
-                  alt={s.dentist_name}
-                  className="img"
-                />
-                <h3 className="card-name">{s.dentist_name}</h3>
-                <p className="card-title">{s.specialty}</p>
-                <p className="card-desc">{s.phone}</p>
-                <button className="btn-view" onClick={() => navigate(`/doctor/${s.id}`)}>
-                  View
-                </button>
+              <div
+                key={s.id}
+                className="specialist-card"
+                style={{ padding: 0, textAlign: 'left', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+              >
+                {/* Large photo area */}
+                <div style={{ position: 'relative', height: 260, overflow: 'hidden', flexShrink: 0, background: '#c1f6ee' }}>
+                  <img
+                    src={s.image_path
+                      ? supabase.storage.from('file_image').getPublicUrl(s.image_path).data.publicUrl
+                      : 'https://placehold.co/300x400?text=Dr'}
+                    alt={s.dentist_name}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
+                  />
+                  {/* Gradient overlay */}
+                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 100, background: 'linear-gradient(to top, rgba(0,0,0,0.65), transparent)' }} />
+                  {/* Specialty badge */}
+                  {s.specialty && (
+                    <span style={{ position: 'absolute', top: 12, right: 12, background: '#2ec4b6', color: '#fff', padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 600, fontFamily: 'Poppins, sans-serif' }}>
+                      {s.specialty}
+                    </span>
+                  )}
+                  {/* Name on photo */}
+                  <h3 style={{ position: 'absolute', bottom: 14, left: 16, color: '#fff', fontSize: 16, fontWeight: 600, margin: 0, textShadow: '0 1px 4px rgba(0,0,0,0.5)', fontFamily: 'Poppins, sans-serif' }}>
+                    {s.dentist_name}
+                  </h3>
+                </div>
+
+                {/* Card body */}
+                <div style={{ padding: '14px 18px 18px', display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
+                  {s.phone && (
+                    <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>📞 {s.phone}</p>
+                  )}
+                  <button
+                    className="btn-view"
+                    style={{ marginTop: 'auto', padding: '9px', width: '100%', borderRadius: 10, fontSize: 13, fontWeight: 600 }}
+                    onClick={() => navigate(`/doctor/${s.id}`)}
+                  >
+                    View Profile
+                  </button>
+                </div>
               </div>
             ))}
           </div>

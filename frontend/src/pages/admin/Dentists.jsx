@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
-
+import { supabase } from '../../config/supabaseClient'
+import { uploadImage } from '../../config/uploadImage'
 const TABS = ['Dentists', 'Services']
 
-const emptyDentist = { dentist_name: '', specialty: '', phone: '', telegram: '', background: '', age: '' }
+const emptyDentist = { dentist_name: '', specialty: '', phone: '', telegram: '', background: '', age: '', image_path: '' }
 const emptyService = { service_name: '', description: '', price: '', duration_minutes: '' }
 
 export default function Dentists() {
@@ -24,6 +25,8 @@ export default function Dentists() {
   const [editingService, setEditingService] = useState(null)
   const [showServiceForm, setShowServiceForm] = useState(false)
   const [serviceLoading, setServiceLoading] = useState(false)
+  const [selectedFile, setSelectedFile] = useState(null)     
+const [previewUrl, setPreviewUrl] = useState(null) 
 
   const [error, setError] = useState('')
 
@@ -53,24 +56,37 @@ export default function Dentists() {
   }, [])
 
   // ── Dentist CRUD ──
-  const saveDentist = async () => {
-    if (!dentistForm.dentist_name || !dentistForm.specialty) return setError('Name and specialty are required')
-    setDentistLoading(true)
-    setError('')
-    try {
-      if (editingDentist) {
-        await api.put(`/dentists/${editingDentist}`, dentistForm)
-      } else {
-        await api.post('/dentists', dentistForm)
+const saveDentist = async () => {
+  if (!dentistForm.dentist_name || !dentistForm.specialty) return setError('Name and specialty are required')
+  setDentistLoading(true)
+  setError('')
+  try {
+    let imagePath = dentistForm.image_path
+
+    if (selectedFile) {
+      imagePath = await uploadImage(selectedFile)
+      if (!imagePath) {
+        setError('Image upload failed')
+        setDentistLoading(false)
+        return
       }
-      await fetchDentists()
-      resetDentistForm()
-    } catch (e) {
-      setError(e.response?.data?.message || 'Failed to save dentist')
-    } finally {
-      setDentistLoading(false)
     }
+
+    const payload = { ...dentistForm, image_path: imagePath }
+
+    if (editingDentist) {
+      await api.put(`/dentists/${editingDentist}`, payload)
+    } else {
+      await api.post('/dentists', payload)
+    }
+    await fetchDentists()
+    resetDentistForm()
+  } catch (e) {
+    setError(e.response?.data?.message || 'Failed to save dentist')
+  } finally {
+    setDentistLoading(false)
   }
+}
 
   const deleteDentist = async (id) => {
     if (!window.confirm('Delete this dentist?')) return
@@ -82,24 +98,27 @@ export default function Dentists() {
     }
   }
 
-  const startEditDentist = (d) => {
-    setDentistForm({
-      dentist_name: d.dentist_name || '',
-      specialty: d.specialty || '',
-      phone: d.phone || '',
-      telegram: d.telegram || '',
-      background: d.background || '',
-      age: d.age || ''
-    })
-    setEditingDentist(d.id)
-    setShowDentistForm(true)
-    window.scrollTo(0, 0)
-  }
+const startEditDentist = (d) => {
+  setDentistForm({
+    dentist_name: d.dentist_name || '',
+    specialty: d.specialty || '',
+    phone: d.phone || '',
+    telegram: d.telegram || '',
+    background: d.background || '',
+    age: d.age || '',
+    image_path: d.image_path || ''   // ← add this
+  })
+  setEditingDentist(d.id)
+  setShowDentistForm(true)
+  window.scrollTo(0, 0)
+}
 
   const resetDentistForm = () => {
     setDentistForm(emptyDentist)
     setEditingDentist(null)
     setShowDentistForm(false)
+    setSelectedFile(null)
+setPreviewUrl(null)
   }
 
   // ── Service CRUD ──
@@ -288,6 +307,26 @@ export default function Dentists() {
                       <textarea value={dentistForm.background} onChange={e => setDentistForm({ ...dentistForm, background: e.target.value })} placeholder="Specializing in braces and aligner therapy..." rows={3}
                         style={{ ...inputStyle, resize: 'vertical' }} />
                     </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={labelStyle}>Profile Picture</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={e => {
+                          const file = e.target.files[0]
+                          setSelectedFile(file)
+                          if (file) setPreviewUrl(URL.createObjectURL(file))
+                        }}
+                        style={inputStyle}
+                      />
+                      {previewUrl && (
+                        <img
+                          src={previewUrl}
+                          alt="Preview"
+                          style={{ marginTop: 10, width: 80, height: 80, borderRadius: 10, objectFit: 'cover', border: '1px solid #e0e4ea' }}
+                        />
+                      )}
+                    </div>
                   </div>
                   <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
                     <button onClick={saveDentist} disabled={dentistLoading}
@@ -303,32 +342,74 @@ export default function Dentists() {
               )}
 
               {/* Dentist Cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 24 }}>
                 {dentists.map(d => (
-                  <div key={d.id} style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
-                    <div style={{ background: 'linear-gradient(135deg, #0d1b3e, #1a3566)', padding: '24px 20px 20px', textAlign: 'center' }}>
-                      <div style={{ width: 60, height: 60, borderRadius: '50%', background: '#4ecdc4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: 22, color: '#0d1b3e', fontWeight: 700 }}>
-                        {d.dentist_name?.charAt(0) || '?'}
+                  <div key={d.id} style={{ background: '#fff', borderRadius: 18, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.10)', display: 'flex', flexDirection: 'column' }}>
+
+                    {/* Large photo area */}
+                    <div style={{ position: 'relative', height: 220, background: 'linear-gradient(135deg, #0d1b3e 0%, #1a3566 100%)', overflow: 'hidden', flexShrink: 0 }}>
+                      {d.image_path ? (
+                        <img
+                          src={supabase.storage.from('file_image').getPublicUrl(d.image_path).data.publicUrl}
+                          alt={d.dentist_name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
+                          onError={e => { e.target.style.display = 'none' }}
+                        />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 72, color: '#4ecdc4', fontWeight: 700, opacity: 0.6 }}>
+                          {d.dentist_name?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                      )}
+                      {/* Gradient overlay at bottom */}
+                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 80, background: 'linear-gradient(to top, rgba(13,27,62,0.85), transparent)' }} />
+                      {/* Specialty badge */}
+                      {d.specialty && (
+                        <div style={{ position: 'absolute', top: 12, right: 12, background: '#4ecdc4', color: '#0d1b3e', padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700, letterSpacing: 0.3 }}>
+                          {d.specialty}
+                        </div>
+                      )}
+                      {/* Name on photo */}
+                      <div style={{ position: 'absolute', bottom: 14, left: 16 }}>
+                        <p style={{ fontSize: 16, fontWeight: 700, color: '#fff', margin: 0, textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>{d.dentist_name}</p>
                       </div>
-                      <h3 style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{d.dentist_name}</h3>
-                      <p style={{ fontSize: 12, color: '#4ecdc4', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{d.specialty}</p>
                     </div>
-                    <div style={{ padding: '16px 18px' }}>
-                      {d.phone && <p style={{ fontSize: 12, color: '#8a9fc4', marginBottom: 4 }}>📞 {d.phone}</p>}
-                      {d.telegram && <p style={{ fontSize: 12, color: '#8a9fc4', marginBottom: 4 }}>✈️ {d.telegram}</p>}
-                      {d.age && <p style={{ fontSize: 12, color: '#8a9fc4', marginBottom: 4 }}>🎂 Age: {d.age}</p>}
-                      {d.background && <p style={{ fontSize: 12, color: '#8a9fc4', lineHeight: 1.6, marginTop: 8, marginBottom: 14, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{d.background}</p>}
-                      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                        <button onClick={() => startEditDentist(d)}
-                          style={{ flex: 1, background: '#f0f2f5', border: 'none', color: '#0d1b3e', padding: '8px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
-                          Edit
-                        </button>
-                        <button onClick={() => deleteDentist(d.id)}
-                          style={{ flex: 1, background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.2)', color: '#ff6b6b', padding: '8px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
-                          Delete
-                        </button>
-                      </div>
+
+                    {/* Info section */}
+                    <div style={{ padding: '14px 18px', flex: 1 }}>
+                      {d.phone && (
+                        <p style={{ fontSize: 12, color: '#8a9fc4', marginBottom: 5, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span>📞</span> {d.phone}
+                        </p>
+                      )}
+                      {d.telegram && (
+                        <p style={{ fontSize: 12, color: '#8a9fc4', marginBottom: 5, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span>✈️</span> {d.telegram}
+                        </p>
+                      )}
+                      {d.age && (
+                        <p style={{ fontSize: 12, color: '#8a9fc4', marginBottom: 5, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span>🎂</span> Age: {d.age}
+                        </p>
+                      )}
+                      {d.background && (
+                        <p style={{ fontSize: 12, color: '#b0bdd6', lineHeight: 1.6, marginTop: 8, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                          {d.background}
+                        </p>
+                      )}
                     </div>
+
+                    {/* Actions */}
+                    <div style={{ display: 'flex', gap: 8, padding: '0 18px 16px' }}>
+                      <button onClick={() => startEditDentist(d)}
+                        style={{ flex: 1, background: '#f0f2f5', border: 'none', color: '#0d1b3e', padding: '9px', borderRadius: 9, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
+                        Edit
+                      </button>
+                      <button onClick={() => deleteDentist(d.id)}
+                        style={{ flex: 1, background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.2)', color: '#ff6b6b', padding: '9px', borderRadius: 9, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
+                        Delete
+                      </button>
+                    </div>
+
                   </div>
                 ))}
               </div>
