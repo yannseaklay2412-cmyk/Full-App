@@ -26,6 +26,8 @@ export default function Book() {
     full_name: '', phone: '', sex: '',
     date_of_birth: '', address: '', notes: '',
   })
+  const [submitError, setSubmitError] = useState('')
+  const [submitting, setSubmitting]   = useState(false)
 
   const today = new Date().toISOString().split('T')[0]
 
@@ -87,61 +89,75 @@ export default function Book() {
   }
 
   const handleSubmit = async () => {
-    // 1. Check if patient already exists — don't overwrite registration name ✅
-    let patient
-    const { data: existingPatient } = await supabase
-      .from('patients')
-      .select('id')
-      .eq('email', user.email)
-      .maybeSingle()
-
-    if (existingPatient) {
-      // Already registered — just use existing id
-      patient = existingPatient
-    } else {
-      // New patient — insert once
-      const { data: newPatient, error: insertError } = await supabase
+    setSubmitError('')
+    setSubmitting(true)
+    try {
+      // 1. Upsert patient
+      let patient
+      const { data: existingPatient } = await supabase
         .from('patients')
+        .select('id')
+        .eq('email', user.email)
+        .maybeSingle()
+
+      if (existingPatient) {
+        patient = existingPatient
+      } else {
+        const { data: newPatient, error: insertError } = await supabase
+          .from('patients')
+          .insert({
+            email:         user.email,
+            full_name:     patientInfo.full_name,
+            phone:         patientInfo.phone,
+            sex:           patientInfo.sex,
+            date_of_birth: patientInfo.date_of_birth,
+            address:       patientInfo.address,
+          })
+          .select()
+          .single()
+        if (insertError) throw new Error(`Patient error: ${insertError.message}`)
+        patient = newPatient
+      }
+
+      // 2. Insert appointment with dentist_id
+      const { data: appt, error: apptError } = await supabase
+        .from('appointments')
         .insert({
-          email:         user.email,
-          full_name:     patientInfo.full_name,
-          phone:         patientInfo.phone,
-          sex:           patientInfo.sex,
-          date_of_birth: patientInfo.date_of_birth,
-          address:       patientInfo.address,
+          patient_id: patient.id,
+          dentist_id: dentist.id,
+          status:     'pending',
+          notes:      patientInfo.notes,
         })
         .select()
         .single()
-      if (insertError) { console.error(insertError); return }
-      patient = newPatient
+      if (apptError) throw new Error(`Appointment error: ${apptError.message}`)
+
+      // 3. Link appointment to timeslot + date
+      const { error: linkError } = await supabase
+        .from('appointment_timeslots')
+        .insert({
+          appointment_id: appt.id,
+          timeslot_id:    timeslot.id,
+          date:           date,
+        })
+      if (linkError) throw new Error(`Timeslot link error: ${linkError.message}`)
+
+      // 4. Link appointment to service
+      const { error: serviceError } = await supabase
+        .from('appointment_services')
+        .insert({
+          appointment_id: appt.id,
+          service_id:     service.id,
+        })
+      if (serviceError) throw new Error(`Service link error: ${serviceError.message}`)
+
+      setShowSuccess(true)
+    } catch (err) {
+      console.error(err)
+      setSubmitError(err.message)
+    } finally {
+      setSubmitting(false)
     }
-
-    // 2. Insert appointment with date and time
-    const { data: appt, error: apptError } = await supabase
-      .from('appointments')
-      .insert({
-        patient_id:       patient.id,
-        dentist_id:       dentist.id,
-        appointment_date: date,
-        start_time:       timeslot.slot_start,
-        end_time:         timeslot.slot_end,
-        status:           'pending',
-        notes:            patientInfo.notes,
-      })
-      .select()
-      .single()
-    if (apptError) { console.error(apptError); return }
-
-    // 3. Link appointment to service
-    const { error: serviceError } = await supabase
-      .from('appointment_services')
-      .insert({
-        appointment_id: appt.id,
-        service_id:     service.id,
-      })
-    if (serviceError) { console.error(serviceError); return }
-
-    setShowSuccess(true)
   }
 
   const Avatar = ({ name, size = 56 }) => (
@@ -348,6 +364,11 @@ export default function Book() {
         )}
 
         {/* Nav Buttons */}
+        {submitError && (
+          <div style={{ background: 'rgba(255,107,107,0.1)', border: '1px solid rgba(255,107,107,0.4)', borderRadius: 10, padding: '10px 16px', marginBottom: 12, fontSize: 13, color: '#cc0000', fontWeight: 500 }}>
+            ✗ {submitError}
+          </div>
+        )}
         <div className="book-btn-row">
           {step > 0 && (
             <button className="book-btn-back" onClick={() => setStep(step - 1)}>← Back</button>
@@ -356,7 +377,9 @@ export default function Book() {
             <button className="book-btn-next" disabled={!canNext}
               onClick={() => canNext && setStep(step + 1)}>Next →</button>
           ) : (
-            <button className="book-btn-next" onClick={handleSubmit}>Confirm Booking ✓</button>
+            <button className="book-btn-next" disabled={submitting} onClick={handleSubmit}>
+              {submitting ? 'Submitting...' : 'Confirm Booking ✓'}
+            </button>
           )}
         </div>
 

@@ -1,39 +1,88 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../../config/supabaseClient'
+
+const API = 'http://localhost:5000/api'
+
+const apiFetch = async (path, options = {}) => {
+  const { data: { session } } = await supabase.auth.getSession()
+  const token = session?.access_token
+  const res = await fetch(`${API}${path}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    ...options,
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+
+const formatDate = (iso) =>
+  new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
 
 export default function Appointments() {
   const navigate = useNavigate()
   const [bookings, setBookings] = useState([])
-  const [filter, setFilter]     = useState('All')
-  const [search, setSearch]     = useState('')
+  const [filter,   setFilter]   = useState('all')
+  const [search,   setSearch]   = useState('')
+  const [loading,  setLoading]  = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
 
-  const loadData = () => {
-    setBookings(JSON.parse(localStorage.getItem('bookings') || '[]'))
+  const loadData = async () => {
+    setLoading(true)
+    try {
+      const data = await apiFetch('/bookings')
+      setBookings(data)
+    } catch (e) {
+      flashError('Failed to load appointments.')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  useEffect(() => {
-    loadData()
-    window.addEventListener('storage', loadData)
-    return () => window.removeEventListener('storage', loadData)
-  }, [])
+  useEffect(() => { loadData() }, [])
 
-  const updateStatus = (id, status) => {
-    const updated = bookings.map(b => b.id === id ? { ...b, status } : b)
-    localStorage.setItem('bookings', JSON.stringify(updated))
-    setBookings(updated)
+  const updateStatus = async (id, status) => {
+    try {
+      const updated = await apiFetch(`/bookings/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      })
+      setBookings(prev => prev.map(b => b.id === id ? { ...b, status: updated.status ?? status } : b))
+    } catch (e) {
+      flashError('Failed to update status.')
+    }
+  }
+
+  const flashError = (msg) => {
+    setErrorMsg(msg)
+    setTimeout(() => setErrorMsg(''), 3000)
   }
 
   const filtered = bookings
-    .filter(b => filter === 'All' || b.status === filter)
-    .filter(b =>
-      b.userName?.toLowerCase().includes(search.toLowerCase()) ||
-      b.dentistName?.toLowerCase().includes(search.toLowerCase())
-    )
+    .filter(b => filter === 'all' || b.status === filter)
+    .filter(b => {
+      const q = search.toLowerCase()
+      return (
+        b.patients?.full_name?.toLowerCase().includes(q) ||
+        b.dentists?.dentist_name?.toLowerCase().includes(q)
+      )
+    })
 
   const statusColor = {
-    Pending:   '#f5c842',
-    Confirmed: '#4ecdc4',
-    Cancelled: '#ff6b6b',
+    pending:   '#f5c842',
+    confirmed: '#4ecdc4',
+    done:      '#7c3aed',
+    cancelled: '#ff6b6b',
+  }
+
+  const stats = {
+    total:     bookings.length,
+    pending:   bookings.filter(b => b.status === 'pending').length,
+    confirmed: bookings.filter(b => b.status === 'confirmed').length,
+    done:      bookings.filter(b => b.status === 'done').length,
+    cancelled: bookings.filter(b => b.status === 'cancelled').length,
   }
 
   const sidebarItems = [
@@ -42,19 +91,13 @@ export default function Appointments() {
     { label: 'Employees',   path: '/admin/dentists'     },
     { label: 'Appointment', path: '/admin/appointments' },
     { label: 'Record',      path: '/admin/users'        },
-    { label: 'Setting',     path: '/admin/reports'      },
+    { label: 'Setting',     path: '/admin/AdminSetting' },
   ]
-  const stats = {
-    total:     bookings.length,
-    pending:   bookings.filter(b => b.status === 'Pending').length,
-    confirmed: bookings.filter(b => b.status === 'Confirmed').length,
-    cancelled: bookings.filter(b => b.status === 'Cancelled').length,
-  }
-  
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'DM Sans', sans-serif", background: '#f0f2f5' }}>
 
-      {/* ── SIDEBAR ── */}
+      {/* SIDEBAR */}
       <aside style={{ width: 180, background: '#0d1b3e', display: 'flex', flexDirection: 'column', flexShrink: 0, paddingBottom: 24 }}>
         <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #243560' }}>
           <div style={{ background: '#4ecdc4', borderRadius: 10, width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0d1b3e' }}>
@@ -84,7 +127,7 @@ export default function Appointments() {
         </div>
       </aside>
 
-      {/* ── MAIN ── */}
+      {/* MAIN */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* TOP BAR */}
@@ -111,12 +154,19 @@ export default function Appointments() {
 
         <div style={{ flex: 1, padding: 24, overflow: 'auto' }}>
 
+          {errorMsg && (
+            <div style={{ background: 'rgba(255,107,107,0.1)', border: '1px solid rgba(255,107,107,0.3)', borderRadius: 10, padding: '10px 16px', marginBottom: 16, fontSize: 13, color: '#ff6b6b', fontWeight: 500 }}>
+              ✗ {errorMsg}
+            </div>
+          )}
+
           {/* STAT CARDS */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16, marginBottom: 24 }}>
             {[
-              { label: 'Total',     num: stats.total,     color: '#7c3aed' },
+              { label: 'Total',     num: stats.total,     color: '#0d1b3e' },
               { label: 'Pending',   num: stats.pending,   color: '#f5c842' },
               { label: 'Confirmed', num: stats.confirmed, color: '#4ecdc4' },
+              { label: 'Done',      num: stats.done,      color: '#7c3aed' },
               { label: 'Cancelled', num: stats.cancelled, color: '#ff6b6b' },
             ].map((s, i) => (
               <div key={i} style={{ background: '#fff', borderRadius: 12, padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -145,117 +195,120 @@ export default function Appointments() {
                 style={{ background: 'none', border: 'none', outline: 'none', fontSize: 13, color: '#0d1b3e', width: '100%', fontFamily: "'DM Sans', sans-serif" }}
               />
             </div>
-            {/* ✅ FIX: Filter tabs now use Capital letters */}
             <div style={{ display: 'flex', background: '#fff', border: '1px solid #e0e4ea', borderRadius: 10, padding: 4, gap: 4 }}>
-              {['All', 'Pending', 'Confirmed', 'Cancelled'].map(f => (
+              {['all', 'pending', 'confirmed', 'done', 'cancelled'].map(f => (
                 <button key={f} onClick={() => setFilter(f)}
                   style={{ padding: '7px 16px', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", textTransform: 'capitalize', transition: 'all 0.2s',
                     background: filter === f ? '#0d1b3e' : 'transparent',
                     color: filter === f ? '#fff' : '#8a9fc4' }}>
-                  {f}
+                  {f === 'all' ? 'All' : f.charAt(0).toUpperCase() + f.slice(1)}
                 </button>
               ))}
             </div>
           </div>
 
           {/* TABLE */}
-          <div style={{ background: '#fff', borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 6px rgba(0,0,0,0.06)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: '#f8f9fc' }}>
-                  {['#', 'Patient', 'Dentist', 'Date', 'Time', 'Status', 'Actions'].map(h => (
-                    <th key={h} style={{ padding: '13px 16px', textAlign: 'left', fontSize: 11, color: '#8a9fc4', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 600 }}>{h}</th>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '60px 0', color: '#8a9fc4', fontSize: 14 }}>Loading…</div>
+          ) : (
+            <div style={{ background: '#fff', borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 6px rgba(0,0,0,0.06)' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: '#f8f9fc' }}>
+                    {['#', 'Patient', 'Dentist', 'Date', 'Status', 'Actions'].map(h => (
+                      <th key={h} style={{ padding: '13px 16px', textAlign: 'left', fontSize: 11, color: '#8a9fc4', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 600 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} style={{ padding: 48, textAlign: 'center', color: '#8a9fc4', fontSize: 14 }}>
+                        {search || filter !== 'all' ? 'No results found' : 'No appointments yet'}
+                      </td>
+                    </tr>
+                  ) : filtered.map((b, i) => (
+                    <tr key={b.id} style={{ borderBottom: '1px solid #f0f2f5', transition: 'background 0.15s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#fafbfc'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                      <td style={{ padding: '13px 16px', fontSize: 12, color: '#8a9fc4' }}>{i + 1}</td>
+                      <td style={{ padding: '13px 16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#0d1b3e', flexShrink: 0 }}>
+                            {b.patients?.full_name?.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p style={{ fontSize: 13, fontWeight: 600, color: '#0d1b3e', marginBottom: 1 }}>{b.patients?.full_name}</p>
+                            <p style={{ fontSize: 11, color: '#8a9fc4' }}>{b.patients?.email || ''}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '13px 16px' }}>
+                        <p style={{ fontSize: 13, color: '#0d1b3e', fontWeight: 500, marginBottom: 1 }}>{b.dentists?.dentist_name}</p>
+                        <p style={{ fontSize: 11, color: '#8a9fc4' }}>{b.dentists?.specialty || ''}</p>
+                      </td>
+                      <td style={{ padding: '13px 16px', fontSize: 13, color: '#666' }}>
+                        {b.created_at ? formatDate(b.created_at) : '—'}
+                      </td>
+                      <td style={{ padding: '13px 16px' }}>
+                        <span style={{ padding: '4px 12px', borderRadius: 99, border: `1px solid ${statusColor[b.status] || '#8a9fc4'}`, color: statusColor[b.status] || '#8a9fc4', fontSize: 11, fontWeight: 600, textTransform: 'capitalize' }}>
+                          {b.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '13px 16px' }}>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          {b.status === 'pending' && (
+                            <button onClick={() => updateStatus(b.id, 'confirmed')}
+                              style={{ background: 'rgba(78,205,196,0.1)', border: '1px solid #4ecdc4', color: '#4ecdc4', padding: '5px 12px', borderRadius: 6, fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
+                              Confirm ✓
+                            </button>
+                          )}
+                          {b.status === 'confirmed' && (
+                            <button onClick={() => updateStatus(b.id, 'done')}
+                              style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid #7c3aed', color: '#7c3aed', padding: '5px 12px', borderRadius: 6, fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
+                              Mark Done
+                            </button>
+                          )}
+                          {b.status !== 'cancelled' && b.status !== 'done' && (
+                            <button onClick={() => updateStatus(b.id, 'cancelled')}
+                              style={{ background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.3)', color: '#ff6b6b', padding: '5px 12px', borderRadius: 6, fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
+                              Cancel
+                            </button>
+                          )}
+                          {b.status === 'cancelled' && (
+                            <button onClick={() => updateStatus(b.id, 'pending')}
+                              style={{ background: '#f8f9fc', border: '1px solid #e0e4ea', color: '#666', padding: '5px 12px', borderRadius: 6, fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
+                              Restore
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} style={{ padding: 48, textAlign: 'center', color: '#8a9fc4', fontSize: 14 }}>
-                      {search || filter !== 'All' ? 'No results found' : 'No appointments yet'}
-                    </td>
-                  </tr>
-                ) : filtered.map((b, i) => (
-                  <tr key={b.id} style={{ borderBottom: '1px solid #f0f2f5', transition: 'background 0.15s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#fafbfc'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <td style={{ padding: '13px 16px', fontSize: 12, color: '#8a9fc4' }}>{i + 1}</td>
-                    <td style={{ padding: '13px 16px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#0d1b3e', flexShrink: 0 }}>
-                          {b.userName?.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p style={{ fontSize: 13, fontWeight: 600, color: '#0d1b3e', marginBottom: 1 }}>{b.userName}</p>
-                          <p style={{ fontSize: 11, color: '#8a9fc4' }}>{b.userEmail || ''}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td style={{ padding: '13px 16px' }}>
-                      <p style={{ fontSize: 13, color: '#0d1b3e', fontWeight: 500, marginBottom: 1 }}>{b.dentistName}</p>
-                      <p style={{ fontSize: 11, color: '#8a9fc4' }}>{b.dentistTitle || ''}</p>
-                    </td>
-                    <td style={{ padding: '13px 16px', fontSize: 13, color: '#666' }}>{b.date}</td>
-                    <td style={{ padding: '13px 16px', fontSize: 13, color: '#666' }}>{b.time}</td>
-                    <td style={{ padding: '13px 16px' }}>
-                      <span style={{ padding: '4px 12px', borderRadius: 99, border: `1px solid ${statusColor[b.status] || '#8a9fc4'}`, color: statusColor[b.status] || '#8a9fc4', fontSize: 11, fontWeight: 600 }}>
-                        {b.status}
-                      </span>
-                    </td>
-                    {/* ✅ FIX: Action buttons now use Capital letters */}
-                    <td style={{ padding: '13px 16px' }}>
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        {b.status === 'Pending' && (
-                          <button onClick={() => updateStatus(b.id, 'Confirmed')}
-                            style={{ background: 'rgba(78,205,196,0.1)', border: '1px solid #4ecdc4', color: '#4ecdc4', padding: '5px 12px', borderRadius: 6, fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
-                            Confirm ✓
-                          </button>
-                        )}
-                        {b.status === 'Confirmed' && (
-                          <button onClick={() => updateStatus(b.id, 'Pending')}
-                            style={{ background: 'rgba(245,200,66,0.1)', border: '1px solid #f5c842', color: '#f5c842', padding: '5px 12px', borderRadius: 6, fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
-                            Pending
-                          </button>
-                        )}
-                        {b.status !== 'Cancelled' && (
-                          <button onClick={() => updateStatus(b.id, 'Cancelled')}
-                            style={{ background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.3)', color: '#ff6b6b', padding: '5px 12px', borderRadius: 6, fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
-                            Cancel
-                          </button>
-                        )}
-                        {b.status === 'Cancelled' && (
-                          <button onClick={() => updateStatus(b.id, 'Pending')}
-                            style={{ background: '#f8f9fc', border: '1px solid #e0e4ea', color: '#666', padding: '5px 12px', borderRadius: 6, fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
-                            Restore
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
 
-            {/* TABLE FOOTER */}
-            {filtered.length > 0 && (
-              <div style={{ padding: '12px 16px', background: '#f8f9fc', borderTop: '1px solid #f0f2f5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <p style={{ fontSize: 12, color: '#8a9fc4' }}>
-                  Showing <span style={{ fontWeight: 600, color: '#0d1b3e' }}>{filtered.length}</span> of <span style={{ fontWeight: 600, color: '#0d1b3e' }}>{bookings.length}</span> appointments
-                </p>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {[
-                    { label: 'Confirmed', count: stats.confirmed, color: '#4ecdc4' },
-                    { label: 'Pending',   count: stats.pending,   color: '#f5c842' },
-                    { label: 'Cancelled', count: stats.cancelled, color: '#ff6b6b' },
-                  ].map(s => (
-                    <span key={s.label} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, border: `1px solid ${s.color}40`, color: s.color, fontWeight: 600 }}>
-                      {s.label}: {s.count}
-                    </span>
-                  ))}
+              {filtered.length > 0 && (
+                <div style={{ padding: '12px 16px', background: '#f8f9fc', borderTop: '1px solid #f0f2f5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <p style={{ fontSize: 12, color: '#8a9fc4' }}>
+                    Showing <span style={{ fontWeight: 600, color: '#0d1b3e' }}>{filtered.length}</span> of <span style={{ fontWeight: 600, color: '#0d1b3e' }}>{bookings.length}</span> appointments
+                  </p>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {[
+                      { label: 'Confirmed', count: stats.confirmed, color: '#4ecdc4' },
+                      { label: 'Pending',   count: stats.pending,   color: '#f5c842' },
+                      { label: 'Done',      count: stats.done,      color: '#7c3aed' },
+                      { label: 'Cancelled', count: stats.cancelled, color: '#ff6b6b' },
+                    ].map(s => (
+                      <span key={s.label} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 99, border: `1px solid ${s.color}40`, color: s.color, fontWeight: 600 }}>
+                        {s.label}: {s.count}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

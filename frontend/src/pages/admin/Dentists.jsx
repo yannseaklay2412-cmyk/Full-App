@@ -156,7 +156,7 @@ export default function Dentists() {
     { label: 'Employees',   path: '/admin/dentists' },
     { label: 'Appointment', path: '/admin/appointments' },
     { label: 'Record',      path: '/admin/users' },
-    { label: 'Setting',     path: '/admin/reports' },
+    { label: 'Setting',     path: '/admin/AdminSetting' },
   ]
 
   const inputStyle = {

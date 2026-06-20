@@ -17,11 +17,38 @@
   flex-direction: column;
   flex-shrink: 0;
   padding-bottom: 24px;
+  transition: transform 0.25s ease;
+  z-index: 200;
+}
+
+/* Hamburger button — hidden on desktop */
+.ad-hamburger {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #192a57;
+  flex-direction: column;
+  gap: 5px;
+}
+.ad-hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+/* Overlay backdrop — hidden on desktop */
+.ad-sidebar-overlay {
+  display: none;
 }
 
 .ad-sidebar-logo {
   padding: 20px 20px 16px;
-  border-bottom: 1px solid #243560;
+  border-bottom: 1px solid #1c2d5a;
 }
 
 .ad-logo-icon {
@@ -29,7 +56,7 @@
   background: #4ecdc4;
   border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  color: #0d1b3e;
+  color: #224292;
 }
 
 .ad-sidebar-label {
@@ -219,18 +246,169 @@
 .ad-emp-card.light .ad-emp-desc { color: #666; }
 
 /* ── RESPONSIVE ── */
+
+/* ── 1200px: tablet landscape ── */
 @media (max-width: 1200px) {
-  .ad-stat-row { grid-template-columns: repeat(3,1fr); }
-  .ad-grid { grid-template-columns: 1fr 260px; }
-  .ad-col-right { display: none; }
+  .ad-sidebar         { width: 160px; }
+  .ad-stat-row        { grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .ad-grid            { grid-template-columns: 1fr 220px; gap: 16px; }
+  .ad-stat-top-num    { font-size: 20px; }
+  .ad-card-header h3  { font-size: 14px; }
+  .ad-emp-card        { padding: 12px; gap: 10px; }
+  .ad-emp-name        { font-size: 12px; }
+  .ad-emp-desc        { font-size: 10px; }
 }
+
+/* ── 900px: tablet portrait ── */
 @media (max-width: 900px) {
-  .ad-stat-row { grid-template-columns: repeat(2,1fr); }
-  .ad-grid { grid-template-columns: 1fr; }
-  .ad-col-mid { display: none; }
+  .ad-sidebar         { width: 140px; }
+  .ad-nav-item        { font-size: 12px; padding: 10px 14px; }
+  .ad-stat-row        { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .ad-grid            { grid-template-columns: 1fr; gap: 14px; }
+  .ad-col-right       { display: none; }
+  .ad-search input    { width: 120px; }
+
+  /* Stat cards */
+  .ad-stat-top-card   { padding: 14px 12px; gap: 10px; }
+  .ad-stat-top-icon   { width: 38px; height: 38px; }
+  .ad-stat-top-num    { font-size: 20px; }
+  .ad-stat-top-label  { font-size: 10px; }
+
+  /* Appointment rows */
+  .ad-appt-avatar     { width: 30px; height: 30px; }
+  .ad-appt-name       { font-size: 12px; }
+  .ad-appt-time       { font-size: 10px; }
+
+  /* Calendar compact */
+  .ad-cal-day         { font-size: 11px; padding: 5px 2px; }
+  .ad-cal-day-label   { font-size: 9px; }
+  .ad-cal-month       { font-size: 12px; }
+  .ad-calendar-title  { font-size: 16px; margin-bottom: 12px; }
+
+  /* Employee cards: two-per-row on tablet */
+  .ad-emp-list        { flex-direction: row; flex-wrap: wrap; gap: 10px; }
+  .ad-emp-card        { flex: 1 1 calc(50% - 5px); min-width: 160px; }
+  .ad-emp-avatar      { width: 38px; height: 38px; }
+  .ad-emp-name        { font-size: 12px; }
+  .ad-emp-title       { font-size: 10px; }
+  .ad-emp-desc        { font-size: 10px; }
 }
+
+/* ── 768px: mobile — sidebar becomes overlay ── */
 @media (max-width: 768px) {
-  .ad-sidebar { display: none; }
-  .ad-stat-row { padding: 14px 14px 0; grid-template-columns: repeat(2,1fr); }
-  .ad-grid { padding: 14px; }
+  /* Hamburger */
+  .ad-hamburger { display: flex; }
+
+  /* Sidebar slide-in overlay */
+  .ad-sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    width: 200px;
+    transform: translateX(-100%);
+    box-shadow: 4px 0 20px rgba(0,0,0,0.18);
+  }
+  .ad-sidebar.open { transform: translateX(0); }
+
+  .ad-sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(13,27,62,0.45);
+    z-index: 199;
+  }
+
+  /* Topbar */
+  .ad-topbar          { padding: 10px 14px; }
+  .ad-topbar-title    { font-size: 10px; }
+  .ad-topbar-sub      { font-size: 12px; }
+  .ad-search          { display: none; }
+
+  /* Stats */
+  .ad-stat-row        { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 12px 12px 0; }
+  .ad-stat-top-card   { padding: 12px 10px; gap: 8px; }
+  .ad-stat-top-icon   { width: 36px; height: 36px; border-radius: 8px; }
+  .ad-stat-top-num    { font-size: 18px; }
+  .ad-stat-top-label  { font-size: 10px; }
+
+  /* Grid & cards */
+  .ad-grid            { padding: 12px; gap: 12px; }
+  .ad-card            { padding: 14px; margin-bottom: 12px; border-radius: 12px; }
+  .ad-card-header     { margin-bottom: 12px; }
+  .ad-card-header h3  { font-size: 14px; }
+
+  /* Appointment rows */
+  .ad-appt-type       { display: none; }
+  .ad-appt-row        { gap: 8px; padding: 8px 10px; }
+  .ad-appt-avatar     { width: 30px; height: 30px; }
+  .ad-appt-name       { font-size: 12px; }
+  .ad-appt-time       { font-size: 10px; }
+  .ad-appt-status     { font-size: 10px; padding: 2px 8px; }
+
+  /* Calendar */
+  .ad-calendar-title  { font-size: 15px; }
+  .ad-cal-day         { font-size: 11px; padding: 5px 1px; border-radius: 5px; }
+  .ad-cal-day-label   { font-size: 9px; padding: 3px 0; }
+  .ad-cal-legend      { gap: 12px; margin-top: 12px; padding-top: 10px; }
+  .ad-legend-item     { font-size: 10px; }
+  .ad-legend-dot      { width: 6px; height: 6px; }
+
+  /* Employee cards: stacked on mobile */
+  .ad-emp-list        { flex-direction: column; gap: 8px; }
+  .ad-emp-card        { padding: 12px; gap: 10px; }
+  .ad-emp-avatar      { width: 36px; height: 36px; border-radius: 8px; }
+  .ad-emp-name        { font-size: 12px; }
+  .ad-emp-title       { font-size: 10px; }
+  .ad-emp-desc        { font-size: 10px; line-height: 1.4; }
+}
+
+/* ── 480px: small mobile ── */
+@media (max-width: 480px) {
+  /* Topbar */
+  .ad-topbar          { padding: 8px 12px; }
+  .ad-topbar-right .ad-avatar { display: none; }
+  .ad-signin-btn      { padding: 6px 12px; font-size: 12px; }
+
+  /* Stats: stack icon above text */
+  .ad-stat-row        { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px 10px 0; }
+  .ad-stat-top-card   { flex-direction: column; align-items: flex-start; padding: 12px 10px; gap: 6px; }
+  .ad-stat-top-icon   { width: 32px; height: 32px; border-radius: 7px; }
+  .ad-stat-top-num    { font-size: 20px; }
+  .ad-stat-top-label  { font-size: 10px; }
+
+  /* Grid & cards */
+  .ad-grid            { padding: 10px; gap: 10px; }
+  .ad-card            { padding: 12px; border-radius: 10px; }
+  .ad-card-header h3  { font-size: 13px; }
+  .ad-view-all        { font-size: 11px; }
+
+  /* Appointment rows: wrap so status goes below name */
+  .ad-appt-row        { flex-wrap: wrap; gap: 6px; padding: 8px; }
+  .ad-appt-info       { min-width: calc(100% - 46px); }
+  .ad-appt-status     { align-self: flex-start; font-size: 10px; }
+  .ad-appt-name       { font-size: 12px; }
+  .ad-appt-time       { font-size: 10px; }
+  .ad-empty           { font-size: 12px; padding: 20px 0; }
+
+  /* Calendar: minimal */
+  .ad-calendar-title  { font-size: 14px; margin-bottom: 10px; }
+  .ad-cal-nav         { margin-bottom: 10px; }
+  .ad-cal-arrow       { width: 24px; height: 24px; font-size: 13px; }
+  .ad-cal-month       { font-size: 12px; }
+  .ad-cal-grid        { gap: 1px; }
+  .ad-cal-day         { font-size: 10px; padding: 4px 1px; border-radius: 4px; }
+  .ad-cal-day-label   { font-size: 8px; }
+  .ad-cal-dot         { width: 3px; height: 3px; }
+  .ad-cal-legend      { flex-wrap: wrap; gap: 8px 14px; }
+
+  /* Employee cards: compact */
+  .ad-emp-list        { gap: 8px; }
+  .ad-emp-card        { padding: 10px; gap: 8px; border-radius: 10px; }
+  .ad-emp-avatar      { width: 32px; height: 32px; border-radius: 7px; }
+  .ad-emp-name        { font-size: 11px; }
+  .ad-emp-title       { font-size: 9px; margin-bottom: 2px; }
+  .ad-emp-desc        { font-size: 9px; }
+
+  /* Logout */
+  .ad-logout-btn      { font-size: 11px; padding: 8px; }
 }

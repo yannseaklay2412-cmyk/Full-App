@@ -11,7 +11,7 @@ const sidebarItems = [
   { label: 'Employees',   path: '/admin/dentists'     },
   { label: 'Appointment', path: '/admin/appointments' },
   { label: 'Record',      path: '/admin/users'        },
-  { label: 'Setting',     path: '/admin/reports'      },
+  { label: 'Setting',     path: '/admin/AdminSetting'      },
 ]
 
 const SIDEBAR = {
@@ -40,7 +40,7 @@ export default function Users() {
   setLoading(true)
   setError(null)
   try {
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { session } } = await supabase.auth.getSession() 
     const token = session?.access_token
 
     const res = await fetch(`${API}/api/patients`, {

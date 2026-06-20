@@ -10,6 +10,7 @@ export default function AdminDashboard() {
   const [bookings, setBookings] = useState([])
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDentist, setSelectedDentist] = useState(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     const users = JSON.parse(localStorage.getItem('users')    || '[]')
@@ -69,15 +70,21 @@ setUpcoming(
     ? bookings.filter(b => b.dentistId === selectedDentist.id)
     : []
 
-  const sortedDentists = [...dentists].sort((a, b) => {
-    const countA = bookings.filter(bk => bk.dentistId === a.id).length
-    const countB = bookings.filter(bk => bk.dentistId === b.id).length
-    return countB - countA
-  })
+  const sortedDentists = [...dentists]
+    .sort((a, b) => {
+      const countA = bookings.filter(bk => bk.dentistId === a.id).length
+      const countB = bookings.filter(bk => bk.dentistId === b.id).length
+      return countB - countA
+    })
 
   return (
     <div className="ad-wrap">
-      <aside className="ad-sidebar">
+      {/* Overlay backdrop — closes sidebar when tapped outside */}
+      {sidebarOpen && (
+        <div className="ad-sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      <aside className={`ad-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="ad-sidebar-logo">
           <div className="ad-logo-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -91,7 +98,8 @@ setUpcoming(
         </div>
         <nav className="ad-sidebar-nav">
           {sidebarItems.map(item => (
-            <div key={item.path} className={`ad-nav-item ${window.location.pathname === item.path ? 'active' : ''}`} onClick={() => navigate(item.path)}>
+            <div key={item.path} className={`ad-nav-item ${window.location.pathname === item.path ? 'active' : ''}`}
+              onClick={() => { navigate(item.path); setSidebarOpen(false) }}>
               {item.label}
             </div>
           ))}
@@ -103,9 +111,14 @@ setUpcoming(
 
       <div className="ad-content">
         <div className="ad-topbar">
-          <div className="ad-topbar-left">
-            <p className="ad-topbar-title">Dashboard</p>
-            <p className="ad-topbar-sub">Home / Overview</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button className="ad-hamburger" onClick={() => setSidebarOpen(o => !o)} aria-label="Toggle menu">
+              <span /><span /><span />
+            </button>
+            <div className="ad-topbar-left">
+              <p className="ad-topbar-title">Dashboard</p>
+              <p className="ad-topbar-sub">Home / Overview</p>
+            </div>
           </div>
           <div className="ad-topbar-right">
             <div className="ad-search">
@@ -205,6 +218,9 @@ setUpcoming(
                 <span className="ad-view-all" onClick={() => navigate('/admin/dentists')}>View All</span>
               </div>
               <div className="ad-emp-list" style={{ maxHeight: 420, overflowY: 'auto' }}>
+                {sortedDentists.length === 0 && (
+                  <div className="ad-empty">No appointments booked yet</div>
+                )}
                 {sortedDentists.map((d, i) => (
                   <div
                     key={d.id}
