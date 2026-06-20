@@ -15,4 +15,5 @@ router.put('/bookings/:id/status',   updateBookingStatus)
 router.get('/patients',              getAllPatients)
 router.get('/patients/:id',          getPatientById)
 
+
 export default router

@@ -1,37 +1,31 @@
-import * as timeslotService from '../services/timeslot.service.js'
+// controllers/timeslot.controller.js
+import * as slotService from '../services/timeslot.service.js'
 
-export const getTimeslots = async (req, res, next) => {
+export const getAllSlots = async (req, res) => {
   try {
-    const { dentist_id, date } = req.query
-    const data = await timeslotService.getTimeslots(dentist_id, date)
-    res.status(200).json({ success: true, data })
-  } catch (err) { next(err) }
+    const slots = await slotService.getAllSlots()
+    res.json(slots)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 }
 
-export const getAllTimeslots = async (req, res, next) => {
+export const addSlot = async (req, res) => {
   try {
-    const data = await timeslotService.getAllTimeslots()
-    res.status(200).json({ success: true, data })
-  } catch (err) { next(err) }
+    const { start_time, end_time } = req.body
+    const slot = await slotService.addSlot(start_time, end_time)
+    res.status(201).json(slot)
+  } catch (err) {
+    res.status(400).json({ error: err.message })
+  }
 }
 
-export const createTimeslot = async (req, res, next) => {
+export const deleteSlot = async (req, res) => {
   try {
-    const data = await timeslotService.createTimeslot(req.body)
-    res.status(201).json({ success: true, message: 'Timeslot created', data })
-  } catch (err) { next(err) }
-}
-
-export const updateTimeslot = async (req, res, next) => {
-  try {
-    const data = await timeslotService.updateTimeslot(req.params.id, req.body)
-    res.status(200).json({ success: true, message: 'Timeslot updated', data })
-  } catch (err) { next(err) }
-}
-
-export const deleteTimeslot = async (req, res, next) => {
-  try {
-    const data = await timeslotService.deleteTimeslot(req.params.id)
-    res.status(200).json({ success: true, ...data })
-  } catch (err) { next(err) }
+    const { id } = req.params
+    await slotService.deleteSlot(id)
+    res.json({ deleted: id })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 }

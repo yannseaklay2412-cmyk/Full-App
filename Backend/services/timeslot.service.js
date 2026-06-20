@@ -1,30 +1,16 @@
-import * as timeslotRepo from '../repositories/timeslot.repository.js'
+// services/timeslot.service.js
+import * as slotRepo from '../repositories/timeslot.repository.js'
 
-export const getTimeslots = async (dentistId, date) => {
-  if (!dentistId || !date) throw { status: 400, message: 'dentist_id and date are required' }
-  return timeslotRepo.getByDentistAndDate(dentistId, date)
+export const getAllSlots = async () => {
+  return await slotRepo.getAllSlots()
 }
 
-export const getAllTimeslots = async () => {
-  return timeslotRepo.getAll()
+export const addSlot = async (start_time, end_time) => {
+  if (!start_time || !end_time) throw new Error('start_time and end_time are required')
+  return await slotRepo.addSlot(start_time, end_time)
 }
 
-export const createTimeslot = async (slotData) => {
-  if (!slotData.dentist_id) throw { status: 400, message: 'dentist_id is required' }
-  if (!slotData.date)       throw { status: 400, message: 'date is required' }
-  if (!slotData.start_time) throw { status: 400, message: 'start_time is required' }
-  if (!slotData.end_time)   throw { status: 400, message: 'end_time is required' }
-  return timeslotRepo.create({ ...slotData, status: 'available' })
-}
-
-export const updateTimeslot = async (id, updates) => {
-  const slot = await timeslotRepo.getById(id)
-  if (!slot) throw { status: 404, message: 'Timeslot not found' }
-  return timeslotRepo.update(id, updates)
-}
-
-export const deleteTimeslot = async (id) => {
-  const slot = await timeslotRepo.getById(id)
-  if (!slot) throw { status: 404, message: 'Timeslot not found' }
-  return timeslotRepo.remove(id)
+export const deleteSlot = async (id) => {
+  if (!id) throw new Error('id is required')
+  await slotRepo.deleteSlot(id)
 }

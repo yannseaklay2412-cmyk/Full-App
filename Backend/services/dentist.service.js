@@ -1,7 +1,12 @@
 import * as dentistRepo from '../repositories/dentist.repository.js'
 
 export const getAllDentists = async () => {
-  return dentistRepo.getAll()
+  const dentists = await dentistRepo.getAll()
+  return dentists.map(d => ({
+    ...d,                  // keep ALL original fields, untouched
+    name: d.dentist_name,  // add alias for frontend compatibility
+    title: d.specialty,    // adjust to your actual column name
+  }))
 }
 
 export const getDentistById = async (id) => {

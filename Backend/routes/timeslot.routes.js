@@ -1,16 +1,11 @@
-import { Router } from 'express'
-import { getTimeslots, getAllTimeslots, createTimeslot, updateTimeslot, deleteTimeslot } from '../controllers/timeslot.controller.js'
-import { protect, adminOnly } from '../middleware/auth.middleware.js'
+// routes/timeslot.routes.js
+import express from 'express'
+import { getAllSlots, addSlot, deleteSlot } from '../controllers/timeslot.controller.js'
 
-const router = Router()
+const router = express.Router()
 
-// Public — patients can view timeslots
-router.get('/', getTimeslots)
-
-// Admin only
-router.get('/all',    protect, adminOnly, getAllTimeslots)
-router.post('/',      protect, adminOnly, createTimeslot)
-router.put('/:id',    protect, adminOnly, updateTimeslot)
-router.delete('/:id', protect, adminOnly, deleteTimeslot)
+router.get('/',       getAllSlots)
+router.post('/',      addSlot)
+router.delete('/:id', deleteSlot)
 
 export default router

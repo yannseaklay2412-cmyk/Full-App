@@ -7,7 +7,6 @@ export const protect = async (req, res, next) => {
 
   const token = authHeader.split(' ')[1]
 
-  // ✅ Verify Supabase token instead of JWT
   const { data, error } = await supabase.auth.getUser(token)
   if (error || !data.user)
     return res.status(401).json({ success: false, message: 'Invalid or expired token' })
