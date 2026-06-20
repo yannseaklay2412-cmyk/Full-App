@@ -52,12 +52,9 @@ export const login = async ({ email, password }) => {
   const { data: user } = await supabase
     .from('profiles').select('role').eq('email', data.user.email).maybeSingle()
 
-<<<<<<< HEAD
   // const role = user?.role == 'admin' ? 'admin' : 'patient' 
-=======
   const role = user?.role === 'admin' ? 'admin' : 'patient'
 
->>>>>>> 2050911aa152839184409a24b21647dfbb184b5d
   // Generate JWT
   const token = jwt.sign(
     { id: data.user.id, email: data.user.email, role },

@@ -13,10 +13,9 @@ export default function Book() {
   const [step, setStep]               = useState(0)
   const [showSuccess, setShowSuccess] = useState(false)
 
-  const [dentists, setDentists]           = useState([])
-  const [services, setServices]           = useState([])
-  const [timeslots, setTimeslots]         = useState([])
-  const [bookedSlotIds, setBookedSlotIds] = useState([])
+  const [dentists, setDentists]   = useState([])
+  const [services, setServices]   = useState([])
+  const [timeslots, setTimeslots] = useState([])
 
   const [dentist, setDentist]   = useState(null)
   const [service, setService]   = useState(null)
@@ -57,28 +56,23 @@ export default function Book() {
   }, [])
 
   useEffect(() => {
-    if (!dentist || !date) return
+    if (!dentist || !date || !service) return
     setTimeslot(null)
+    setTimeslots([])
     const fetchTimeslots = async () => {
-      // 1. Get time templates for this dentist
-      const { data: slots } = await supabase
-        .from('timeslots')
-        .select('id, start_time, end_time')
-        .eq('dentist_id', dentist.id)
-        .order('start_time')
-      if (slots) setTimeslots(slots)
-
-      // 2. Get booked slot ids for selected date
-      const { data: booked } = await supabase
-        .from('appointment_timeslots')
-        .select('timeslot_id')
-        .eq('date', date)
-      if (booked) setBookedSlotIds(booked.map(b => b.timeslot_id))
+      const { data, error } = await supabase.rpc('get_available_slots', {
+        p_dentist_id:              dentist.id,
+        p_service_id:              service.id,
+        p_date:                    date,
+      })
+      if (error) { console.error(error); return }
+      if (data) setTimeslots(data)
     }
     fetchTimeslots()
-  }, [dentist, date])
+  }, [dentist, date, service])
 
-  useEffect(() => { setTimeslot(null); setDate('') }, [dentist])
+  useEffect(() => { setTimeslot(null); setDate(''); setTimeslots([]) }, [dentist])
+  useEffect(() => { setTimeslot(null); setTimeslots([]) }, [service])
 
   const canNext = [
     !!dentist,
@@ -122,30 +116,23 @@ export default function Book() {
       patient = newPatient
     }
 
-    // 2. Insert appointment
+    // 2. Insert appointment with date and time
     const { data: appt, error: apptError } = await supabase
       .from('appointments')
       .insert({
-        patient_id: patient.id,
-        dentist_id: dentist.id,
-        status:     'pending',
-        notes:      patientInfo.notes,
+        patient_id:       patient.id,
+        dentist_id:       dentist.id,
+        appointment_date: date,
+        start_time:       timeslot.slot_start,
+        end_time:         timeslot.slot_end,
+        status:           'pending',
+        notes:            patientInfo.notes,
       })
       .select()
       .single()
     if (apptError) { console.error(apptError); return }
 
-    // 3. Link appointment to timeslot + date
-    const { error: linkError } = await supabase
-      .from('appointment_timeslots')
-      .insert({
-        appointment_id: appt.id,
-        timeslot_id:    timeslot.id,
-        date:           date,
-      })
-    if (linkError) { console.error(linkError); return }
-
-    // 4. Link appointment to service
+    // 3. Link appointment to service
     const { error: serviceError } = await supabase
       .from('appointment_services')
       .insert({
@@ -264,16 +251,14 @@ export default function Book() {
               <p className="book-slot-hint">No slots available. Please try another date.</p>
             ) : (
               <div className="book-time-grid">
-                {timeslots.map(t => {
-                  const isBooked   = bookedSlotIds.includes(t.id)
-                  const isSelected = timeslot?.id === t.id
+                {timeslots.map((t, i) => {
+                  const isSelected = timeslot?.slot_start === t.slot_start
                   return (
-                    <div key={t.id}
-                      className={`book-time-slot ${isBooked ? 'slot-booked' : 'slot-available'} ${isSelected ? 'selected' : ''}`}
-                      onClick={() => !isBooked && setTimeslot(t)}>
-                      <span className="book-slot-time">{t.start_time} – {t.end_time}</span>
-                      {isBooked && <span className="book-slot-tag tag-booked">Taken</span>}
-                      {isSelected && !isBooked && <span className="book-slot-tag tag-selected">✓</span>}
+                    <div key={i}
+                      className={`book-time-slot slot-available ${isSelected ? 'selected' : ''}`}
+                      onClick={() => setTimeslot(t)}>
+                      <span className="book-slot-time">{t.slot_start} – {t.slot_end}</span>
+                      {isSelected && <span className="book-slot-tag tag-selected">✓</span>}
                     </div>
                   )
                 })}
@@ -347,7 +332,7 @@ export default function Book() {
                 { label: 'Duration', value: `${service?.duration_minutes} min` },
                 { label: 'Price',    value: `$${service?.price}` },
                 { label: 'Date',     value: date },
-                { label: 'Time',     value: `${timeslot?.start_time} – ${timeslot?.end_time}` },
+                { label: 'Time',     value: `${timeslot?.slot_start} – ${timeslot?.slot_end}` },
                 { label: 'Notes',    value: patientInfo.notes || '—' },
                 { label: 'Status',   value: '⏳ Pending confirmation' },
               ].map((row, i) => (
@@ -388,7 +373,7 @@ export default function Book() {
               <div className="success-row"><span>Dentist</span><span>{dentist?.dentist_name}</span></div>
               <div className="success-row"><span>Service</span><span>{service?.service_name}</span></div>
               <div className="success-row"><span>Date</span><span>{date}</span></div>
-              <div className="success-row"><span>Time</span><span>{timeslot?.start_time} – {timeslot?.end_time}</span></div>
+              <div className="success-row"><span>Time</span><span>{timeslot?.slot_start} – {timeslot?.slot_end}</span></div>
             </div>
             <span className="success-badge">⏳ Pending confirmation</span>
             <button className="success-btn" onClick={() => navigate('/dashboard')}>Go to Dashboard</button>
