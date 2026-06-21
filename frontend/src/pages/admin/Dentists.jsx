@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import { supabase } from '../../config/supabaseClient'
+import { uploadImage } from '../../config/uploadImage'
 
 const TABS = ['Dentists', 'Services']
 
@@ -29,16 +30,8 @@ export default function Dentists() {
   const [serviceImageFile, setServiceImageFile] = useState(null)
   const [error, setError] = useState('')
 
-  const uploadImage = async (file, folder) => {
-    const ext = file.name.split('.').pop()
-    const path = `${folder}/${Date.now()}.${ext}`
-    const { error: uploadError } = await supabase.storage
-      .from('file_image')
-      .upload(path, file, { upsert: true })
-    if (uploadError) throw uploadError
-    const { data } = supabase.storage.from('file_image').getPublicUrl(path)
-    return data.publicUrl
-  }
+  const getPublicUrl = (fileName) =>
+    supabase.storage.from('file_image').getPublicUrl(fileName).data.publicUrl
 
   // ── Fetch dentists ──
   const fetchDentists = async () => {
@@ -73,7 +66,9 @@ export default function Dentists() {
     try {
       let formToSave = { ...dentistForm }
       if (dentistPhotoFile) {
-        formToSave.photo_key = await uploadImage(dentistPhotoFile, 'dentists')
+        const fileName = await uploadImage(dentistPhotoFile)
+        if (!fileName) throw new Error('Image upload failed')
+        formToSave.photo_key = getPublicUrl(fileName)
       }
       if (editingDentist) {
         await api.put(`/dentists/${editingDentist}`, formToSave)
@@ -130,7 +125,9 @@ export default function Dentists() {
     try {
       let formToSave = { ...serviceForm }
       if (serviceImageFile) {
-        formToSave.image_url = await uploadImage(serviceImageFile, 'services')
+        const fileName = await uploadImage(serviceImageFile)
+        if (!fileName) throw new Error('Image upload failed')
+        formToSave.image_url = getPublicUrl(fileName)
       }
       if (editingService) {
         await api.put(`/services/${editingService}`, formToSave)
