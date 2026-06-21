@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import { supabase } from '../../config/supabaseClient'
 import { uploadImage } from '../../config/uploadImage'
+
 const TABS = ['Dentists', 'Services']
 
-const emptyDentist = { dentist_name: '', specialty: '', phone: '', telegram: '', background: '', age: '', image_path: '' }
-const emptyService = { service_name: '', description: '', price: '', duration_minutes: '' }
+const emptyDentist = { dentist_name: '', specialty: '', phone: '', telegram: '', background: '', age: '', photo_key: '' }
+const emptyService = { service_name: '', description: '', price: '', duration_minutes: '', image_url: '' }
 
 export default function Dentists() {
   const navigate = useNavigate()
@@ -25,10 +26,12 @@ export default function Dentists() {
   const [editingService, setEditingService] = useState(null)
   const [showServiceForm, setShowServiceForm] = useState(false)
   const [serviceLoading, setServiceLoading] = useState(false)
-  const [selectedFile, setSelectedFile] = useState(null)     
-const [previewUrl, setPreviewUrl] = useState(null) 
-
+  const [dentistPhotoFile, setDentistPhotoFile] = useState(null)
+  const [serviceImageFile, setServiceImageFile] = useState(null)
   const [error, setError] = useState('')
+
+  const getPublicUrl = (fileName) =>
+    supabase.storage.from('file_image').getPublicUrl(fileName).data.publicUrl
 
   // ── Fetch dentists ──
   const fetchDentists = async () => {
@@ -56,37 +59,30 @@ const [previewUrl, setPreviewUrl] = useState(null)
   }, [])
 
   // ── Dentist CRUD ──
-const saveDentist = async () => {
-  if (!dentistForm.dentist_name || !dentistForm.specialty) return setError('Name and specialty are required')
-  setDentistLoading(true)
-  setError('')
-  try {
-    let imagePath = dentistForm.image_path
-
-    if (selectedFile) {
-      imagePath = await uploadImage(selectedFile)
-      if (!imagePath) {
-        setError('Image upload failed')
-        setDentistLoading(false)
-        return
+  const saveDentist = async () => {
+    if (!dentistForm.dentist_name || !dentistForm.specialty) return setError('Name and specialty are required')
+    setDentistLoading(true)
+    setError('')
+    try {
+      let formToSave = { ...dentistForm }
+      if (dentistPhotoFile) {
+        const fileName = await uploadImage(dentistPhotoFile)
+        if (!fileName) throw new Error('Image upload failed')
+        formToSave.photo_key = getPublicUrl(fileName)
       }
+      if (editingDentist) {
+        await api.put(`/dentists/${editingDentist}`, formToSave)
+      } else {
+        await api.post('/dentists', formToSave)
+      }
+      await fetchDentists()
+      resetDentistForm()
+    } catch (e) {
+      setError(e.response?.data?.message || 'Failed to save dentist')
+    } finally {
+      setDentistLoading(false)
     }
-
-    const payload = { ...dentistForm, image_path: imagePath }
-
-    if (editingDentist) {
-      await api.put(`/dentists/${editingDentist}`, payload)
-    } else {
-      await api.post('/dentists', payload)
-    }
-    await fetchDentists()
-    resetDentistForm()
-  } catch (e) {
-    setError(e.response?.data?.message || 'Failed to save dentist')
-  } finally {
-    setDentistLoading(false)
   }
-}
 
   const deleteDentist = async (id) => {
     if (!window.confirm('Delete this dentist?')) return
@@ -98,27 +94,27 @@ const saveDentist = async () => {
     }
   }
 
-const startEditDentist = (d) => {
-  setDentistForm({
-    dentist_name: d.dentist_name || '',
-    specialty: d.specialty || '',
-    phone: d.phone || '',
-    telegram: d.telegram || '',
-    background: d.background || '',
-    age: d.age || '',
-    image_path: d.image_path || ''   // ← add this
-  })
-  setEditingDentist(d.id)
-  setShowDentistForm(true)
-  window.scrollTo(0, 0)
-}
+  const startEditDentist = (d) => {
+    setDentistForm({
+      dentist_name: d.dentist_name || '',
+      specialty: d.specialty || '',
+      phone: d.phone || '',
+      telegram: d.telegram || '',
+      background: d.background || '',
+      age: d.age || '',
+      photo_key: d.photo_key || ''
+    })
+    setDentistPhotoFile(null)
+    setEditingDentist(d.id)
+    setShowDentistForm(true)
+    window.scrollTo(0, 0)
+  }
 
   const resetDentistForm = () => {
     setDentistForm(emptyDentist)
+    setDentistPhotoFile(null)
     setEditingDentist(null)
     setShowDentistForm(false)
-    setSelectedFile(null)
-setPreviewUrl(null)
   }
 
   // ── Service CRUD ──
@@ -127,10 +123,16 @@ setPreviewUrl(null)
     setServiceLoading(true)
     setError('')
     try {
+      let formToSave = { ...serviceForm }
+      if (serviceImageFile) {
+        const fileName = await uploadImage(serviceImageFile)
+        if (!fileName) throw new Error('Image upload failed')
+        formToSave.image_url = getPublicUrl(fileName)
+      }
       if (editingService) {
-        await api.put(`/services/${editingService}`, serviceForm)
+        await api.put(`/services/${editingService}`, formToSave)
       } else {
-        await api.post('/services', serviceForm)
+        await api.post('/services', formToSave)
       }
       await fetchServices()
       resetServiceForm()
@@ -156,8 +158,10 @@ setPreviewUrl(null)
       service_name: s.service_name || '',
       description: s.description || '',
       price: s.price || '',
-      duration_minutes: s.duration_minutes || ''
+      duration_minutes: s.duration_minutes || '',
+      image_url: s.image_url || ''
     })
+    setServiceImageFile(null)
     setEditingService(s.id)
     setShowServiceForm(true)
     window.scrollTo(0, 0)
@@ -165,6 +169,7 @@ setPreviewUrl(null)
 
   const resetServiceForm = () => {
     setServiceForm(emptyService)
+    setServiceImageFile(null)
     setEditingService(null)
     setShowServiceForm(false)
   }
@@ -308,22 +313,13 @@ setPreviewUrl(null)
                         style={{ ...inputStyle, resize: 'vertical' }} />
                     </div>
                     <div style={{ gridColumn: '1 / -1' }}>
-                      <label style={labelStyle}>Profile Picture</label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={e => {
-                          const file = e.target.files[0]
-                          setSelectedFile(file)
-                          if (file) setPreviewUrl(URL.createObjectURL(file))
-                        }}
-                        style={inputStyle}
-                      />
-                      {previewUrl && (
+                      <label style={labelStyle}>Photo</label>
+                      <input type="file" accept="image/*" onChange={e => setDentistPhotoFile(e.target.files[0])} style={inputStyle} />
+                      {(dentistPhotoFile || dentistForm.photo_key) && (
                         <img
-                          src={previewUrl}
-                          alt="Preview"
-                          style={{ marginTop: 10, width: 80, height: 80, borderRadius: 10, objectFit: 'cover', border: '1px solid #e0e4ea' }}
+                          src={dentistPhotoFile ? URL.createObjectURL(dentistPhotoFile) : dentistForm.photo_key}
+                          alt="preview"
+                          style={{ marginTop: 10, width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '3px solid #4ecdc4' }}
                         />
                       )}
                     </div>
@@ -348,9 +344,9 @@ setPreviewUrl(null)
 
                     {/* Large photo area */}
                     <div style={{ position: 'relative', height: 220, background: 'linear-gradient(135deg, #0d1b3e 0%, #1a3566 100%)', overflow: 'hidden', flexShrink: 0 }}>
-                      {d.image_path ? (
+                      {d.photo_key ? (
                         <img
-                          src={supabase.storage.from('file_image').getPublicUrl(d.image_path).data.publicUrl}
+                          src={d.photo_key}
                           alt={d.dentist_name}
                           style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
                           onError={e => { e.target.style.display = 'none' }}
@@ -360,15 +356,12 @@ setPreviewUrl(null)
                           {d.dentist_name?.charAt(0)?.toUpperCase() || '?'}
                         </div>
                       )}
-                      {/* Gradient overlay at bottom */}
                       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 80, background: 'linear-gradient(to top, rgba(13,27,62,0.85), transparent)' }} />
-                      {/* Specialty badge */}
                       {d.specialty && (
                         <div style={{ position: 'absolute', top: 12, right: 12, background: '#4ecdc4', color: '#0d1b3e', padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700, letterSpacing: 0.3 }}>
                           {d.specialty}
                         </div>
                       )}
-                      {/* Name on photo */}
                       <div style={{ position: 'absolute', bottom: 14, left: 16 }}>
                         <p style={{ fontSize: 16, fontWeight: 700, color: '#fff', margin: 0, textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>{d.dentist_name}</p>
                       </div>
@@ -449,6 +442,17 @@ setPreviewUrl(null)
                       <label style={labelStyle}>Description</label>
                       <textarea value={serviceForm.description} onChange={e => setServiceForm({ ...serviceForm, description: e.target.value })} placeholder="Professional teeth cleaning to remove plaque..." rows={3}
                         style={{ ...inputStyle, resize: 'vertical' }} />
+                    </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={labelStyle}>Service Image</label>
+                      <input type="file" accept="image/*" onChange={e => setServiceImageFile(e.target.files[0])} style={inputStyle} />
+                      {(serviceImageFile || serviceForm.image_url) && (
+                        <img
+                          src={serviceImageFile ? URL.createObjectURL(serviceImageFile) : serviceForm.image_url}
+                          alt="preview"
+                          style={{ marginTop: 10, width: 80, height: 80, borderRadius: 12, objectFit: 'cover', border: '3px solid #4ecdc4' }}
+                        />
+                      )}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
