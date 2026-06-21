@@ -97,13 +97,22 @@ export default function AdminDashboard() {
 
   const sortedDentists = [...dentists]
     .sort((a, b) => {
+<<<<<<< Updated upstream
       const countA = bookings.filter(bk => bk.dentist_id === a.id || bk.dentists?.id === a.id).length
       const countB = bookings.filter(bk => bk.dentist_id === b.id || bk.dentists?.id === b.id).length
+=======
+      const countA = bookings.filter(bk => bk.dentistId === a.id).length
+      const countB = bookings.filter(bk => bk.dentistId === b.id).length
+>>>>>>> Stashed changes
       return countB - countA
     })
 
   return (
     <div className="ad-wrap">
+<<<<<<< Updated upstream
+=======
+      {/* Overlay backdrop — closes sidebar when tapped outside */}
+>>>>>>> Stashed changes
       {sidebarOpen && (
         <div className="ad-sidebar-overlay" onClick={() => setSidebarOpen(false)} />
       )}
@@ -248,7 +257,11 @@ export default function AdminDashboard() {
               </div>
               <div className="ad-emp-list" style={{ maxHeight: 420, overflowY: 'auto' }}>
                 {sortedDentists.length === 0 && (
+<<<<<<< Updated upstream
                   <div className="ad-empty">No employees yet</div>
+=======
+                  <div className="ad-empty">No appointments booked yet</div>
+>>>>>>> Stashed changes
                 )}
                 {sortedDentists.map((d, i) => (
                   <div
