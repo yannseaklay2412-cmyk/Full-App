@@ -1,5 +1,21 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { supabase } from '../../config/supabaseClient'
+
+const API = 'http://localhost:5000/api'
+
+const apiFetch = async (path) => {
+  const { data: { session } } = await supabase.auth.getSession()
+  const token = session?.access_token
+  const res = await fetch(`${API}${path}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
 
 const sidebarItems = [
   { label: 'Dashboard',   path: '/admin'              },
@@ -17,6 +33,8 @@ const STATUS_COLOR = {
   pending:   { color: '#f5c842', bg: 'rgba(245,200,66,0.08)',  border: '#f5c842' },
   Cancelled: { color: '#ff6b6b', bg: 'rgba(255,107,107,0.08)', border: '#ff6b6b' },
   cancelled: { color: '#ff6b6b', bg: 'rgba(255,107,107,0.08)', border: '#ff6b6b' },
+  done:      { color: '#7c3aed', bg: 'rgba(124,58,237,0.08)',  border: '#7c3aed' },
+  Done:      { color: '#7c3aed', bg: 'rgba(124,58,237,0.08)',  border: '#7c3aed' },
 }
 
 const SIDEBAR = {
@@ -37,17 +55,32 @@ export default function UserDetail() {
   const [bookings, setBookings] = useState([])
   const [filter, setFilter]     = useState('all')
   const [notFound, setNotFound] = useState(false)
+  const [loading, setLoading]   = useState(true)
 
   useEffect(() => {
-    const users    = JSON.parse(localStorage.getItem('users')    || '[]')
-    const allBookings = JSON.parse(localStorage.getItem('bookings') || '[]')
-    const found    = users.find(u => String(u.id) === String(id))
-    if (!found) { setNotFound(true); return }
-    setUser(found)
-    const userBookings = allBookings.filter(
-      b => b.userEmail === found.email || b.email === found.email
-    )
-    setBookings(userBookings)
+    const load = async () => {
+      try {
+        const [patient, allBookings] = await Promise.all([
+          apiFetch(`/patients/${id}`),
+          apiFetch('/bookings'),
+        ])
+
+        if (!patient) { setNotFound(true); return }
+        setUser(patient)
+
+        const bookingList = Array.isArray(allBookings) ? allBookings : (allBookings.data ?? [])
+        const userBookings = bookingList.filter(b =>
+          String(b.patient_id) === String(id) ||
+          b.patients?.id === id
+        )
+        setBookings(userBookings)
+      } catch (e) {
+        setNotFound(true)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
   }, [id])
 
   const navItem = (item) => ({
@@ -58,8 +91,14 @@ export default function UserDetail() {
   })
 
   const today    = new Date().toISOString().split('T')[0]
-  const upcoming = bookings.filter(b => b.date >= today && b.status !== 'Cancelled' && b.status !== 'cancelled')
-  const past     = bookings.filter(b => b.date <  today || b.status === 'Cancelled' || b.status === 'cancelled')
+  const upcoming = bookings.filter(b => {
+    const bDate = b.date || b.created_at?.split('T')[0]
+    return bDate >= today && b.status !== 'Cancelled' && b.status !== 'cancelled'
+  })
+  const past = bookings.filter(b => {
+    const bDate = b.date || b.created_at?.split('T')[0]
+    return bDate < today || b.status === 'Cancelled' || b.status === 'cancelled'
+  })
 
   const stats = {
     total:     bookings.length,
@@ -73,11 +112,30 @@ export default function UserDetail() {
     : filter === 'past'     ? past
     : bookings.filter(b => b.status?.toLowerCase() === filter)
 
-  const initials = user?.name
-    ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+  const initials = user?.full_name
+    ? user.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : '?'
 
-  // ── NOT FOUND ──
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'DM Sans', sans-serif", background: '#f0f2f5' }}>
+        <aside style={SIDEBAR.wrap}>
+          <div style={SIDEBAR.logo}><div style={SIDEBAR.logoBox}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 2C8 2 5 5 5 9c0 2 .5 4 1.5 5.5L8 20h8l1.5-5.5C18.5 13 19 11 19 9c0-4-3-7-7-7z"/>
+            </svg>
+          </div></div>
+          {sidebarItems.map(item => (
+            <div key={item.path} onClick={() => navigate(item.path)} style={navItem(item)}>{item.label}</div>
+          ))}
+        </aside>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8a9fc4', fontSize: 14 }}>
+          Loading patient...
+        </div>
+      </div>
+    )
+  }
+
   if (notFound) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'DM Sans', sans-serif", background: '#f0f2f5' }}>
@@ -107,7 +165,7 @@ export default function UserDetail() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'DM Sans', sans-serif", background: '#f0f2f5' }}>
 
-      {/* ── SIDEBAR ── */}
+      {/* SIDEBAR */}
       <aside style={SIDEBAR.wrap}>
         <div style={SIDEBAR.logo}>
           <div style={SIDEBAR.logoBox}>
@@ -132,7 +190,7 @@ export default function UserDetail() {
         </div>
       </aside>
 
-      {/* ── MAIN ── */}
+      {/* MAIN */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* TOP BAR */}
@@ -151,15 +209,11 @@ export default function UserDetail() {
 
           {/* PROFILE CARD */}
           <div style={{ background: '#fff', borderRadius: 16, padding: '24px 28px', marginBottom: 20, boxShadow: '0 1px 6px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
-
-            {/* Avatar */}
             <div style={{ width: 70, height: 70, borderRadius: '50%', background: 'linear-gradient(135deg, #4ecdc4, #2bb5ac)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, fontWeight: 800, color: '#0d1b3e', flexShrink: 0 }}>
               {initials}
             </div>
-
-            {/* Info */}
             <div style={{ flex: 1 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0d1b3e', marginBottom: 4 }}>{user.name}</h2>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0d1b3e', marginBottom: 4 }}>{user.full_name}</h2>
               <p style={{ fontSize: 13, color: '#8a9fc4', marginBottom: 10 }}>{user.email}</p>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 11, padding: '3px 12px', borderRadius: 99, background: 'rgba(78,205,196,0.08)', border: '1px solid rgba(78,205,196,0.3)', color: '#4ecdc4', fontWeight: 600 }}>
@@ -170,15 +224,18 @@ export default function UserDetail() {
                     Active Patient
                   </span>
                 )}
+                {user.is_banned && (
+                  <span style={{ fontSize: 11, padding: '3px 12px', borderRadius: 99, background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.4)', color: '#ff6b6b', fontWeight: 600 }}>
+                    Banned
+                  </span>
+                )}
               </div>
             </div>
-
-            {/* Joined date */}
-            {user.createdAt && (
+            {user.created_at && (
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
                 <p style={{ fontSize: 11, color: '#8a9fc4', marginBottom: 4 }}>Member Since</p>
                 <p style={{ fontSize: 13, fontWeight: 600, color: '#0d1b3e' }}>
-                  {new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                  {new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                 </p>
               </div>
             )}
@@ -239,20 +296,33 @@ export default function UserDetail() {
                       No appointments found
                     </td>
                   </tr>
-                ) : [...filtered].sort((a, b) => b.id - a.id).map((b, i) => {
+                ) : [...filtered].sort((a, b) => {
+                  const aDate = a.date || a.created_at || ''
+                  const bDate = b.date || b.created_at || ''
+                  return bDate.localeCompare(aDate)
+                }).map((b, i) => {
                   const sc = STATUS_COLOR[b.status] || STATUS_COLOR.pending
+                  const serviceName = b.appointment_services?.[0]?.services?.service_name
+                    || b.appointment_services?.[0]?.service_name
+                    || '—'
                   return (
                     <tr key={b.id} style={{ borderBottom: '1px solid #f0f2f5', transition: 'background 0.15s' }}
                       onMouseEnter={e => e.currentTarget.style.background = '#fafbfc'}
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                       <td style={{ padding: '13px 16px', fontSize: 12, color: '#8a9fc4' }}>{i + 1}</td>
                       <td style={{ padding: '13px 16px' }}>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: '#0d1b3e', marginBottom: 1 }}>{b.dentistName || b.doctorName}</p>
-                        <p style={{ fontSize: 11, color: '#8a9fc4' }}>{b.dentistTitle || ''}</p>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: '#0d1b3e', marginBottom: 1 }}>
+                          {b.dentists?.dentist_name || '—'}
+                        </p>
+                        <p style={{ fontSize: 11, color: '#8a9fc4' }}>{b.dentists?.specialty || ''}</p>
                       </td>
-                      <td style={{ padding: '13px 16px', fontSize: 13, color: '#666' }}>{b.service}</td>
-                      <td style={{ padding: '13px 16px', fontSize: 13, color: '#666' }}>{b.date}</td>
-                      <td style={{ padding: '13px 16px', fontSize: 13, color: '#666' }}>{b.time}</td>
+                      <td style={{ padding: '13px 16px', fontSize: 13, color: '#666' }}>{serviceName}</td>
+                      <td style={{ padding: '13px 16px', fontSize: 13, color: '#666' }}>
+                        {b.date || b.created_at?.split('T')[0] || '—'}
+                      </td>
+                      <td style={{ padding: '13px 16px', fontSize: 13, color: '#666' }}>
+                        {b.start_time || '—'}
+                      </td>
                       <td style={{ padding: '13px 16px' }}>
                         <span style={{ padding: '4px 12px', borderRadius: 99, border: `1px solid ${sc.border}`, color: sc.color, background: sc.bg, fontSize: 11, fontWeight: 600, textTransform: 'capitalize' }}>
                           {b.status}

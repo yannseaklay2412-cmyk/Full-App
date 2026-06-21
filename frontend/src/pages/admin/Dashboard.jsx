@@ -1,7 +1,23 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import './Dashboard.css' 
-import { DataStorage } from '../../seeders/data' 
+import './Dashboard.css'
+import { supabase } from '../../config/supabaseClient'
+
+const API = 'http://localhost:5000/api'
+
+const apiFetch = async (path) => {
+  const { data: { session } } = await supabase.auth.getSession()
+  const token = session?.access_token
+  const res = await fetch(`${API}${path}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+
 export default function AdminDashboard() {
   const navigate = useNavigate()
   const [stats, setStats]       = useState({ users: 0, total: 0, pending: 0, confirmed: 0, cancelled: 0 })
@@ -13,33 +29,42 @@ export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
-    const users = JSON.parse(localStorage.getItem('users')    || '[]')
-    const bks   = JSON.parse(localStorage.getItem('bookings') || '[]')
-    const dents = JSON.parse(localStorage.getItem('dentists') || '[]')
+    const load = async () => {
+      try {
+        const [patients, bks, dents] = await Promise.all([
+          apiFetch('/patients'),
+          apiFetch('/bookings'),
+          apiFetch('/dentists'),
+        ])
 
-    if (dents.length === 0) {
-    
-      const defaults = DataStorage.dentists
-      localStorage.setItem('dentists', JSON.stringify(defaults))
-      setDentists(defaults)
-    } else {
-      setDentists(dents)
+        const patientList = Array.isArray(patients) ? patients : (patients.data ?? [])
+        const bookingList = Array.isArray(bks) ? bks : (bks.data ?? [])
+        const dentistList = Array.isArray(dents) ? dents : (dents.data ?? [])
+
+        setDentists(dentistList)
+        setBookings(bookingList)
+        setStats({
+          users:     patientList.length,
+          total:     bookingList.length,
+          pending:   bookingList.filter(b => b.status === 'pending').length,
+          confirmed: bookingList.filter(b => b.status === 'confirmed').length,
+          cancelled: bookingList.filter(b => b.status === 'cancelled').length,
+        })
+
+        const today = new Date().toISOString().split('T')[0]
+        setUpcoming(
+          [...bookingList]
+            .filter(b => {
+              const bDate = b.date || b.created_at?.split('T')[0]
+              return bDate === today && b.status !== 'cancelled'
+            })
+            .sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''))
+        )
+      } catch (e) {
+        console.error('Failed to load dashboard data', e)
+      }
     }
-    setBookings(bks)
-    setStats({
-      users:     users.length,
-      total:     bks.length,
-      pending:   bks.filter(b => b.status === 'pending').length,
-      confirmed: bks.filter(b => b.status === 'confirmed').length,
-      cancelled: bks.filter(b => b.status === 'cancelled').length,
-    })
-
-    const today = new Date().toISOString().split('T')[0]
-setUpcoming(
-  [...bks]
-    .filter(b => b.date === today && b.status !== 'cancelled')
-    .sort((a, b) => a.time.localeCompare(b.time))
-)
+    load()
   }, [])
 
   const year        = currentMonth.getFullYear()
@@ -50,7 +75,7 @@ setUpcoming(
   const todayDate   = new Date().getDate()
   const todayMonth  = new Date().getMonth()
   const todayYear   = new Date().getFullYear()
-  const bookedDates = bookings.map(b => b.date)
+  const bookedDates = bookings.map(b => b.date || b.created_at?.split('T')[0])
   const calendarDays = []
   for (let i = 0; i < firstDay; i++) calendarDays.push(null)
   for (let d = 1; d <= daysInMonth; d++) calendarDays.push(d)
@@ -67,19 +92,18 @@ setUpcoming(
   ]
 
   const dentistAppointments = selectedDentist
-    ? bookings.filter(b => b.dentistId === selectedDentist.id)
+    ? bookings.filter(b => b.dentist_id === selectedDentist.id || b.dentists?.id === selectedDentist.id)
     : []
 
   const sortedDentists = [...dentists]
     .sort((a, b) => {
-      const countA = bookings.filter(bk => bk.dentistId === a.id).length
-      const countB = bookings.filter(bk => bk.dentistId === b.id).length
+      const countA = bookings.filter(bk => bk.dentist_id === a.id || bk.dentists?.id === a.id).length
+      const countB = bookings.filter(bk => bk.dentist_id === b.id || bk.dentists?.id === b.id).length
       return countB - countA
     })
 
   return (
     <div className="ad-wrap">
-      {/* Overlay backdrop — closes sidebar when tapped outside */}
       {sidebarOpen && (
         <div className="ad-sidebar-overlay" onClick={() => setSidebarOpen(false)} />
       )}
@@ -165,7 +189,7 @@ setUpcoming(
               </div>
               <div className="ad-appt-list">
                 {upcoming.length === 0 ? (
-                  <div className="ad-empty">Today appointments</div>
+                  <div className="ad-empty">No appointments today</div>
                 ) : upcoming.map(b => (
                   <div key={b.id} className="ad-appt-row">
                     <div className="ad-appt-avatar">
@@ -174,10 +198,12 @@ setUpcoming(
                       </svg>
                     </div>
                     <div className="ad-appt-info">
-                      <p className="ad-appt-name">{b.userName}</p>
-                      <p className="ad-appt-time">{b.date} · {b.time}</p>
+                      <p className="ad-appt-name">{b.patients?.full_name || '—'}</p>
+                      <p className="ad-appt-time">
+                        {b.date || b.created_at?.split('T')[0]} · {b.start_time || ''}
+                      </p>
                     </div>
-                    <span className="ad-appt-type">{b.dentistTitle || 'Check Up'}</span>
+                    <span className="ad-appt-type">{b.dentists?.specialty || 'Check Up'}</span>
                     <span className="ad-appt-status" style={{ color: statusColor[b.status], borderColor: statusColor[b.status] }}>{b.status}</span>
                   </div>
                 ))}
@@ -190,15 +216,19 @@ setUpcoming(
                 <div className="ad-empty">No activity yet</div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  {[...bookings].sort((a,b) => b.id - a.id).slice(0,5).map((b, i, arr) => (
+                  {[...bookings].sort((a, b) => b.id - a.id).slice(0, 5).map((b, i, arr) => (
                     <div key={b.id} style={{ display: 'flex', gap: 12, padding: '10px 0', borderBottom: i < arr.length - 1 ? '1px solid #f0f2f5' : 'none' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
                         <div style={{ width: 10, height: 10, borderRadius: '50%', background: statusColor[b.status], marginTop: 3 }}></div>
                         {i < arr.length - 1 && <div style={{ width: 2, height: '100%', minHeight: 24, background: '#f0f2f5', marginTop: 4 }}></div>}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: '#0d1b3e', marginBottom: 2 }}>{b.userName} booked with {b.dentistName}</p>
-                        <p style={{ fontSize: 11, color: '#8a9fc4' }}>{b.date} · {b.time}</p>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: '#0d1b3e', marginBottom: 2 }}>
+                          {b.patients?.full_name || '—'} booked with {b.dentists?.dentist_name || '—'}
+                        </p>
+                        <p style={{ fontSize: 11, color: '#8a9fc4' }}>
+                          {b.date || b.created_at?.split('T')[0]} · {b.start_time || ''}
+                        </p>
                       </div>
                       <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 99, border: `1px solid ${statusColor[b.status]}`, color: statusColor[b.status], fontWeight: 600, textTransform: 'capitalize', alignSelf: 'flex-start', flexShrink: 0 }}>
                         {b.status}
@@ -210,7 +240,6 @@ setUpcoming(
             </div>
           </div>
 
-
           <div className="ad-col-right">
             <div className="ad-card ad-card-full">
               <div className="ad-card-header">
@@ -219,7 +248,7 @@ setUpcoming(
               </div>
               <div className="ad-emp-list" style={{ maxHeight: 420, overflowY: 'auto' }}>
                 {sortedDentists.length === 0 && (
-                  <div className="ad-empty">No appointments booked yet</div>
+                  <div className="ad-empty">No employees yet</div>
                 )}
                 {sortedDentists.map((d, i) => (
                   <div
@@ -229,8 +258,12 @@ setUpcoming(
                     style={{ cursor: 'pointer' }}
                   >
                     <div className="ad-emp-avatar">
-                      {d.photo ? (
-                        <img src={d.photo} alt={d.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 10 }} />
+                      {d.image_path ? (
+                        <img
+                          src={supabase.storage.from('file_image').getPublicUrl(d.image_path).data.publicUrl}
+                          alt={d.dentist_name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 10 }}
+                        />
                       ) : (
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                           <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
@@ -238,12 +271,12 @@ setUpcoming(
                       )}
                     </div>
                     <div className="ad-emp-info">
-                        <p className="ad-emp-name">{d.name}</p>
-                        <p className="ad-emp-title">{d.title}</p>
-                        <p className="ad-emp-desc">
-                          {bookings.filter(b => b.dentistId === d.id).length} appointments
-                        </p>
-                      </div>
+                      <p className="ad-emp-name">{d.dentist_name}</p>
+                      <p className="ad-emp-title">{d.specialty}</p>
+                      <p className="ad-emp-desc">
+                        {bookings.filter(b => b.dentist_id === d.id || b.dentists?.id === d.id).length} appointments
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -252,7 +285,7 @@ setUpcoming(
         </div>
       </div>
 
-      {/* ── DOCTOR APPOINTMENTS MODAL ── */}
+      {/* DOCTOR APPOINTMENTS MODAL */}
       {selectedDentist && (
         <div
           onClick={() => setSelectedDentist(null)}
@@ -272,8 +305,8 @@ setUpcoming(
           >
             <div style={{ padding: '18px 22px', borderBottom: '1px solid #f0f2f5', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0d1b3e', marginBottom: 2 }}>{selectedDentist.name}</h3>
-                <p style={{ fontSize: 12, color: '#8a9fc4' }}>{selectedDentist.title}</p>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0d1b3e', marginBottom: 2 }}>{selectedDentist.dentist_name}</h3>
+                <p style={{ fontSize: 12, color: '#8a9fc4' }}>{selectedDentist.specialty}</p>
               </div>
               <button
                 onClick={() => setSelectedDentist(null)}
@@ -290,7 +323,11 @@ setUpcoming(
                 </div>
               ) : (
                 [...dentistAppointments]
-                  .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
+                  .sort((a, b) => {
+                    const aKey = (a.date || a.created_at?.split('T')[0] || '') + (a.start_time || '')
+                    const bKey = (b.date || b.created_at?.split('T')[0] || '') + (b.start_time || '')
+                    return aKey.localeCompare(bKey)
+                  })
                   .map((b, i, arr) => (
                     <div
                       key={b.id}
@@ -300,8 +337,12 @@ setUpcoming(
                       }}
                     >
                       <div>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: '#0d1b3e', marginBottom: 2 }}>{b.userName}</p>
-                        <p style={{ fontSize: 11, color: '#8a9fc4' }}>{b.date} · {b.time}</p>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: '#0d1b3e', marginBottom: 2 }}>
+                          {b.patients?.full_name || '—'}
+                        </p>
+                        <p style={{ fontSize: 11, color: '#8a9fc4' }}>
+                          {b.date || b.created_at?.split('T')[0]} · {b.start_time || ''}
+                        </p>
                       </div>
                       <span
                         style={{
