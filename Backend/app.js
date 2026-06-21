@@ -12,6 +12,7 @@ import serviceRoutes  from './routes/service.routes.js'
 import timeslotRoutes from './routes/timeslot.routes.js'
 import adminRoutes    from './routes/admin.routes.js'
 
+
 const app = express()
 
 // ── Global Middleware ─────────────────────────────────────
@@ -33,6 +34,8 @@ app.use('/api/dentists',  dentistRoutes)
 app.use('/api/services',  serviceRoutes)
 app.use('/api/timeslots', timeslotRoutes)
 app.use('/api/admin',     adminRoutes)
+app.use('/api/timeslots', timeslotRoutes)
+
 
 // ── 404 & Error ───────────────────────────────────────────
 app.use(notFound)

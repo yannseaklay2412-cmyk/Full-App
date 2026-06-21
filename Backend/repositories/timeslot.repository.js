@@ -1,61 +1,19 @@
-import { supabase } from '../config/supabase.js'
+// repositories/timeslot.repository.js
+import pool from '../config/db.js'
 
-export const getByDentistAndDate = async (dentistId, date) => {
-  const { data, error } = await supabase
-    .from('timeslots')
-    .select('id, date, start_time, end_time, status')
-    .eq('dentist_id', dentistId)
-    .eq('date', date)
-    .order('start_time')
-  if (error) throw error
-  return data
+export const getAllSlots = async () => {
+  const { rows } = await pool.query('SELECT id, start_time, end_time FROM timeslots ORDER BY start_time ASC')
+  return rows
 }
 
-export const getById = async (id) => {
-  const { data, error } = await supabase
-    .from('timeslots')
-    .select('*')
-    .eq('id', id)
-    .single()
-  if (error) throw error
-  return data
+export const addSlot = async (start_time, end_time) => {
+  const { rows } = await pool.query(
+    'INSERT INTO timeslots (start_time, end_time) VALUES ($1, $2) RETURNING *',
+    [start_time, end_time]
+  )
+  return rows[0]
 }
 
-export const getAll = async () => {
-  const { data, error } = await supabase
-    .from('timeslots')
-    .select('id, date, start_time, end_time, status, dentist_id')
-    .order('date')
-  if (error) throw error
-  return data
-}
-
-export const create = async (slotData) => {
-  const { data, error } = await supabase
-    .from('timeslots')
-    .insert(slotData)
-    .select()
-    .single()
-  if (error) throw error
-  return data
-}
-
-export const update = async (id, updates) => {
-  const { data, error } = await supabase
-    .from('timeslots')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single()
-  if (error) throw error
-  return data
-}
-
-export const remove = async (id) => {
-  const { error } = await supabase
-    .from('timeslots')
-    .delete()
-    .eq('id', id)
-  if (error) throw error
-  return { message: 'Timeslot deleted' }
+export const deleteSlot = async (id) => {
+  await pool.query('DELETE FROM timeslots WHERE id = $1', [id])
 }

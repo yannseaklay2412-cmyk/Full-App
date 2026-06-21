@@ -3,7 +3,7 @@ import { supabase } from '../config/supabase.js'
 export const getAll = async () => {
   const { data, error } = await supabase
     .from('dentists')
-    .select('id, dentist_name, specialty, phone, background, age')
+    .select('id, dentist_name, specialty, phone, background, age, image_path')
     .order('dentist_name')
   if (error) throw error
   return data

@@ -25,7 +25,6 @@ export default function Dentists() {
   const [editingService, setEditingService] = useState(null)
   const [showServiceForm, setShowServiceForm] = useState(false)
   const [serviceLoading, setServiceLoading] = useState(false)
-
   const [dentistPhotoFile, setDentistPhotoFile] = useState(null)
   const [serviceImageFile, setServiceImageFile] = useState(null)
   const [error, setError] = useState('')
@@ -184,7 +183,7 @@ export default function Dentists() {
     { label: 'Employees',   path: '/admin/dentists' },
     { label: 'Appointment', path: '/admin/appointments' },
     { label: 'Record',      path: '/admin/users' },
-    { label: 'Setting',     path: '/admin/reports' },
+    { label: 'Setting',     path: '/admin/AdminSetting' },
   ]
 
   const inputStyle = {
@@ -342,35 +341,71 @@ export default function Dentists() {
               )}
 
               {/* Dentist Cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 24 }}>
                 {dentists.map(d => (
-                  <div key={d.id} style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
-                    <div style={{ background: 'linear-gradient(135deg, #0d1b3e, #1a3566)', padding: '24px 20px 20px', textAlign: 'center' }}>
-                      {d.photo_key
-                        ? <img src={d.photo_key} alt={d.dentist_name} style={{ width: 60, height: 60, borderRadius: '50%', objectFit: 'cover', margin: '0 auto 12px', display: 'block', border: '3px solid #4ecdc4' }} />
-                        : <div style={{ width: 60, height: 60, borderRadius: '50%', background: '#4ecdc4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: 22, color: '#0d1b3e', fontWeight: 700 }}>
-                            {d.dentist_name?.charAt(0) || '?'}
-                          </div>
-                      }
-                      <h3 style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{d.dentist_name}</h3>
-                      <p style={{ fontSize: 12, color: '#4ecdc4', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{d.specialty}</p>
-                    </div>
-                    <div style={{ padding: '16px 18px' }}>
-                      {d.phone && <p style={{ fontSize: 12, color: '#8a9fc4', marginBottom: 4 }}>📞 {d.phone}</p>}
-                      {d.telegram && <p style={{ fontSize: 12, color: '#8a9fc4', marginBottom: 4 }}>✈️ {d.telegram}</p>}
-                      {d.age && <p style={{ fontSize: 12, color: '#8a9fc4', marginBottom: 4 }}>🎂 Age: {d.age}</p>}
-                      {d.background && <p style={{ fontSize: 12, color: '#8a9fc4', lineHeight: 1.6, marginTop: 8, marginBottom: 14, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{d.background}</p>}
-                      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                        <button onClick={() => startEditDentist(d)}
-                          style={{ flex: 1, background: '#f0f2f5', border: 'none', color: '#0d1b3e', padding: '8px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
-                          Edit
-                        </button>
-                        <button onClick={() => deleteDentist(d.id)}
-                          style={{ flex: 1, background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.2)', color: '#ff6b6b', padding: '8px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
-                          Delete
-                        </button>
+                  <div key={d.id} style={{ background: '#fff', borderRadius: 18, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.10)', display: 'flex', flexDirection: 'column' }}>
+
+                    {/* Large photo area */}
+                    <div style={{ position: 'relative', height: 220, background: 'linear-gradient(135deg, #0d1b3e 0%, #1a3566 100%)', overflow: 'hidden', flexShrink: 0 }}>
+                      {d.photo_key ? (
+                        <img
+                          src={d.photo_key}
+                          alt={d.dentist_name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
+                          onError={e => { e.target.style.display = 'none' }}
+                        />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 72, color: '#4ecdc4', fontWeight: 700, opacity: 0.6 }}>
+                          {d.dentist_name?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                      )}
+                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 80, background: 'linear-gradient(to top, rgba(13,27,62,0.85), transparent)' }} />
+                      {d.specialty && (
+                        <div style={{ position: 'absolute', top: 12, right: 12, background: '#4ecdc4', color: '#0d1b3e', padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700, letterSpacing: 0.3 }}>
+                          {d.specialty}
+                        </div>
+                      )}
+                      <div style={{ position: 'absolute', bottom: 14, left: 16 }}>
+                        <p style={{ fontSize: 16, fontWeight: 700, color: '#fff', margin: 0, textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>{d.dentist_name}</p>
                       </div>
                     </div>
+
+                    {/* Info section */}
+                    <div style={{ padding: '14px 18px', flex: 1 }}>
+                      {d.phone && (
+                        <p style={{ fontSize: 12, color: '#8a9fc4', marginBottom: 5, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span>📞</span> {d.phone}
+                        </p>
+                      )}
+                      {d.telegram && (
+                        <p style={{ fontSize: 12, color: '#8a9fc4', marginBottom: 5, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span>✈️</span> {d.telegram}
+                        </p>
+                      )}
+                      {d.age && (
+                        <p style={{ fontSize: 12, color: '#8a9fc4', marginBottom: 5, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span>🎂</span> Age: {d.age}
+                        </p>
+                      )}
+                      {d.background && (
+                        <p style={{ fontSize: 12, color: '#b0bdd6', lineHeight: 1.6, marginTop: 8, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                          {d.background}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div style={{ display: 'flex', gap: 8, padding: '0 18px 16px' }}>
+                      <button onClick={() => startEditDentist(d)}
+                        style={{ flex: 1, background: '#f0f2f5', border: 'none', color: '#0d1b3e', padding: '9px', borderRadius: 9, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
+                        Edit
+                      </button>
+                      <button onClick={() => deleteDentist(d.id)}
+                        style={{ flex: 1, background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.2)', color: '#ff6b6b', padding: '9px', borderRadius: 9, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
+                        Delete
+                      </button>
+                    </div>
+
                   </div>
                 ))}
               </div>

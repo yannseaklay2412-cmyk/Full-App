@@ -1,4 +1,12 @@
 import * as bookingService from '../services/booking.service.js'
+import dashboardmodel from '../models/dashboard.model.js'
+
+export const getDashboard = async (req, res, next) => {
+  try {
+    const data = await dashboardmodel.getStats()   // was "DashboardModel" — wrong casing, would crash
+    res.status(200).json({ success: true, data })
+  } catch (err) { next(err) }
+}
 
 export const getMyBookings = async (req, res, next) => {
   try {
@@ -28,17 +36,15 @@ export const cancelBooking = async (req, res, next) => {
   } catch (err) { next(err) }
 }
 
-// Admin
 export const getAllBookings = async (req, res, next) => {
   try {
-    const data = await bookingService.getAllBookings(req.query)
-    res.status(200).json({ success: true, data })
+    const data = await bookingService.getAllBookings(req.query)  // req.query passed through
+    res.json(data)
   } catch (err) { next(err) }
 }
-
 export const updateBookingStatus = async (req, res, next) => {
   try {
     const data = await bookingService.updateBookingStatus(req.params.id, req.body.status)
-    res.status(200).json({ success: true, message: `Booking marked as ${req.body.status}`, data })
+    res.json(data)
   } catch (err) { next(err) }
 }

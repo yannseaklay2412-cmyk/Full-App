@@ -1,21 +1,23 @@
 import { Router } from 'express'
-import { getMyBookings, getBookingById, createBooking, cancelBooking } from '../controllers/booking.controller.js'
-import { protect, patientOnly } from '../middleware/auth.middleware.js'
+import {
+  getMyBookings,
+  getAllBookings,
+  getBookingById,
+  createBooking,
+  cancelBooking,
+  updateBookingStatus,
+} from '../controllers/booking.controller.js'
+import { protect, patientOnly, adminOnly } from '../middleware/auth.middleware.js'
 
 const router = Router()
 
 router.use(protect)
 
-// GET  /api/bookings        — get my bookings
-router.get('/',          patientOnly, getMyBookings)
-
-// GET  /api/bookings/:id    — get booking by id
-router.get('/:id',       getBookingById)
-
-// POST /api/bookings        — create booking
-router.post('/',         patientOnly, createBooking)
-
-// PUT  /api/bookings/:id/cancel — cancel booking
+router.get('/', adminOnly, getAllBookings)
+router.get('/mine', patientOnly, getMyBookings)
+router.get('/:id', getBookingById)
+router.post('/', patientOnly, createBooking)
 router.put('/:id/cancel', cancelBooking)
+router.patch('/:id', adminOnly, updateBookingStatus)
 
 export default router
