@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
+import { supabase } from '../../config/supabaseClient'
 
 const TABS = ['Dentists', 'Services']
 
-const emptyDentist = { dentist_name: '', specialty: '', phone: '', telegram: '', background: '', age: '' }
-const emptyService = { service_name: '', description: '', price: '', duration_minutes: '' }
+const emptyDentist = { dentist_name: '', specialty: '', phone: '', telegram: '', background: '', age: '', photo_key: '' }
+const emptyService = { service_name: '', description: '', price: '', duration_minutes: '', image_url: '' }
 
 export default function Dentists() {
   const navigate = useNavigate()
@@ -25,7 +26,20 @@ export default function Dentists() {
   const [showServiceForm, setShowServiceForm] = useState(false)
   const [serviceLoading, setServiceLoading] = useState(false)
 
+  const [dentistPhotoFile, setDentistPhotoFile] = useState(null)
+  const [serviceImageFile, setServiceImageFile] = useState(null)
   const [error, setError] = useState('')
+
+  const uploadImage = async (file, folder) => {
+    const ext = file.name.split('.').pop()
+    const path = `${folder}/${Date.now()}.${ext}`
+    const { error: uploadError } = await supabase.storage
+      .from('file_image')
+      .upload(path, file, { upsert: true })
+    if (uploadError) throw uploadError
+    const { data } = supabase.storage.from('file_image').getPublicUrl(path)
+    return data.publicUrl
+  }
 
   // ── Fetch dentists ──
   const fetchDentists = async () => {
@@ -58,10 +72,14 @@ export default function Dentists() {
     setDentistLoading(true)
     setError('')
     try {
+      let formToSave = { ...dentistForm }
+      if (dentistPhotoFile) {
+        formToSave.photo_key = await uploadImage(dentistPhotoFile, 'dentists')
+      }
       if (editingDentist) {
-        await api.put(`/dentists/${editingDentist}`, dentistForm)
+        await api.put(`/dentists/${editingDentist}`, formToSave)
       } else {
-        await api.post('/dentists', dentistForm)
+        await api.post('/dentists', formToSave)
       }
       await fetchDentists()
       resetDentistForm()
@@ -89,8 +107,10 @@ export default function Dentists() {
       phone: d.phone || '',
       telegram: d.telegram || '',
       background: d.background || '',
-      age: d.age || ''
+      age: d.age || '',
+      photo_key: d.photo_key || ''
     })
+    setDentistPhotoFile(null)
     setEditingDentist(d.id)
     setShowDentistForm(true)
     window.scrollTo(0, 0)
@@ -98,6 +118,7 @@ export default function Dentists() {
 
   const resetDentistForm = () => {
     setDentistForm(emptyDentist)
+    setDentistPhotoFile(null)
     setEditingDentist(null)
     setShowDentistForm(false)
   }
@@ -108,10 +129,14 @@ export default function Dentists() {
     setServiceLoading(true)
     setError('')
     try {
+      let formToSave = { ...serviceForm }
+      if (serviceImageFile) {
+        formToSave.image_url = await uploadImage(serviceImageFile, 'services')
+      }
       if (editingService) {
-        await api.put(`/services/${editingService}`, serviceForm)
+        await api.put(`/services/${editingService}`, formToSave)
       } else {
-        await api.post('/services', serviceForm)
+        await api.post('/services', formToSave)
       }
       await fetchServices()
       resetServiceForm()
@@ -137,8 +162,10 @@ export default function Dentists() {
       service_name: s.service_name || '',
       description: s.description || '',
       price: s.price || '',
-      duration_minutes: s.duration_minutes || ''
+      duration_minutes: s.duration_minutes || '',
+      image_url: s.image_url || ''
     })
+    setServiceImageFile(null)
     setEditingService(s.id)
     setShowServiceForm(true)
     window.scrollTo(0, 0)
@@ -146,6 +173,7 @@ export default function Dentists() {
 
   const resetServiceForm = () => {
     setServiceForm(emptyService)
+    setServiceImageFile(null)
     setEditingService(null)
     setShowServiceForm(false)
   }
@@ -288,6 +316,17 @@ export default function Dentists() {
                       <textarea value={dentistForm.background} onChange={e => setDentistForm({ ...dentistForm, background: e.target.value })} placeholder="Specializing in braces and aligner therapy..." rows={3}
                         style={{ ...inputStyle, resize: 'vertical' }} />
                     </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={labelStyle}>Photo</label>
+                      <input type="file" accept="image/*" onChange={e => setDentistPhotoFile(e.target.files[0])} style={inputStyle} />
+                      {(dentistPhotoFile || dentistForm.photo_key) && (
+                        <img
+                          src={dentistPhotoFile ? URL.createObjectURL(dentistPhotoFile) : dentistForm.photo_key}
+                          alt="preview"
+                          style={{ marginTop: 10, width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '3px solid #4ecdc4' }}
+                        />
+                      )}
+                    </div>
                   </div>
                   <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
                     <button onClick={saveDentist} disabled={dentistLoading}
@@ -307,9 +346,12 @@ export default function Dentists() {
                 {dentists.map(d => (
                   <div key={d.id} style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
                     <div style={{ background: 'linear-gradient(135deg, #0d1b3e, #1a3566)', padding: '24px 20px 20px', textAlign: 'center' }}>
-                      <div style={{ width: 60, height: 60, borderRadius: '50%', background: '#4ecdc4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: 22, color: '#0d1b3e', fontWeight: 700 }}>
-                        {d.dentist_name?.charAt(0) || '?'}
-                      </div>
+                      {d.photo_key
+                        ? <img src={d.photo_key} alt={d.dentist_name} style={{ width: 60, height: 60, borderRadius: '50%', objectFit: 'cover', margin: '0 auto 12px', display: 'block', border: '3px solid #4ecdc4' }} />
+                        : <div style={{ width: 60, height: 60, borderRadius: '50%', background: '#4ecdc4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: 22, color: '#0d1b3e', fontWeight: 700 }}>
+                            {d.dentist_name?.charAt(0) || '?'}
+                          </div>
+                      }
                       <h3 style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{d.dentist_name}</h3>
                       <p style={{ fontSize: 12, color: '#4ecdc4', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{d.specialty}</p>
                     </div>
@@ -368,6 +410,17 @@ export default function Dentists() {
                       <label style={labelStyle}>Description</label>
                       <textarea value={serviceForm.description} onChange={e => setServiceForm({ ...serviceForm, description: e.target.value })} placeholder="Professional teeth cleaning to remove plaque..." rows={3}
                         style={{ ...inputStyle, resize: 'vertical' }} />
+                    </div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <label style={labelStyle}>Service Image</label>
+                      <input type="file" accept="image/*" onChange={e => setServiceImageFile(e.target.files[0])} style={inputStyle} />
+                      {(serviceImageFile || serviceForm.image_url) && (
+                        <img
+                          src={serviceImageFile ? URL.createObjectURL(serviceImageFile) : serviceForm.image_url}
+                          alt="preview"
+                          style={{ marginTop: 10, width: 80, height: 80, borderRadius: 12, objectFit: 'cover', border: '3px solid #4ecdc4' }}
+                        />
+                      )}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>

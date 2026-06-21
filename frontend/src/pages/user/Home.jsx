@@ -212,7 +212,7 @@ export default function Home() {
             {specialists.map((s) => (
               <div className="specialist-card" key={s.id}>
                 <img
-                  src={s.photo || 'https://via.placeholder.com/300x200?text=Dentist'}
+                  src={s.photo_key || 'https://placehold.co/300x200?text=Dentist'}
                   alt={s.dentist_name}
                   className="img"
                 />
@@ -237,7 +237,7 @@ export default function Home() {
             <div className="service-card" key={s.id}>
               <div
                 className="service-img-bg"
-                style={{ backgroundImage: `url(${[service1,service2,service3,service4,service5,service6][i] || service1})` }}
+                style={{ backgroundImage: `url(${s.image_url || [service1,service2,service3,service4,service5,service6][i] || service1})` }}
               />
               <div className="service-hover-overlay" />
               <div className="service-content">
