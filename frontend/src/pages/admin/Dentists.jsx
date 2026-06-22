@@ -6,7 +6,7 @@ import { uploadImage } from '../../config/uploadImage'
 
 const TABS = ['Dentists', 'Services']
 
-const emptyDentist = { dentist_name: '', specialty: '', phone: '', telegram: '', background: '', age: '', photo_key: '' }
+const emptyDentist = { dentist_name: '', specialty: '', phone: '', telegram: '', background: '', age: '', image_path: '' }
 const emptyService = { service_name: '', description: '', price: '', duration_minutes: '', image_url: '' }
 
 export default function Dentists() {
@@ -68,7 +68,7 @@ export default function Dentists() {
       if (dentistPhotoFile) {
         const fileName = await uploadImage(dentistPhotoFile)
         if (!fileName) throw new Error('Image upload failed')
-        formToSave.photo_key = getPublicUrl(fileName)
+        formToSave.image_path = fileName
       }
       if (editingDentist) {
         await api.put(`/dentists/${editingDentist}`, formToSave)
@@ -102,7 +102,7 @@ export default function Dentists() {
       telegram: d.telegram || '',
       background: d.background || '',
       age: d.age || '',
-      photo_key: d.photo_key || ''
+      image_path: d.image_path || ''
     })
     setDentistPhotoFile(null)
     setEditingDentist(d.id)
@@ -315,9 +315,9 @@ export default function Dentists() {
                     <div style={{ gridColumn: '1 / -1' }}>
                       <label style={labelStyle}>Photo</label>
                       <input type="file" accept="image/*" onChange={e => setDentistPhotoFile(e.target.files[0])} style={inputStyle} />
-                      {(dentistPhotoFile || dentistForm.photo_key) && (
+                      {(dentistPhotoFile || dentistForm.image_path) && (
                         <img
-                          src={dentistPhotoFile ? URL.createObjectURL(dentistPhotoFile) : dentistForm.photo_key}
+                          src={dentistPhotoFile ? URL.createObjectURL(dentistPhotoFile) : getPublicUrl(dentistForm.image_path)}
                           alt="preview"
                           style={{ marginTop: 10, width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '3px solid #4ecdc4' }}
                         />
@@ -344,9 +344,9 @@ export default function Dentists() {
 
                     {/* Large photo area */}
                     <div style={{ position: 'relative', height: 220, background: 'linear-gradient(135deg, #0d1b3e 0%, #1a3566 100%)', overflow: 'hidden', flexShrink: 0 }}>
-                      {d.photo_key ? (
+                      {d.image_path ? (
                         <img
-                          src={d.photo_key}
+                          src={getPublicUrl(d.image_path)}
                           alt={d.dentist_name}
                           style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center' }}
                           onError={e => { e.target.style.display = 'none' }}

@@ -76,3 +76,31 @@ export const banById = async (id) => {
   if (error) throw { status: 500, message: error.message }
   return data || null
 }
+
+export const deleteAppointmentsByPatientId = async (patientId) => {
+  // Get appointment IDs first so we can clean up the join table
+  const { data: appts, error: fetchErr } = await supabase
+    .from('appointments')
+    .select('id')
+    .eq('patient_id', patientId)
+  if (fetchErr) throw { status: 500, message: fetchErr.message }
+
+  if (appts && appts.length > 0) {
+    const ids = appts.map(a => a.id)
+
+    // Delete junction records first (appointment_services)
+    const { error: svcErr } = await supabase
+      .from('appointment_services')
+      .delete()
+      .in('appointment_id', ids)
+    if (svcErr) throw { status: 500, message: svcErr.message }
+
+    // Then delete the appointments themselves
+    const { error: apptErr } = await supabase
+      .from('appointments')
+      .delete()
+      .eq('patient_id', patientId)
+    if (apptErr) throw { status: 500, message: apptErr.message }
+  }
+}
+
