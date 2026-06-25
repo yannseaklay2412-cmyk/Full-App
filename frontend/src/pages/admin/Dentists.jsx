@@ -368,24 +368,33 @@ export default function Dentists() {
                     </div>
 
                     {/* Info section */}
-                    <div style={{ padding: '14px 18px', flex: 1 }}>
+                    <div style={{ padding: '16px 18px', flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
                       {d.phone && (
-                        <p style={{ fontSize: 12, color: '#8a9fc4', marginBottom: 5, display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span>📞</span> {d.phone}
-                        </p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(78,205,196,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4ecdc4" strokeWidth="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.64A2 2 0 012 .93h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                          </div>
+                          <span style={{ fontSize: 12, color: '#4a5568', fontWeight: 500 }}>{d.phone}</span>
+                        </div>
                       )}
                       {d.telegram && (
-                        <p style={{ fontSize: 12, color: '#8a9fc4', marginBottom: 5, display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span>✈️</span> {d.telegram}
-                        </p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(78,205,196,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4ecdc4" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                          </div>
+                          <span style={{ fontSize: 12, color: '#4a5568', fontWeight: 500 }}>{d.telegram}</span>
+                        </div>
                       )}
                       {d.age && (
-                        <p style={{ fontSize: 12, color: '#8a9fc4', marginBottom: 5, display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span>🎂</span> Age: {d.age}
-                        </p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(124,58,237,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                          </div>
+                          <span style={{ fontSize: 12, color: '#4a5568', fontWeight: 500 }}>Age {d.age}</span>
+                        </div>
                       )}
                       {d.background && (
-                        <p style={{ fontSize: 12, color: '#b0bdd6', lineHeight: 1.6, marginTop: 8, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        <p style={{ fontSize: 11, color: '#8a9fc4', lineHeight: 1.6, marginTop: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                           {d.background}
                         </p>
                       )}
@@ -394,11 +403,11 @@ export default function Dentists() {
                     {/* Actions */}
                     <div style={{ display: 'flex', gap: 8, padding: '0 18px 16px' }}>
                       <button onClick={() => startEditDentist(d)}
-                        style={{ flex: 1, background: '#f0f2f5', border: 'none', color: '#0d1b3e', padding: '9px', borderRadius: 9, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
+                        style={{ flex: 1, background: 'transparent', border: '1px solid #e0e4ea', color: '#0d1b3e', padding: '9px', borderRadius: 9, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
                         Edit
                       </button>
                       <button onClick={() => deleteDentist(d.id)}
-                        style={{ flex: 1, background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.2)', color: '#ff6b6b', padding: '9px', borderRadius: 9, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
+                        style={{ flex: 1, background: '#ff6b6b', border: 'none', color: '#fff', padding: '9px', borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
                         Delete
                       </button>
                     </div>

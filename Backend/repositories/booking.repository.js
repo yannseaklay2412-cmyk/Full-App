@@ -36,7 +36,8 @@ export const getAll = async ({ status } = {}) => {
       id, status, notes, created_at,
       dentists ( id, dentist_name, specialty ),
       patients ( id, full_name, email, phone ),
-      appointment_services ( services ( id, service_name, price, duration_minutes ) )
+      appointment_services ( services ( id, service_name, price, duration_minutes ) ),
+      appointment_timeslots ( date, timeslots ( start_time, end_time ) )
     `)
     .order('created_at', { ascending: false })
   if (status) query = query.eq('status', status)

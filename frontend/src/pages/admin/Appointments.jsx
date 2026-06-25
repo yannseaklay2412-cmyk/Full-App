@@ -215,7 +215,7 @@ export default function Appointments() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: '#f8f9fc' }}>
-                    {['#', 'Patient', 'Dentist', 'Date', 'Status', 'Actions'].map(h => (
+                    {['#', 'Patient', 'Dentist', 'Date', 'Time', 'Status', 'Actions'].map(h => (
                       <th key={h} style={{ padding: '13px 16px', textAlign: 'left', fontSize: 11, color: '#8a9fc4', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 600 }}>{h}</th>
                     ))}
                   </tr>
@@ -223,7 +223,7 @@ export default function Appointments() {
                 <tbody>
                   {filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={6} style={{ padding: 48, textAlign: 'center', color: '#8a9fc4', fontSize: 14 }}>
+                      <td colSpan={7} style={{ padding: 48, textAlign: 'center', color: '#8a9fc4', fontSize: 14 }}>
                         {search || filter !== 'all' ? 'No results found' : 'No appointments yet'}
                       </td>
                     </tr>
@@ -248,7 +248,18 @@ export default function Appointments() {
                         <p style={{ fontSize: 11, color: '#8a9fc4' }}>{b.dentists?.specialty || ''}</p>
                       </td>
                       <td style={{ padding: '13px 16px', fontSize: 13, color: '#666' }}>
-                        {b.created_at ? formatDate(b.created_at) : '—'}
+                        {b.appointment_timeslots?.[0]?.date
+                          ? formatDate(b.appointment_timeslots[0].date)
+                          : b.created_at ? formatDate(b.created_at) : '—'}
+                      </td>
+                      <td style={{ padding: '13px 16px' }}>
+                        {b.appointment_timeslots?.[0]?.timeslots?.start_time
+                          ? <span style={{ fontSize: 12, fontWeight: 600, color: '#0d1b3e', background: 'rgba(78,205,196,0.1)', border: '1px solid rgba(78,205,196,0.3)', borderRadius: 6, padding: '3px 10px', whiteSpace: 'nowrap' }}>
+                              {b.appointment_timeslots[0].timeslots.start_time.slice(0, 5)}
+                              {' – '}
+                              {b.appointment_timeslots[0].timeslots.end_time?.slice(0, 5)}
+                            </span>
+                          : <span style={{ color: '#8a9fc4', fontSize: 12 }}>—</span>}
                       </td>
                       <td style={{ padding: '13px 16px' }}>
                         <span style={{ padding: '4px 12px', borderRadius: 99, border: `1px solid ${statusColor[b.status] || '#8a9fc4'}`, color: statusColor[b.status] || '#8a9fc4', fontSize: 11, fontWeight: 600, textTransform: 'capitalize' }}>
