@@ -56,7 +56,7 @@ const handleLogin = async (e) => {
       setLoginError('No role assigned.')
     }
     // Wait a moment for role state to update
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
   } catch (error) {
     console.error('Login Error:', error)
@@ -364,15 +364,15 @@ const handleRegister = async (e) => {
                     </div>
                     
                   <div className="auth-field">
-                    <label>Sex</label>
+                    <label>Gender</label>
                     <select
                       name="sex"
-                      placeholder="Select your sex"
+                      placeholder="Select your gender"
                       value={registerForm.sex}
                       onChange={e => setRegisterForm({ ...registerForm, sex: e.target.value })}
                       className="auth-input"
                     >  
-                      <option value="">Select your sex</option>
+                      <option value="">Select your gender</option>
                       <option value="male">Male</option>
                       <option value="female">Female</option>
                     </select>
