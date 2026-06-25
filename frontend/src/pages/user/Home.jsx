@@ -200,7 +200,9 @@ export default function Home() {
             {specialists.map((s) => (
               <div className="specialist-card" key={s.id}>
                 <img
-                  src={s.photo_key || 'https://placehold.co/300x200?text=Dentist'}
+                  src={s.image_path
+                    ? supabase.storage.from('file_image').getPublicUrl(s.image_path).data.publicUrl
+                    : 'https://placehold.co/300x200?text=Dentist'}
                   alt={s.dentist_name}
                   className="img"
                 />
