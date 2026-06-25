@@ -43,5 +43,10 @@ export const banPatient = async (id) => {
     err.status = 404
     throw err
   }
+
+  // 1. Delete all appointments (and their service records)
+  await patientRepository.deleteAppointmentsByPatientId(id)
+
+  // 2. Mark as banned — the protect middleware will block all future API calls
   return await patientRepository.banById(id)
 }

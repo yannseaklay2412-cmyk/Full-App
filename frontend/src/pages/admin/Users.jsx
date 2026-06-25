@@ -68,7 +68,10 @@ const handleBan = async (userId) => {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${token}` },
     })
-    if (!res.ok) throw new Error(`Failed to ban: ${res.status}`)
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      throw new Error(body.message || `Server error ${res.status}`)
+    }
 
     // Update status locally — no need to refetch
     setUsers(prev => prev.map(u =>
@@ -85,8 +88,9 @@ const handleBan = async (userId) => {
   // ── Filtering ─────────────────────────────────────────────────────────────
   const filtered = users
     .filter(u => {
-      if (filter === 'banned') return u.is_banned === true || u.status === 'banned'
-      return true // 'all' shows every user including banned
+      const banned = u.is_banned === true || u.status === 'banned'
+      if (filter === 'banned') return banned
+      return !banned // 'all' shows only active (non-banned) users
     })
     .filter(u =>
       u.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -120,8 +124,9 @@ const handleBan = async (userId) => {
         </div>
         <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0d1b3e', marginBottom: 8 }}>Ban Patient?</h3>
         <p style={{ fontSize: 13, color: '#8a9fc4', marginBottom: 24, lineHeight: 1.5 }}>
-              You are about to ban <strong style={{ color: '#0d1b3e' }}>{userName}</strong>. They will no longer be able to log in.
-            </p>
+          You are about to ban <strong style={{ color: '#0d1b3e' }}>{userName}</strong>.<br/>
+          This will <strong style={{ color: '#ff6b6b' }}>delete all their appointments</strong> and <strong style={{ color: '#ff6b6b' }}>remove their login access</strong> permanently. They must register with a new email to use the app again.
+        </p>
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={() => setConfirmId(null)}
             style={{ flex: 1, padding: '10px 0', borderRadius: 8, border: '1px solid #e0e4ea', background: '#f8f9fc', color: '#0d1b3e', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
@@ -318,10 +323,12 @@ const handleBan = async (userId) => {
                               style={{ background: 'rgba(78,205,196,0.1)', border: '1px solid #4ecdc4', color: '#4ecdc4', padding: '5px 14px', borderRadius: 6, fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
                               View
                             </button>
-                            <button onClick={() => setConfirmId(u.id)}
-                              style={{ background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.4)', color: '#ff6b6b', padding: '5px 14px', borderRadius: 6, fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
-                              Delete
-                            </button>
+                            {!isBanned && (
+                              <button onClick={() => setConfirmId(u.id)}
+                                style={{ background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.4)', color: '#ff6b6b', padding: '5px 14px', borderRadius: 6, fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
+                                Ban
+                              </button>
+                            )}
                           </div>
                         </td>
 

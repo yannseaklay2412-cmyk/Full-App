@@ -11,6 +11,16 @@ export const protect = async (req, res, next) => {
   if (error || !data.user)
     return res.status(401).json({ success: false, message: 'Invalid or expired token' })
 
+  // Block banned users from accessing any API route
+  const { data: patient } = await supabase
+    .from('patients')
+    .select('is_banned')
+    .eq('id', data.user.id)
+    .maybeSingle()
+
+  if (patient?.is_banned === true)
+    return res.status(403).json({ success: false, message: 'Your account has been banned.' })
+
   req.user = data.user
   next()
 }

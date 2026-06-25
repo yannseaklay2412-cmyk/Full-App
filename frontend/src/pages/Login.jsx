@@ -12,6 +12,7 @@ export default function Login() {
   const { login } = useAuth()
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
   const [loginError, setLoginError] = useState('')
+  const [loginSuccess, setLoginSuccess] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
   const [showLoginPass, setShowLoginPass] = useState(false)
 
@@ -45,15 +46,17 @@ const handleLogin = async (e) => {
       setLoginError(result.error)
       return
     }
-     if (result.role === 'admin') {
-  navigate('/admin')
-} else if (result.role === 'patient') {
-  navigate('/dashboard')
-} else {
-  setLoginError('No role assigned.')
-}
+    if (result.role === 'admin') {
+      setLoginSuccess('Welcome back, Admin! Taking you to your dashboard...')
+      setTimeout(() => navigate('/admin', { replace: true }), 1500)
+    } else if (result.role === 'patient') {
+      setLoginSuccess('Welcome back! Taking you to your account...')
+      setTimeout(() => navigate('/dashboard', { replace: true }), 1500)
+    } else {
+      setLoginError('No role assigned.')
+    }
     // Wait a moment for role state to update
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
   } catch (error) {
     console.error('Login Error:', error)
@@ -142,7 +145,7 @@ const handleRegister = async (e) => {
 
     // Step 4 - Success
     setRegisterSuccess(
-      'Account created successfully! Please check your email to verify your account.'
+      `Welcome, ${registerForm.name.split(' ')[0]}! Your account is ready. Please check your email to verify it.`
     )
 
     setRegisterForm({
@@ -302,7 +305,15 @@ const handleRegister = async (e) => {
                     </div>
                   </div>
                   {loginError && <p className="auth-error">{loginError}</p>}
-                  <button type="submit" className="auth-btn" disabled={loginLoading}>
+                  {loginSuccess && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: 'rgba(78,205,196,0.1)', border: '1px solid rgba(78,205,196,0.3)', borderRadius: 10 }}>
+                      <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#2ec4b6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                      <p style={{ fontSize: 13, color: '#2ec4b6', fontWeight: 500, margin: 0 }}>{loginSuccess}</p>
+                    </div>
+                  )}
+                  <button type="submit" className="auth-btn" disabled={loginLoading || !!loginSuccess}>
                     {loginLoading ? <span className="auth-spinner"></span> : 'Sign In'}
                   </button>
                 </form>
@@ -353,15 +364,15 @@ const handleRegister = async (e) => {
                     </div>
                     
                   <div className="auth-field">
-                    <label>Sex</label>
+                    <label>Gender</label>
                     <select
                       name="sex"
-                      placeholder="Select your sex"
+                      placeholder="Select your gender"
                       value={registerForm.sex}
                       onChange={e => setRegisterForm({ ...registerForm, sex: e.target.value })}
                       className="auth-input"
                     >  
-                      <option value="">Select your sex</option>
+                      <option value="">Select your gender</option>
                       <option value="male">Male</option>
                       <option value="female">Female</option>
                     </select>
@@ -397,8 +408,15 @@ const handleRegister = async (e) => {
                       </button>
                     </div>
                   </div>
-                  {registerError   && <p className="auth-error">{registerError}</p>}
-                  {registerSuccess && <p className="auth-success">{registerSuccess}</p>}
+                  {registerError && <p className="auth-error">{registerError}</p>}
+                  {registerSuccess && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: 'rgba(78,205,196,0.1)', border: '1px solid rgba(78,205,196,0.3)', borderRadius: 10 }}>
+                      <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#2ec4b6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                      <p style={{ fontSize: 13, color: '#2ec4b6', fontWeight: 500, margin: 0 }}>{registerSuccess}</p>
+                    </div>
+                  )}
                   <button type="submit" className="auth-btn" disabled={registerLoading}>
                     {registerLoading ? <span className="auth-spinner"></span> : 'Create Account'}
                   </button>

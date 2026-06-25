@@ -16,7 +16,7 @@ export default function DoctorDetail() {
         .select('*')
         .eq('id', id)
         .single()
-
+      //error handling 
       if (error) {
         console.error('Error fetching doctor:', error)
         setDoctor(null)
@@ -25,8 +25,9 @@ export default function DoctorDetail() {
       }
       setLoading(false)
     }
-
+    //execute the function
     fetchDoctor()
+
   }, [id])
 
   if (loading) {
