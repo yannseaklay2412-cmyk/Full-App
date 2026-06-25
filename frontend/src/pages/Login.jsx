@@ -48,10 +48,10 @@ const handleLogin = async (e) => {
     }
     if (result.role === 'admin') {
       setLoginSuccess('Welcome back, Admin! Taking you to your dashboard...')
-      setTimeout(() => navigate('/admin'), 1500)
+      setTimeout(() => navigate('/admin', { replace: true }), 1500)
     } else if (result.role === 'patient') {
       setLoginSuccess('Welcome back! Taking you to your account...')
-      setTimeout(() => navigate('/dashboard'), 1500)
+      setTimeout(() => navigate('/dashboard', { replace: true }), 1500)
     } else {
       setLoginError('No role assigned.')
     }
