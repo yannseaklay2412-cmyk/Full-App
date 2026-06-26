@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../config/supabaseClient'
+import api from '../../api/axios'
 import './Book.css'
 
 const STEPS = ['Dentist', 'Service', 'Date & Time', 'Your Info', 'Confirm']
@@ -62,13 +63,12 @@ export default function Book() {
     setTimeslot(null)
     setTimeslots([])
     const fetchTimeslots = async () => {
-      const { data, error } = await supabase.rpc('get_available_slots', {
-        p_dentist_id:              dentist.id,
-        p_service_id:              service.id,
-        p_date:                    date,
-      })
-      if (error) { console.error(error); return }
-      if (data) setTimeslots(data)
+      try {
+        const { data } = await api.get('/timeslots/available', {
+          params: { dentist_id: dentist.id, service_id: service.id, date },
+        })
+        setTimeslots(data.data || [])
+      } catch (err) { console.error(err) }
     }
     fetchTimeslots()
   }, [dentist, date, service])
@@ -119,30 +119,23 @@ export default function Book() {
         patient = newPatient
       }
 
-      // 2. Insert appointment with dentist_id
+      // 2. Insert appointment with date and time
       const { data: appt, error: apptError } = await supabase
         .from('appointments')
         .insert({
-          patient_id: patient.id,
-          dentist_id: dentist.id,
-          status:     'pending',
-          notes:      patientInfo.notes,
+          patient_id:       patient.id,
+          dentist_id:       dentist.id,
+          status:           'pending',
+          notes:            patientInfo.notes,
+          appointment_date: date,
+          start_time:       timeslot.slot_start,
+          end_time:         timeslot.slot_end,
         })
         .select()
         .single()
       if (apptError) throw new Error(`Appointment error: ${apptError.message}`)
 
-      // 3. Link appointment to timeslot + date
-      const { error: linkError } = await supabase
-        .from('appointment_timeslots')
-        .insert({
-          appointment_id: appt.id,
-          timeslot_id:    timeslot.id,
-          date:           date,
-        })
-      if (linkError) throw new Error(`Timeslot link error: ${linkError.message}`)
-
-      // 4. Link appointment to service
+      // 3. Link appointment to service
       const { error: serviceError } = await supabase
         .from('appointment_services')
         .insert({
