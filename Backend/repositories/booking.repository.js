@@ -4,7 +4,7 @@ export const getByPatientId = async (patientId) => {
   const { data, error } = await supabase
     .from('appointments')
     .select(`
-      id, status, notes, created_at,
+      id, status, notes, created_at, appointment_date, start_time, end_time,
       dentists ( id, dentist_name, specialty ),
       appointment_services ( services ( id, service_name, price, duration_minutes ) )
     `)
@@ -18,7 +18,7 @@ export const getById = async (id) => {
   const { data, error } = await supabase
     .from('appointments')
     .select(`
-      id, status, notes, created_at,
+      id, status, notes, created_at, appointment_date, start_time, end_time,
       dentists ( id, dentist_name, specialty ),
       patients ( id, full_name, email, phone ),
       appointment_services ( services ( id, service_name, price, duration_minutes ) )
@@ -33,11 +33,10 @@ export const getAll = async ({ status } = {}) => {
   let query = supabase
     .from('appointments')
     .select(`
-      id, status, notes, created_at,
+      id, status, notes, created_at, appointment_date, start_time, end_time,
       dentists ( id, dentist_name, specialty ),
       patients ( id, full_name, email, phone ),
-      appointment_services ( services ( id, service_name, price, duration_minutes ) ),
-      appointment_timeslots ( date, timeslots ( start_time, end_time ) )
+      appointment_services ( services ( id, service_name, price, duration_minutes ) )
     `)
     .order('created_at', { ascending: false })
   if (status) query = query.eq('status', status)
@@ -46,10 +45,10 @@ export const getAll = async ({ status } = {}) => {
   return data
 }
 
-export const create = async ({ patient_id, dentist_id, notes }) => {
+export const create = async ({ patient_id, dentist_id, notes, appointment_date, start_time, end_time }) => {
   const { data, error } = await supabase
     .from('appointments')
-    .insert({ patient_id, dentist_id, status: 'pending', notes })
+    .insert({ patient_id, dentist_id, status: 'pending', notes, appointment_date, start_time, end_time })
     .select()
     .single()
   if (error) throw error

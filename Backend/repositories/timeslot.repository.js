@@ -1,19 +1,34 @@
-// repositories/timeslot.repository.js
-import pool from '../config/db.js'
+import { supabase } from '../config/supabase.js'
 
-export const getAllSlots = async () => {
-  const { rows } = await pool.query('SELECT id, start_time, end_time FROM timeslots ORDER BY start_time ASC')
-  return rows
+export const getDentistSchedule = async (dentistId) => {
+  const { data, error } = await supabase
+    .from('dentist_schedules')
+    .select('start_time, end_time')
+    .eq('dentist_id', dentistId)
+    .single()
+  if (error) throw error
+  return data
 }
 
-export const addSlot = async (start_time, end_time) => {
-  const { rows } = await pool.query(
-    'INSERT INTO timeslots (start_time, end_time) VALUES ($1, $2) RETURNING *',
-    [start_time, end_time]
-  )
-  return rows[0]
+export const getBookedSlots = async (dentistId, date) => {
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('start_time, end_time')
+    .eq('dentist_id', dentistId)
+    .eq('appointment_date', date)
+    .neq('status', 'cancelled')
+    .not('start_time', 'is', null)
+    .order('start_time')
+  if (error) throw error
+  return data
 }
 
-export const deleteSlot = async (id) => {
-  await pool.query('DELETE FROM timeslots WHERE id = $1', [id])
+export const getServiceDuration = async (serviceId) => {
+  const { data, error } = await supabase
+    .from('services')
+    .select('duration_minutes')
+    .eq('id', serviceId)
+    .single()
+  if (error) throw error
+  return data.duration_minutes
 }

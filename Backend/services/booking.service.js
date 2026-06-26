@@ -13,12 +13,9 @@ export const getBookingById = async (id) => {
   return booking
 }
 
-export const createBooking = async (email, { dentist_id, notes, full_name, phone, sex, date_of_birth, address }) => {
-  // Upsert patient
+export const createBooking = async (email, { dentist_id, notes, full_name, phone, sex, date_of_birth, address, appointment_date, start_time, end_time }) => {
   const patient = await patientRepo.upsert({ email, full_name, phone, sex, date_of_birth, address })
-
-  // Create appointment
-  const booking = await bookingRepo.create({ patient_id: patient.id, dentist_id, notes })
+  const booking = await bookingRepo.create({ patient_id: patient.id, dentist_id, notes, appointment_date, start_time, end_time })
   return booking
 }
 
