@@ -6,7 +6,7 @@ import { uploadImage } from '../../config/uploadImage'
 
 const TABS = ['Dentists', 'Services']
 
-const emptyDentist = { dentist_name: '', specialty: '', phone: '', telegram: '', background: '', age: '', image_path: '' }
+const emptyDentist = { dentist_name: '', specialty: '', phone: '', telegram: '', background: '', age: '', image_path: '', work_start: '', work_end: '' }
 const emptyService = { service_name: '', description: '', price: '', duration_minutes: '', image_url: '' }
 
 export default function Dentists() {
@@ -64,16 +64,21 @@ export default function Dentists() {
     setDentistLoading(true)
     setError('')
     try {
-      let formToSave = { ...dentistForm }
+      let { work_start, work_end, ...formToSave } = dentistForm
       if (dentistPhotoFile) {
         const fileName = await uploadImage(dentistPhotoFile)
         if (!fileName) throw new Error('Image upload failed')
         formToSave.image_path = fileName
       }
+      let savedId = editingDentist
       if (editingDentist) {
         await api.put(`/dentists/${editingDentist}`, formToSave)
       } else {
-        await api.post('/dentists', formToSave)
+        const res = await api.post('/dentists', formToSave)
+        savedId = (res.data.data || res.data).id
+      }
+      if (savedId && work_start && work_end) {
+        await api.put(`/dentists/${savedId}/schedule`, { start_time: work_start, end_time: work_end })
       }
       await fetchDentists()
       resetDentistForm()
@@ -94,7 +99,17 @@ export default function Dentists() {
     }
   }
 
-  const startEditDentist = (d) => {
+  const startEditDentist = async (d) => {
+    let work_start = ''
+    let work_end = ''
+    try {
+      const res = await api.get(`/dentists/${d.id}/schedule`)
+      const sched = res.data
+      if (sched) {
+        work_start = sched.start_time?.slice(0, 5) || ''
+        work_end   = sched.end_time?.slice(0, 5)   || ''
+      }
+    } catch (_) {}
     setDentistForm({
       dentist_name: d.dentist_name || '',
       specialty: d.specialty || '',
@@ -102,7 +117,9 @@ export default function Dentists() {
       telegram: d.telegram || '',
       background: d.background || '',
       age: d.age || '',
-      image_path: d.image_path || ''
+      image_path: d.image_path || '',
+      work_start,
+      work_end
     })
     setDentistPhotoFile(null)
     setEditingDentist(d.id)
@@ -307,6 +324,14 @@ export default function Dentists() {
                       <label style={labelStyle}>Age</label>
                       <input required type="number" value={dentistForm.age} onChange={e => setDentistForm({ ...dentistForm, age: e.target.value })} placeholder="35" style={inputStyle} />
                     </div>
+                    <div>
+                      <label style={labelStyle}>Work Start Hour</label>
+                      <input type="time" value={dentistForm.work_start} onChange={e => setDentistForm({ ...dentistForm, work_start: e.target.value })} style={inputStyle} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Work End Hour</label>
+                      <input type="time" value={dentistForm.work_end} onChange={e => setDentistForm({ ...dentistForm, work_end: e.target.value })} style={inputStyle} />
+                    </div>
                     <div style={{ gridColumn: '1 / -1' }}>
                       <label style={labelStyle}>Background / About</label>
                       <textarea value={dentistForm.background} onChange={e => setDentistForm({ ...dentistForm, background: e.target.value })} placeholder="Specializing in braces and aligner therapy..." rows={3}
@@ -391,6 +416,14 @@ export default function Dentists() {
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
                           </div>
                           <span style={{ fontSize: 12, color: '#4a5568', fontWeight: 500 }}>Age {d.age}</span>
+                        </div>
+                      )}
+                      {d.work_start && d.work_end && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(251,146,60,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                          </div>
+                          <span style={{ fontSize: 12, color: '#4a5568', fontWeight: 500 }}>{d.work_start} – {d.work_end}</span>
                         </div>
                       )}
                       {d.background && (

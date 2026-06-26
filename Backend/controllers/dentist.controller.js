@@ -34,3 +34,18 @@ export const deleteDentist = async (req, res, next) => {
     res.json({ deleted: req.params.id, ...data })
   } catch (err) { next(err) }
 }
+
+export const getDentistSchedule = async (req, res, next) => {
+  try {
+    const data = await dentistService.getDentistSchedule(req.params.id)
+    res.json(data)
+  } catch (err) { next(err) }
+}
+
+export const upsertDentistSchedule = async (req, res, next) => {
+  try {
+    const { start_time, end_time } = req.body
+    const data = await dentistService.upsertDentistSchedule(req.params.id, start_time, end_time)
+    res.json(data)
+  } catch (err) { next(err) }
+}
