@@ -77,7 +77,7 @@ const login = async (email, password) => {
 
   // 3. Get JWT from backend — with proper error handling
   try {
-    const res = await fetch('http://localhost:5000/api/auth/login', {
+    const res = await fetch('https://full-app-9w8w.onrender.com/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
