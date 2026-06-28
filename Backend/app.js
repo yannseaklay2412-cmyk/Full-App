@@ -16,7 +16,21 @@ import adminRoutes    from './routes/admin.routes.js'
 const app = express()
 
 // ── Global Middleware ─────────────────────────────────────
-app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }))
+const allowedOrigins = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map(o => o.trim())
+  .filter(Boolean)
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
+  credentials: true,
+}))
 app.use(express.json())
 app.use(morgan('dev'))
 
