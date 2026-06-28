@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../../config/supabaseClient'   // ← adjust path to match your project
+import { supabase } from '../../config/supabaseClient'
+import './Dashboard.css'   // ← adjust path to match your project
 
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
 const API = import.meta.env.VITE_API_BASE_URL

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../../config/supabaseClient'
+import './Dashboard.css'
 
 const API = import.meta.env.VITE_API_BASE_URL
 

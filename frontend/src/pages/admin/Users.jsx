@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../config/supabaseClient.js'
+import './Dashboard.css'
 
 
-const API = 'https://full-app-9w8w.onrender.com'
+const API = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000'
 
 const sidebarItems = [
   { label: 'Dashboard',   path: '/admin'              },

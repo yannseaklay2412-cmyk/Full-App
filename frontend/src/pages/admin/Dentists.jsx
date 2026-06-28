@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import { supabase } from '../../config/supabaseClient'
+import './Dashboard.css'
 import { uploadImage } from '../../config/uploadImage'
 
 const TABS = ['Dentists', 'Services']
