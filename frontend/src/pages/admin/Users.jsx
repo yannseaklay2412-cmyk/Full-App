@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../config/supabaseClient.js'
 
 
-const API = 'http://localhost:5000'
+const API = 'https://full-app-9w8w.onrender.com'
 
 const sidebarItems = [
   { label: 'Dashboard',   path: '/admin'              },

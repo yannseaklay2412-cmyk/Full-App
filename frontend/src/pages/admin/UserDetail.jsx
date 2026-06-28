@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../../config/supabaseClient'
 
-const API = 'http://localhost:5000/api'
+const API = 'https://full-app-9w8w.onrender.com/api'
 
 const apiFetch = async (path) => {
   const { data: { session } } = await supabase.auth.getSession()
