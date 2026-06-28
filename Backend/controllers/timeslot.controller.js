@@ -1,5 +1,12 @@
 import * as slotService from '../services/timeslot.service.js'
 
+export const getAllTimeslots = async (req, res, next) => {
+  try {
+    const slots = await slotService.getAllTimeslots()
+    res.json(slots)
+  } catch (err) { next(err) }
+}
+
 export const getAvailableSlots = async (req, res, next) => {
   try {
     const { dentist_id, service_id, date } = req.query

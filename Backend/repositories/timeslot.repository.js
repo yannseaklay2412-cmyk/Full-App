@@ -1,5 +1,13 @@
 import { supabase } from '../config/supabase.js'
 
+export const getAllTimeslots = async () => {
+  const { data, error } = await supabase
+    .from('dentist_schedules')
+    .select('*')
+  if (error) throw error
+  return data || []
+}
+
 export const getDentistSchedule = async (dentistId) => {
   const { data, error } = await supabase
     .from('dentist_schedules')

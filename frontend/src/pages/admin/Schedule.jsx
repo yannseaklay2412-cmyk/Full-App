@@ -4,7 +4,7 @@ import { supabase } from '../../config/supabaseClient'
 import './Dashboard.css'   // ← adjust path to match your project
 
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
-const API = import.meta.env.VITE_API_BASE_URL
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 const apiFetch = async (path, options = {}) => {

@@ -38,7 +38,8 @@ export default function Dentists() {
   const fetchDentists = async () => {
     try {
       const res = await api.get('/dentists')
-      setDentists(res.data.data || res.data)
+      const data = res.data.data ?? res.data
+      setDentists(Array.isArray(data) ? data : [])
     } catch (e) {
       setError('Failed to load dentists')
     }

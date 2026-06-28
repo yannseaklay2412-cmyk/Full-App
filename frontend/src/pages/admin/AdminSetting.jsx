@@ -21,28 +21,8 @@ export default function AdminSettings() {
   const [newPassword, setNewPassword]          = useState('')
   const [confirmPassword, setConfirmPassword]  = useState('')
 
-  const [loading, setLoading]       = useState(false)
-  const [resetLoading, setResetLoading] = useState(false)
-  const [message, setMessage]       = useState(null)
-
-  // ── Forgot Password ──────────────────────────────────────────
-  const handleForgotPassword = async () => {
-    setMessage(null)
-    if (!currentEmail) {
-      setMessage({ type: 'error', text: 'Enter your current email above first.' })
-      return
-    }
-    setResetLoading(true)
-    const { error } = await supabase.auth.resetPasswordForEmail(currentEmail, {
-      redirectTo: window.location.origin + '/admin/AdminSetting',
-    })
-    setResetLoading(false)
-    if (error) {
-      setMessage({ type: 'error', text: error.message })
-    } else {
-      setMessage({ type: 'success', text: `Password reset email sent to ${currentEmail}. Check your inbox.` })
-    }
-  }
+  const [loading, setLoading]   = useState(false)
+  const [message, setMessage]   = useState(null)
 
   // ── Save Changes ─────────────────────────────────────────────
   const handleUpdate = async (e) => {
@@ -85,11 +65,18 @@ export default function AdminSettings() {
 
       // Step 2: build update payload
       const updatePayload = {}
-      if (newEmail) updatePayload.email = newEmail
+      if (newEmail && newEmail !== currentEmail) updatePayload.email = newEmail
       if (newPassword) updatePayload.password = newPassword
+
+      if (Object.keys(updatePayload).length === 0) {
+        setMessage({ type: 'error', text: 'No changes to save. Enter a new email or new password.' })
+        setLoading(false)
+        return
+      }
 
       const { data: updatedUser, error: updateError } = await supabase.auth.updateUser(updatePayload)
       if (updateError) {
+        console.error('updateUser error:', updateError)
         setMessage({ type: 'error', text: updateError.message })
         setLoading(false)
         return
@@ -227,15 +214,6 @@ export default function AdminSettings() {
                 autoComplete="current-password"
               />
             </div>
-            {/* ── Forgot password link ── */}
-            <button
-              type="button"
-              className="as-forgot"
-              onClick={handleForgotPassword}
-              disabled={resetLoading}
-            >
-              {resetLoading ? 'Sending...' : 'Forgot password?'}
-            </button>
           </div>
 
           <div className="as-divider" />

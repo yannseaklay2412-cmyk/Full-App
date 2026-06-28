@@ -1,5 +1,9 @@
 import * as slotRepo from '../repositories/timeslot.repository.js'
 
+export const getAllTimeslots = async () => {
+  return await slotRepo.getAllTimeslots()
+}
+
 const toMinutes = (t) => {
   const [h, m] = t.split(':').map(Number)
   return h * 60 + m

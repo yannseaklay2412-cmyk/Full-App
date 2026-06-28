@@ -1,8 +1,4 @@
 node_modules/
 dist/
-<<<<<<< HEAD
-.env
-=======
 .env
 .DS_Store
->>>>>>> b3232298b16b48eeeaed0d48e0bb5b449434240a

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../../config/supabaseClient'
 import './Dashboard.css'
 
-const API = import.meta.env.VITE_API_BASE_URL
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
 
 const apiFetch = async (path) => {
   const { data: { session } } = await supabase.auth.getSession()

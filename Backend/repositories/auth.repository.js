@@ -1,14 +1,25 @@
 import { supabase } from '../config/supabase.js'
 
 export const findUserByEmail = async (email) => {
-  const { data, error } = await supabase
+  // Check patients table first
+  const { data: patient, error: patientError } = await supabase
     .from('patients')
     .select('id, email, full_name')
     .eq('email', email)
     .maybeSingle()
 
-  if (error) throw { status: 500, message: error.message }
-  return data || null
+  if (patientError) throw { status: 500, message: patientError.message }
+  if (patient) return patient
+
+  // Fall back to profiles table (for admin users)
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('id, email')
+    .eq('email', email)
+    .maybeSingle()
+
+  if (profileError) throw { status: 500, message: profileError.message }
+  return profile || null
 }
 
 export const saveResetToken = async (email, tokenHash, expiresAt, newPassword) => {
