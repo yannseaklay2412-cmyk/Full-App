@@ -7,6 +7,8 @@ import History from '../pages/user/Historyy'
 
 import Home from '../pages/user/Home'
 import Login from '../pages/Login'
+import ResetPassword from '../pages/ResetPassword'
+import ConfirmPassword from '../pages/ConfirmPassword'
 import NotFound from '../pages/NotFound'
 
 import UserDashboard from '../pages/user/Dashboard'
@@ -30,6 +32,8 @@ export default function AppRoutes() {
       {/* Public */}
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/reset-password"   element={<ResetPassword />} />
+      <Route path="/confirm-password" element={<ConfirmPassword />} />
       <Route path="/doctor/:id" element={<DoctorInfo />} />
 
       {/* User routes */}

@@ -23,6 +23,15 @@ export default function Login() {
   const [showRegPass, setShowRegPass] = useState(false)
   const [showRegConfirm, setShowRegConfirm] = useState(false)
 
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotNewPass, setForgotNewPass] = useState('')
+  const [forgotConfirmPass, setForgotConfirmPass] = useState('')
+  const [showForgotPass, setShowForgotPass] = useState(false)
+  const [showForgotConfirm, setShowForgotConfirm] = useState(false)
+  const [forgotError, setForgotError] = useState('')
+  const [forgotSent, setForgotSent] = useState(false)
+  const [forgotLoading, setForgotLoading] = useState(false)
+
 const handleLogin = async (e) => {
   e.preventDefault()
   setLoginError('')
@@ -170,6 +179,25 @@ const handleRegister = async (e) => {
   }
 }
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault()
+    setForgotError('')
+    if (!forgotEmail) { setForgotError('Please enter your email address.'); return }
+    if (!forgotNewPass) { setForgotError('Please enter a new password.'); return }
+    if (forgotNewPass.length < 6) { setForgotError('Password must be at least 6 characters.'); return }
+    if (forgotNewPass !== forgotConfirmPass) { setForgotError('Passwor4s do not match.'); return }
+
+    setForgotLoading(true)
+    try {
+      await api.post('/auth/forgot-password', { email: forgotEmail, password: forgotNewPass })
+      setForgotSent(true)
+    } catch (err) {
+      setForgotError(err.response?.data?.message || 'Something went wrong. Please try again.')
+    } finally {
+      setForgotLoading(false)
+    }
+  }
+
   const EyeIcon = () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -250,23 +278,25 @@ const handleRegister = async (e) => {
         {/* RIGHT */}
         <div className="auth-right">
 
-          {/* TABS at the top */}
-          <div className="auth-tabs-wrap">
-            <div className="auth-tabs">
-              <button
-                className={`auth-tab ${tab === 'signin' ? 'active' : ''}`}
-                onClick={() => { setTab('signin'); setLoginError('') }}
-              >
-                Sign In
-              </button>
-              <button
-                className={`auth-tab ${tab === 'signup' ? 'active' : ''}`}
-                onClick={() => { setTab('signup'); setRegisterError(''); setRegisterSuccess('') }}
-              >
-                Sign Up
-              </button>
+          {/* TABS at the top — hidden on the forgot-password view */}
+          {tab !== 'forgot' && (
+            <div className="auth-tabs-wrap">
+              <div className="auth-tabs">
+                <button
+                  className={`auth-tab ${tab === 'signin' ? 'active' : ''}`}
+                  onClick={() => { setTab('signin'); setLoginError('') }}
+                >
+                  Sign In
+                </button>
+                <button
+                  className={`auth-tab ${tab === 'signup' ? 'active' : ''}`}
+                  onClick={() => { setTab('signup'); setRegisterError(''); setRegisterSuccess('') }}
+                >
+                  Sign Up
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* CARD */}
           <div className="auth-card">
@@ -290,7 +320,15 @@ const handleRegister = async (e) => {
                     />
                   </div>
                   <div className="auth-field">
-                    <label>Password</label>
+                    <div className="auth-label-row">
+                      <label>Password</label>
+                      <span
+                        className="auth-forgot-link"
+                        onClick={() => { setTab('forgot'); setLoginError(''); setForgotEmail(loginForm.email); setForgotSent(false) }}
+                      >
+                        Forgot password?
+                      </span>
+                    </div>
                     <div className="auth-pass-wrap">
                       <input
                         type={showLoginPass ? 'text' : 'password'}
@@ -425,6 +463,87 @@ const handleRegister = async (e) => {
                   Already have an account?{' '}
                   <span onClick={() => setTab('signin')}>Sign in</span>
                 </p>
+              </div>
+            )}
+
+            {/* ── FORGOT PASSWORD ── */}
+            {tab === 'forgot' && (
+              <div className="auth-form-wrap">
+                {!forgotSent ? (
+                  <>
+                    <div className="auth-form-header">
+                      <h2>Forgot password?</h2>
+                      <p>Enter your email and we'll send you a reset link</p>
+                    </div>
+                    <form className="auth-form" onSubmit={handleForgotPassword}>
+                      <div className="auth-field">
+                        <label>Email Address</label>
+                        <input
+                          type="email"
+                          placeholder="you@example.com"
+                          value={forgotEmail}
+                          onChange={e => setForgotEmail(e.target.value)}
+                          className="auth-input"
+                          autoFocus
+                        />
+                      </div>
+                      <div className="auth-field">
+                        <label>New Password</label>
+                        <div className="auth-pass-wrap">
+                          <input
+                            type={showForgotPass ? 'text' : 'password'}
+                            placeholder="Enter new password"
+                            value={forgotNewPass}
+                            onChange={e => setForgotNewPass(e.target.value)}
+                            className="auth-input"
+                          />
+                          <button type="button" className="pass-toggle" onClick={() => setShowForgotPass(!showForgotPass)}>
+                            {showForgotPass ? <EyeOffIcon /> : <EyeIcon />}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="auth-field">
+                        <label>Confirm Password</label>
+                        <div className="auth-pass-wrap">
+                          <input
+                            type={showForgotConfirm ? 'text' : 'password'}
+                            placeholder="Re-enter new password"
+                            value={forgotConfirmPass}
+                            onChange={e => setForgotConfirmPass(e.target.value)}
+                            className="auth-input"
+                          />
+                          <button type="button" className="pass-toggle" onClick={() => setShowForgotConfirm(!showForgotConfirm)}>
+                            {showForgotConfirm ? <EyeOffIcon /> : <EyeIcon />}
+                          </button>
+                        </div>
+                      </div>
+                      {forgotError && <p className="auth-error">{forgotError}</p>}
+                      <button type="submit" className="auth-btn" disabled={forgotLoading}>
+                        {forgotLoading ? <span className="auth-spinner"></span> : 'Update Password'}
+                      </button>
+                    </form>
+                    <p className="auth-switch">
+                      Remember it?{' '}
+                      <span onClick={() => { setTab('signin'); setForgotError(''); setForgotEmail(''); setForgotNewPass(''); setForgotConfirmPass('') }}>
+                        Back to Sign In
+                      </span>
+                    </p>
+                  </>
+                ) : (
+                  <div className="forgot-sent-wrap">
+                    <div className="forgot-sent-icon">✉️</div>
+                    <h2>Check your inbox!</h2>
+                    <p>
+                      A confirmation email was sent to <strong>{forgotEmail}</strong>. Click the button inside to apply your new password.
+                    </p>
+                    <button
+                      className="auth-btn"
+                      onClick={() => { setTab('signin'); setForgotSent(false); setForgotEmail(''); setForgotNewPass(''); setForgotConfirmPass('') }}
+                    >
+                      Sign In Now
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 

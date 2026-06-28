@@ -385,6 +385,54 @@
 }
 .auth-switch span:hover { text-decoration: underline; }
 
+/* ── FORGOT PASSWORD ── */
+.auth-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.auth-forgot-link {
+  font-size: 11px;
+  color: var(--teal);
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: opacity 0.2s;
+}
+.auth-forgot-link:hover { opacity: 0.75; }
+
+.forgot-sent-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 12px 8px 8px;
+  gap: 14px;
+}
+
+.forgot-sent-icon {
+  font-size: 44px;
+  line-height: 1;
+}
+
+.forgot-sent-wrap h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.forgot-sent-wrap p {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.65;
+  max-width: 300px;
+}
+
+.forgot-sent-wrap p strong {
+  color: var(--text-light);
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
   .auth-left   { display: none; }
