@@ -303,23 +303,10 @@
 }
 
 @media (max-width: 768px) {
-  .ad-hamburger { display: flex; }
-  .ad-sidebar {
-    position: fixed;
-    top: 0; left: 0;
-    height: 100vh;
-    width: 200px;
-    transform: translateX(-100%);
-    box-shadow: 4px 0 20px rgba(0,0,0,0.18);
-  }
-  .ad-sidebar.open { transform: translateX(0); }
-  .ad-sidebar-overlay {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(13,27,62,0.45);
-    z-index: 199;
-  }
+  .ad-hamburger { display: none; }
+  .ad-sidebar { width: 110px; }
+  .ad-sidebar-label { display: none; }
+  .ad-nav-item { font-size: 11px; padding: 10px 10px; }
   .ad-topbar         { padding: 10px 14px; }
   .ad-topbar-title   { font-size: 10px; }
   .ad-topbar-sub     { font-size: 12px; }

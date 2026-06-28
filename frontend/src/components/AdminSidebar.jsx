@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import '../pages/admin/Dashboard.css'
 
@@ -14,13 +13,10 @@ const sidebarItems = [
 export default function AdminSidebar({ pageTitle, pageSubtitle, children }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const [open, setOpen] = useState(false)
 
   return (
     <div className="ad-wrap">
-      {open && <div className="ad-sidebar-overlay" onClick={() => setOpen(false)} />}
-
-      <aside className={`ad-sidebar ${open ? 'open' : ''}`}>
+      <aside className="ad-sidebar">
         <div className="ad-sidebar-logo">
           <div className="ad-logo-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -37,7 +33,7 @@ export default function AdminSidebar({ pageTitle, pageSubtitle, children }) {
             <div
               key={item.path}
               className={`ad-nav-item ${location.pathname === item.path ? 'active' : ''}`}
-              onClick={() => { navigate(item.path); setOpen(false) }}
+              onClick={() => navigate(item.path)}
             >
               {item.label}
             </div>
@@ -53,9 +49,6 @@ export default function AdminSidebar({ pageTitle, pageSubtitle, children }) {
       <div className="ad-content">
         <div className="ad-topbar">
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button className="ad-hamburger" onClick={() => setOpen(o => !o)} aria-label="Toggle menu">
-              <span /><span /><span />
-            </button>
             <div>
               <p className="ad-topbar-title">{pageTitle || 'Dashboard'}</p>
               <p className="ad-topbar-sub">{pageSubtitle || 'Admin'}</p>
