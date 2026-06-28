@@ -77,7 +77,7 @@ const login = async (email, password) => {
 
   // 3. Get JWT from backend — with proper error handling
   try {
-    const res = await fetch('https://full-app-9w8w.onrender.com/api/auth/login', {
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),

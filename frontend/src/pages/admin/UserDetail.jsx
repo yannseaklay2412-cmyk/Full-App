@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../../config/supabaseClient'
 
-const API = 'https://full-app-9w8w.onrender.com/api'
+const API = import.meta.env.VITE_API_BASE_URL
 
 const apiFetch = async (path) => {
   const { data: { session } } = await supabase.auth.getSession()

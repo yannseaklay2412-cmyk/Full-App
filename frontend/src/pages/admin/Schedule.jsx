@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../config/supabaseClient'   // ← adjust path to match your project
 
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
-const API  = 'https://full-app-9w8w.onrender.com/api'
+const API = import.meta.env.VITE_API_BASE_URL
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 const apiFetch = async (path, options = {}) => {
