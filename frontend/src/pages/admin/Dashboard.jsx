@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Dashboard.css'
 import { supabase } from '../../config/supabaseClient'
+import AdminSidebar from '../../components/AdminSidebar'
 
 const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
 
@@ -26,8 +27,6 @@ export default function AdminDashboard() {
   const [bookings, setBookings]       = useState([])
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDentist, setSelectedDentist] = useState(null)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-
   useEffect(() => {
     const load = async () => {
       try {
@@ -78,15 +77,6 @@ export default function AdminDashboard() {
 
   const statusColor = { pending: '#f5c842', confirmed: '#4ecdc4', cancelled: '#ff6b6b' }
 
-  const sidebarItems = [
-    { label: 'Dashboard',   path: '/admin'               },
-    { label: 'Schedule',    path: '/admin/schedule'      },
-    { label: 'Employees',   path: '/admin/dentists'      },
-    { label: 'Appointment', path: '/admin/appointments'  },
-    { label: 'Record',      path: '/admin/users'         },
-    { label: 'Setting',     path: '/admin/AdminSetting'  },
-  ]
-
   const dentistAppointments = selectedDentist
     ? bookings.filter(b => b.dentist_id === selectedDentist.id || b.dentists?.id === selectedDentist.id)
     : []
@@ -98,56 +88,7 @@ export default function AdminDashboard() {
   })
 
   return (
-    <div className="ad-wrap">
-      {sidebarOpen && (
-        <div className="ad-sidebar-overlay" onClick={() => setSidebarOpen(false)} />
-      )}
-
-      <aside className={`ad-sidebar ${sidebarOpen ? 'open' : ''}`}>
-        <div className="ad-sidebar-logo">
-          <div className="ad-logo-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 2C8 2 5 5 5 9c0 2 .5 4 1.5 5.5L8 20h8l1.5-5.5C18.5 13 19 11 19 9c0-4-3-7-7-7z"/>
-            </svg>
-          </div>
-        </div>
-        <div className="ad-sidebar-label">
-          <p className="ad-sidebar-top">Dashboard</p>
-          <p className="ad-sidebar-sub">Home / Overview</p>
-        </div>
-        <nav className="ad-sidebar-nav">
-          {sidebarItems.map(item => (
-            <div key={item.path} className={`ad-nav-item ${window.location.pathname === item.path ? 'active' : ''}`}
-              onClick={() => { navigate(item.path); setSidebarOpen(false) }}>
-              {item.label}
-            </div>
-          ))}
-        </nav>
-      </aside>
-
-      <div className="ad-content">
-        <div className="ad-topbar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button className="ad-hamburger" onClick={() => setSidebarOpen(o => !o)} aria-label="Toggle menu">
-              <span /><span /><span />
-            </button>
-            <div className="ad-topbar-left">
-              <p className="ad-topbar-title">Dashboard</p>
-              <p className="ad-topbar-sub">Home / Overview</p>
-            </div>
-          </div>
-          <div className="ad-topbar-right">
-            <div className="ad-avatar">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
-              </svg>
-            </div>
-            <button className="ad-signin-btn" onClick={() => { localStorage.removeItem('currentUser'); navigate('/login') }}>
-              Sign Out
-            </button>
-          </div>
-        </div>
-
+    <AdminSidebar pageTitle="Dashboard" pageSubtitle="Home / Overview">
         <div className="ad-stat-row">
           {[
             { label: 'Total Patients', num: stats.users,     color: '#4ecdc4', icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>) },
@@ -264,7 +205,6 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
-      </div>
 
       {/* DOCTOR APPOINTMENTS MODAL */}
       {selectedDentist && (
@@ -310,6 +250,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
-    </div>
+    </AdminSidebar>
   )
 }
