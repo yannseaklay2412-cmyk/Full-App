@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
-import { supabase } from '../../config/supabaseClient'
 import api from '../../api/axios'
 import './Book.css'
 
@@ -9,7 +7,6 @@ const STEPS = ['Dentist', 'Service', 'Date & Time', 'Your Info', 'Confirm']
 
 export default function Book() {
   const navigate = useNavigate()
-  const { user } = useAuth()
 
   const [step, setStep]               = useState(0)
   const [showSuccess, setShowSuccess] = useState(false)
@@ -18,10 +15,10 @@ export default function Book() {
   const [services, setServices]   = useState([])
   const [timeslots, setTimeslots] = useState([])
 
-  const [dentist, setDentist]   = useState(null)
-  const [service, setService]   = useState(null)
-  const [date, setDate]         = useState('')
-  const [timeslot, setTimeslot] = useState(null)
+  const [dentist, setDentist]     = useState(null)
+  const [selectedServices, setSelectedServices] = useState([])
+  const [date, setDate]           = useState('')
+  const [timeslot, setTimeslot]   = useState(null)
 
   const [patientInfo, setPatientInfo] = useState({
     full_name: '', phone: '', sex: '',
@@ -34,55 +31,58 @@ export default function Book() {
 
   useEffect(() => {
     const fetchDentists = async () => {
-      const { data } = await supabase
-        .from('dentists')
-        .select('id, dentist_name, specialty')
-      if (data) setDentists(data)
+      try {
+        const { data } = await api.get('/dentists')
+        setDentists(data || [])
+      } catch (err) { console.error(err) }
     }
     fetchDentists()
   }, [])
 
   useEffect(() => {
     const fetchServices = async () => {
-      const { data, error } = await supabase
-        .from('services')
-        // .select('id, service_name, description, price,duration_minutes')
-        .select('*')
-        // .eq('is_active', true)
-        // .order('id')
-      console.log('services data:', data)
-      console.log('services error:', error)
-      // if (error) { console.error(error); return }
-      if (data) setServices(data)
+      try {
+        const { data } = await api.get('/services')
+        setServices(data.data || [])
+      } catch (err) { console.error(err) }
     }
     fetchServices()
   }, [])
 
   useEffect(() => {
-    if (!dentist || !date || !service) return
+    if (!dentist || !date || selectedServices.length === 0) return
     setTimeslot(null)
     setTimeslots([])
     const fetchTimeslots = async () => {
       try {
         const { data } = await api.get('/timeslots/available', {
-          params: { dentist_id: dentist.id, service_id: service.id, date },
+          params: { dentist_id: dentist.id, service_id: selectedServices.map(s => s.id).join(','), date },
         })
         setTimeslots(data.data || [])
       } catch (err) { console.error(err) }
     }
     fetchTimeslots()
-  }, [dentist, date, service])
+  }, [dentist, date, selectedServices])
 
   useEffect(() => { setTimeslot(null); setDate(''); setTimeslots([]) }, [dentist])
-  useEffect(() => { setTimeslot(null); setTimeslots([]) }, [service])
+  useEffect(() => { setTimeslot(null); setTimeslots([]) }, [selectedServices])
 
   const canNext = [
     !!dentist,
-    !!service,
+    selectedServices.length > 0,
     !!date && !!timeslot,
     !!(patientInfo.full_name && patientInfo.phone && patientInfo.sex && patientInfo.date_of_birth),
     true,
   ][step]
+
+  const toggleService = (s) => {
+    setSelectedServices(prev =>
+      prev.some(x => x.id === s.id) ? prev.filter(x => x.id !== s.id) : [...prev, s]
+    )
+  }
+
+  const totalPrice    = selectedServices.reduce((sum, s) => sum + Number(s.price), 0)
+  const totalDuration = selectedServices.reduce((sum, s) => sum + Number(s.duration_minutes), 0)
 
   const handleInfoChange = (e) => {
     setPatientInfo(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -92,62 +92,24 @@ export default function Book() {
     setSubmitError('')
     setSubmitting(true)
     try {
-      // 1. Upsert patient
-      let patient
-      const { data: existingPatient } = await supabase
-        .from('patients')
-        .select('id')
-        .eq('email', user.email)
-        .maybeSingle()
-
-      if (existingPatient) {
-        patient = existingPatient
-      } else {
-        const { data: newPatient, error: insertError } = await supabase
-          .from('patients')
-          .insert({
-            email:         user.email,
-            full_name:     patientInfo.full_name,
-            phone:         patientInfo.phone,
-            sex:           patientInfo.sex,
-            date_of_birth: patientInfo.date_of_birth,
-            address:       patientInfo.address,
-          })
-          .select()
-          .single()
-        if (insertError) throw new Error(`Patient error: ${insertError.message}`)
-        patient = newPatient
-      }
-
-      // 2. Insert appointment with date and time
-      const { data: appt, error: apptError } = await supabase
-        .from('appointments')
-        .insert({
-          patient_id:       patient.id,
-          dentist_id:       dentist.id,
-          status:           'pending',
-          notes:            patientInfo.notes,
-          appointment_date: date,
-          start_time:       timeslot.slot_start,
-          end_time:         timeslot.slot_end,
-        })
-        .select()
-        .single()
-      if (apptError) throw new Error(`Appointment error: ${apptError.message}`)
-
-      // 3. Link appointment to service
-      const { error: serviceError } = await supabase
-        .from('appointment_services')
-        .insert({
-          appointment_id: appt.id,
-          service_id:     service.id,
-        })
-      if (serviceError) throw new Error(`Service link error: ${serviceError.message}`)
+      await api.post('/bookings', {
+        dentist_id:       dentist.id,
+        service_ids:      selectedServices.map(s => s.id),
+        notes:            patientInfo.notes,
+        full_name:        patientInfo.full_name,
+        phone:            patientInfo.phone,
+        sex:              patientInfo.sex,
+        date_of_birth:    patientInfo.date_of_birth,
+        address:          patientInfo.address,
+        appointment_date: date,
+        start_time:       timeslot.slot_start,
+        end_time:         timeslot.slot_end,
+      })
 
       setShowSuccess(true)
     } catch (err) {
       console.error(err)
-      setSubmitError(err.message)
+      setSubmitError(err.response?.data?.message || err.message)
     } finally {
       setSubmitting(false)
     }
@@ -221,27 +183,36 @@ export default function Book() {
         {/* Step 2 — Service */}
         {step === 1 && (
           <>
-            <p className="book-section-label">Select a Service</p>
+            <p className="book-section-label">Select one or more Services</p>
             {services.length === 0 ? (
               <p className="book-slot-hint">Loading services...</p>
             ) : (
               <div className="book-service-list">
-                {services.map(s => (
-                  <div key={s.id}
-                    className={`book-service-card ${service?.id === s.id ? 'selected' : ''}`}
-                    onClick={() => setService(s)}>
-                    <div className="book-service-icon">{s.icon || '🦷'}</div>
-                    <div>
-                      <p className="book-service-name">{s.service_name}</p>
-                      <p className="book-service-duration">⏱ {s.duration_minutes} min</p>
-                      {s.description && <p className="book-service-duration">{s.description}</p>}
+                {services.map(s => {
+                  const isSelected = selectedServices.some(x => x.id === s.id)
+                  return (
+                    <div key={s.id}
+                      className={`book-service-card ${isSelected ? 'selected' : ''}`}
+                      onClick={() => toggleService(s)}>
+                      <div className="book-service-icon">{s.icon || '🦷'}</div>
+                      <div>
+                        <p className="book-service-name">{s.service_name}</p>
+                        <p className="book-service-duration">⏱ {s.duration_minutes} min</p>
+                        {s.description && <p className="book-service-duration">{s.description}</p>}
+                      </div>
+                      <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+                        <p style={{ fontWeight: 600, color: '#0d9488' }}>${s.price}</p>
+                        {isSelected && <span className="book-service-check">✓</span>}
+                      </div>
                     </div>
-                    <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                      <p style={{ fontWeight: 600, color: '#0d9488' }}>${s.price}</p>
-                      {service?.id === s.id && <span className="book-service-check">✓</span>}
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
+              </div>
+            )}
+            {selectedServices.length > 0 && (
+              <div className="book-confirm-row" style={{ marginTop: 12 }}>
+                <span className="book-confirm-label">{selectedServices.length} service{selectedServices.length > 1 ? 's' : ''} selected</span>
+                <span className="book-confirm-value">⏱ {totalDuration} min · ${totalPrice}</span>
               </div>
             )}
           </>
@@ -337,9 +308,9 @@ export default function Book() {
               {[
                 { label: 'Patient',  value: patientInfo.full_name },
                 { label: 'Phone',    value: patientInfo.phone },
-                { label: 'Service',  value: `${service?.icon || '🦷'} ${service?.service_name}` },
-                { label: 'Duration', value: `${service?.duration_minutes} min` },
-                { label: 'Price',    value: `$${service?.price}` },
+                { label: 'Services', value: selectedServices.map(s => `${s.icon || '🦷'} ${s.service_name}`).join(', ') },
+                { label: 'Duration', value: `${totalDuration} min` },
+                { label: 'Price',    value: `$${totalPrice}` },
                 { label: 'Date',     value: date },
                 { label: 'Time',     value: `${timeslot?.slot_start} – ${timeslot?.slot_end}` },
                 { label: 'Notes',    value: patientInfo.notes || '—' },
@@ -387,7 +358,7 @@ export default function Book() {
             <p className="success-sub">Pending confirmation from our team.</p>
             <div className="success-detail">
               <div className="success-row"><span>Dentist</span><span>{dentist?.dentist_name}</span></div>
-              <div className="success-row"><span>Service</span><span>{service?.service_name}</span></div>
+              <div className="success-row"><span>Services</span><span>{selectedServices.map(s => s.service_name).join(', ')}</span></div>
               <div className="success-row"><span>Date</span><span>{date}</span></div>
               <div className="success-row"><span>Time</span><span>{timeslot?.slot_start} – {timeslot?.slot_end}</span></div>
             </div>

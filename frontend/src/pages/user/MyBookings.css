@@ -243,9 +243,126 @@
 }
 .mb-empty-icon { font-size: 48px; opacity: 0.4; }
 
+/* MODAL */
+.mb-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+
+.mb-modal {
+  background: var(--white);
+  border-radius: 20px;
+  padding: 36px;
+  width: 100%;
+  max-width: 540px;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.mb-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(0,0,0,0.06);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  transition: background 0.2s;
+}
+.mb-modal-close:hover { background: rgba(0,0,0,0.12); }
+
+.mb-modal-heading {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.mb-modal-doctor {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.mb-modal-doctor-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.mb-modal-doctor-title {
+  font-size: 13px;
+  color: var(--primary);
+}
+
+.mb-modal-divider {
+  border: none;
+  border-top: 1px solid rgba(0,0,0,0.07);
+  margin-bottom: 8px;
+}
+
+.mb-modal-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  font-size: 14px;
+}
+
+.mb-modal-label {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.mb-modal-value {
+  font-weight: 600;
+  color: var(--text);
+  text-align: right;
+}
+
+.mb-modal-status {
+  color: var(--primary-dark);
+}
+
+.mb-modal-btn {
+  width: 100%;
+  margin-top: 24px;
+  padding: 13px;
+  background: var(--primary);
+  color: var(--white);
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  transition: background 0.2s;
+}
+.mb-modal-btn:hover { background: var(--primary-dark); }
+
 /* RESPONSIVE */
 @media (max-width: 600px) {
   .mb-topbar { padding: 14px 20px; }
   .mb-card { flex-direction: column; align-items: flex-start; }
   .mb-card-right { flex-direction: row; align-items: center; width: 100%; justify-content: space-between; }
+  .mb-modal { padding: 24px; }
 }

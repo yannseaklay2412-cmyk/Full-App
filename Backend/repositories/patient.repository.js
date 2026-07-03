@@ -40,7 +40,7 @@ export const findById = async (id) => {
 export const findByEmail = async (email) => {
   const { data, error } = await supabase
     .from('patients')
-    .select('id, full_name, email, phone, sex, created_at,is_banned')
+    .select('id, full_name, email, phone, sex, date_of_birth, address, created_at, is_banned')
     .eq('email', email)
     .maybeSingle()
 
@@ -48,8 +48,19 @@ export const findByEmail = async (email) => {
   return data || null
 }
 
+export const upsert = async ({ email, full_name, phone, sex, date_of_birth, address }) => {
+  const { data, error } = await supabase
+    .from('patients')
+    .upsert({ email, full_name, phone, sex, date_of_birth, address }, { onConflict: 'email' })
+    .select()
+    .single()
+
+  if (error) throw { status: 500, message: error.message }
+  return data
+}
+
 export const updateByEmail = async (email, body) => {
-  const allowed = ['full_name', 'phone', 'sex']
+  const allowed = ['full_name', 'phone', 'sex', 'date_of_birth', 'address']
   const updates = Object.fromEntries(
     Object.entries(body).filter(([k]) => allowed.includes(k))
   )

@@ -31,12 +31,11 @@ export const getBookedSlots = async (dentistId, date) => {
   return data
 }
 
-export const getServiceDuration = async (serviceId) => {
+export const getTotalDuration = async (serviceIds) => {
   const { data, error } = await supabase
     .from('services')
     .select('duration_minutes')
-    .eq('id', serviceId)
-    .single()
+    .in('id', serviceIds)
   if (error) throw error
-  return data.duration_minutes
+  return data.reduce((sum, s) => sum + s.duration_minutes, 0)
 }

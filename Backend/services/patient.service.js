@@ -12,12 +12,9 @@ export const getMyProfile = async (email) => {
 
 export const updateProfile = async (email, body) => {
   const result = await patientRepository.updateByEmail(email, body)
-  if (!result) {
-    const err = new Error('Patient not found')
-    err.status = 404
-    throw err
-  }
-  return result
+  if (result) return result
+  // No patient row yet (e.g. user hasn't booked before) — create one now
+  return patientRepository.upsert({ email, ...body })
 }
 
 // ── Admin ─────────────────────────────────────────────────────────────────

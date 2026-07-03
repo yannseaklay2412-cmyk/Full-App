@@ -460,6 +460,118 @@
   line-height: 1.5;
 }
 
+/* ── History Detail Modal ── */
+.dash-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+
+.dash-modal {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 36px;
+  width: 100%;
+  max-width: 540px;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.dash-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(0,0,0,0.06);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: background 0.2s;
+}
+.dash-modal-close:hover { background: rgba(0,0,0,0.12); }
+
+.dash-modal-heading {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: #6b7280;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.dash-modal-doctor {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.dash-modal-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0d9488, #0f766e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 19px;
+  flex-shrink: 0;
+}
+
+.dash-modal-doctor-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1e1e1e;
+  margin: 0 0 2px;
+}
+
+.dash-modal-doctor-title {
+  font-size: 13px;
+  color: #2ec4b6;
+  margin: 0;
+}
+
+.dash-modal-divider {
+  border: none;
+  border-top: 1px solid rgba(0,0,0,0.07);
+  margin-bottom: 8px;
+}
+
+.dash-modal-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  font-size: 14px;
+}
+
+.dash-modal-label {
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.dash-modal-value {
+  font-weight: 600;
+  color: #1e1e1e;
+  text-align: right;
+}
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
   .dash-stats {

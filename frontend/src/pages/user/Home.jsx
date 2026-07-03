@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import './Home.css'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../config/supabaseClient'
+import api from '../../api/axios'
 
 import heroImage from '../../assets/images/dentist.png'
 import service1 from '../../assets/images/service1.jpg'
@@ -23,17 +24,14 @@ export default function Home() {
   const [services, setServices] = useState([])
   const [loading, setLoading] = useState(true)
 
-  // Fetch dentists from Supabase
+  // Fetch dentists from the backend API
   useEffect(() => {
     const fetchDentists = async () => {
-      const { data, error } = await supabase
-        .from('dentists')
-        .select('*')
-
-      if (error) {
-        console.error('Error fetching dentists:', error)
-      } else {
+      try {
+        const { data } = await api.get('/dentists')
         setSpecialists(data || [])
+      } catch (err) {
+        console.error('Error fetching dentists:', err)
       }
       setLoading(false)
     }
@@ -43,13 +41,12 @@ export default function Home() {
 
   useEffect(() => {
     const fetchServices = async () => {
-      const { data, error } = await supabase
-        .from('services')
-        // .select('id, service_name, description, price,duration_minutes')
-        .select('*')
-        // .eq('is_active', true)
-        // .order('id')
-      if (data) setServices(data)
+      try {
+        const { data } = await api.get('/services')
+        setServices(data.data || [])
+      } catch (err) {
+        console.error('Error fetching services:', err)
+      }
     }
     fetchServices()
   }, [])

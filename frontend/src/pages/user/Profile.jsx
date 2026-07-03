@@ -1,7 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import api from '../../api/axios'
 import './Profile.css'
+
+const emptyForm = {
+  name:      '',
+  email:     '',
+  phone:     '',
+  dob:       '',
+  gender:    '',
+  address:   '',
+  emergency: '',
+  bloodType: '',
+  allergies: '',
+}
 
 export default function Profile() {
   const navigate = useNavigate()
@@ -9,57 +22,72 @@ export default function Profile() {
   const [editing, setEditing] = useState(false)
   const [saved, setSaved] = useState(false)
 
-  const [form, setForm] = useState({
-    name:      '',
-    email:     '',
-    phone:     '',
-    dob:       '',
-    gender:    '',
-    address:   '',
-    emergency: '',
-    bloodType: '',
-    allergies: '',
-  })
+  const [form, setForm] = useState(emptyForm)
+
+  // Local-only fields that have no column in the patients table yet
+  const loadLocalExtras = () => JSON.parse(localStorage.getItem('userProfile') || '{}')
+
+  const loadProfile = useCallback(async () => {
+    const extras = loadLocalExtras()
+    try {
+      const { data } = await api.get('/patients/me')
+      const patient = data.data
+      setForm({
+        name:      patient.full_name || '',
+        email:     patient.email || user?.email || '',
+        phone:     patient.phone || '',
+        dob:       patient.date_of_birth || '',
+        gender:    patient.sex || '',
+        address:   patient.address || '',
+        emergency: extras.emergency || '',
+        bloodType: extras.bloodType || '',
+        allergies: extras.allergies || '',
+      })
+    } catch (err) {
+      // No patient record yet (e.g. never booked) — start from a blank profile
+      setForm({
+        ...emptyForm,
+        email:     user?.email || '',
+        emergency: extras.emergency || '',
+        bloodType: extras.bloodType || '',
+        allergies: extras.allergies || '',
+      })
+    }
+  }, [user])
 
   useEffect(() => {
-    const storedProfile = JSON.parse(localStorage.getItem('userProfile') || '{}')
-    setForm({
-      name:      storedProfile.name      || user?.name  || '',
-      email:     storedProfile.email     || user?.email || '',
-      phone:     storedProfile.phone     || '',
-      dob:       storedProfile.dob       || '',
-      gender:    storedProfile.gender    || '',
-      address:   storedProfile.address   || '',
-      emergency: storedProfile.emergency || '',
-      bloodType: storedProfile.bloodType || '',
-      allergies: storedProfile.allergies || '',
-    })
-  }, [user])
+    if (!user) return
+    loadProfile()
+  }, [user, loadProfile])
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  const handleSave = () => {
-    localStorage.setItem('userProfile', JSON.stringify(form))
+  const handleSave = async () => {
+    try {
+      await api.put('/patients/me', {
+        full_name:     form.name,
+        phone:         form.phone,
+        sex:           form.gender,
+        date_of_birth: form.dob,
+        address:       form.address,
+      })
+    } catch (err) {
+      console.error(err)
+    }
+    localStorage.setItem('userProfile', JSON.stringify({
+      emergency: form.emergency,
+      bloodType: form.bloodType,
+      allergies: form.allergies,
+    }))
     setEditing(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
   }
 
   const handleCancel = () => {
-    const storedProfile = JSON.parse(localStorage.getItem('userProfile') || '{}')
-    setForm({
-      name:      storedProfile.name      || user?.name  || '',
-      email:     storedProfile.email     || user?.email || '',
-      phone:     storedProfile.phone     || '',
-      dob:       storedProfile.dob       || '',
-      gender:    storedProfile.gender    || '',
-      address:   storedProfile.address   || '',
-      emergency: storedProfile.emergency || '',
-      bloodType: storedProfile.bloodType || '',
-      allergies: storedProfile.allergies || '',
-    })
+    loadProfile()
     setEditing(false)
   }
 
@@ -183,9 +211,9 @@ export default function Profile() {
                   disabled={!editing}
                 >
                   <option value="">Select gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
                 </select>
               </div>
 

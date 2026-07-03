@@ -13,9 +13,10 @@ export const getBookingById = async (id) => {
   return booking
 }
 
-export const createBooking = async (email, { dentist_id, notes, full_name, phone, sex, date_of_birth, address, appointment_date, start_time, end_time }) => {
+export const createBooking = async (email, { dentist_id, service_ids, notes, full_name, phone, sex, date_of_birth, address, appointment_date, start_time, end_time }) => {
   const patient = await patientRepo.upsert({ email, full_name, phone, sex, date_of_birth, address })
   const booking = await bookingRepo.create({ patient_id: patient.id, dentist_id, notes, appointment_date, start_time, end_time })
+  if (service_ids?.length) await bookingRepo.linkServices(booking.id, service_ids)
   return booking
 }
 

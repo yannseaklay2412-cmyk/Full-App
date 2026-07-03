@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { supabase } from '../../config/supabaseClient'
+import api from '../../api/axios'
 import './MyBookings.css'
 
 const STATUS_COLORS = {
@@ -11,62 +11,65 @@ const STATUS_COLORS = {
   done:      { bg: 'rgba(100,200,100,0.12)', color: '#64c864', border: '#64c864' },
 }
 
+const STATUS_LABEL = {
+  pending:   '⏳ Pending confirmation',
+  confirmed: '✓ Confirmed',
+  done:      '✅ Done',
+  cancelled: '✗ Cancelled',
+}
+
 export default function MyBookings() {
   const navigate = useNavigate()
   const { user } = useAuth()
 
-  const [bookings, setBookings] = useState([])
-  const [filter, setFilter]     = useState('All')
-  const [loading, setLoading]   = useState(true)
+  const [bookings, setBookings]           = useState([])
+  const [filter, setFilter]               = useState('All')
+  const [loading, setLoading]             = useState(true)
+  const [selectedBooking, setSelectedBooking] = useState(null)
 
   useEffect(() => {
     if (!user) return
     const fetchBookings = async () => {
       setLoading(true)
-
-      // Step 1 — get patient by email
-      const { data: patient } = await supabase
-        .from('patients')
-        .select('id')
-        .eq('email', user.email)
-        .maybeSingle()
-
-      if (!patient) { setLoading(false); return }
-
-      // Step 2 — fetch appointments using patient_id
-      const { data } = await supabase
-        .from('appointments')
-        .select(`
-          id,
-          status,
-          notes,
-          created_at,
-          dentists ( dentist_name, specialty ),
-          services:appointment_services ( services ( service_name, price ) )
-        `)
-        .eq('patient_id', patient.id)
-        .order('created_at', { ascending: false })
-
-      if (data) setBookings(data)
+      try {
+        const { data } = await api.get('/bookings/mine')
+        setBookings(data.data || [])
+      } catch (err) {
+        console.error(err)
+      }
       setLoading(false)
     }
     fetchBookings()
   }, [user])
 
-  const handleCancel = async (id) => {
-    const { error } = await supabase
-      .from('appointments')
-      .update({ status: 'cancelled' })
-      .eq('id', id)
+  const serviceNames  = (b) => b.appointment_services?.map(as => as.services?.service_name).filter(Boolean).join(', ') || '—'
+  const serviceTotal  = (b) => b.appointment_services?.reduce((sum, as) => sum + (as.services?.price || 0), 0) || 0
+  const durationTotal = (b) => b.appointment_services?.reduce((sum, as) => sum + (as.services?.duration_minutes || 0), 0) || 0
 
-    if (!error) {
+  const handleCancel = async (id) => {
+    try {
+      await api.put(`/bookings/${id}/cancel`)
       setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b))
+      if (selectedBooking?.id === id) setSelectedBooking(prev => ({ ...prev, status: 'cancelled' }))
+    } catch (err) {
+      console.error(err)
     }
   }
 
   const filtered = filter === 'All'
     ? bookings
     : bookings.filter(b => b.status === filter.toLowerCase())
+
+  const Avatar = ({ name, size = 48 }) => (
+    <div style={{
+      width: size, height: size, borderRadius: '50%',
+      background: 'linear-gradient(135deg, #0d9488, #0f766e)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: '#fff', fontWeight: 700, fontSize: size * 0.4, flexShrink: 0,
+    }}>
+      {name?.charAt(0).toUpperCase()}
+    </div>
+  )
 
   return (
     <div className="mybookings-page">
@@ -80,7 +83,7 @@ export default function MyBookings() {
             <span style={{ color: '#1e1e1e' }}>Tooth</span>
             <span style={{ color: '#2ec4b6' }}>Time</span>
           </div>
-        </div>      
+        </div>
       </div>
 
       <div className="mb-content">
@@ -112,7 +115,7 @@ export default function MyBookings() {
           ))}
         </div>
 
-        {/* Loading */}
+        {/* List */}
         {loading ? (
           <div className="mb-empty"><p>Loading appointments...</p></div>
         ) : filtered.length === 0 ? (
@@ -125,17 +128,15 @@ export default function MyBookings() {
           <div className="mb-list">
             {filtered.map(b => {
               const style = STATUS_COLORS[b.status] || STATUS_COLORS.pending
-              const serviceName = b.services?.[0]?.services?.service_name || '—'
-              const servicePrice = b.services?.[0]?.services?.price || '—'
               return (
-                <div className="mb-card" key={b.id}>
+                <div className="mb-card" key={b.id} onClick={() => setSelectedBooking(b)} style={{ cursor: 'pointer' }}>
                   <div className="mb-card-left">
                     <div className="mb-card-icon">🦷</div>
                     <div className="mb-card-info">
                       <p className="mb-doctor">{b.dentists?.dentist_name || '—'}</p>
-                      <p className="mb-service">{serviceName}</p>
+                      <p className="mb-service">{serviceNames(b)}</p>
                       <div className="mb-meta">
-                        <span>💰 ${servicePrice}</span>
+                        <span>💰 ${serviceTotal(b)}</span>
                         <span>📝 {b.notes || 'No notes'}</span>
                       </div>
                     </div>
@@ -148,7 +149,7 @@ export default function MyBookings() {
                       {b.status}
                     </span>
                     {b.status !== 'cancelled' && b.status !== 'done' && (
-                      <button className="btn-cancel" onClick={() => handleCancel(b.id)}>
+                      <button className="btn-cancel" onClick={e => { e.stopPropagation(); handleCancel(b.id) }}>
                         Cancel
                       </button>
                     )}
@@ -159,6 +160,49 @@ export default function MyBookings() {
           </div>
         )}
       </div>
+
+      {/* Detail Modal */}
+      {selectedBooking && (
+        <div className="mb-modal-overlay" onClick={() => setSelectedBooking(null)}>
+          <div className="mb-modal" onClick={e => e.stopPropagation()}>
+
+            <button className="mb-modal-close" onClick={() => setSelectedBooking(null)}>✕</button>
+
+            <p className="mb-modal-heading">REVIEW YOUR APPOINTMENT</p>
+
+            <div className="mb-modal-doctor">
+              <Avatar name={selectedBooking.dentists?.dentist_name} />
+              <div>
+                <p className="mb-modal-doctor-name">{selectedBooking.dentists?.dentist_name || '—'}</p>
+                <p className="mb-modal-doctor-title">{selectedBooking.dentists?.specialty || '—'}</p>
+              </div>
+            </div>
+
+            <div className="mb-modal-divider" />
+
+            {[
+              { label: 'Patient',  value: selectedBooking.patients?.full_name || '—' },
+              { label: 'Phone',    value: selectedBooking.patients?.phone || '—' },
+              { label: 'Services', value: `🦷 ${serviceNames(selectedBooking)}` },
+              { label: 'Duration', value: `${durationTotal(selectedBooking)} min` },
+              { label: 'Price',    value: `$${serviceTotal(selectedBooking)}` },
+              { label: 'Date',     value: selectedBooking.appointment_date || '—' },
+              { label: 'Time',     value: selectedBooking.start_time && selectedBooking.end_time ? `${selectedBooking.start_time} – ${selectedBooking.end_time}` : '—' },
+              { label: 'Notes',    value: selectedBooking.notes || '—' },
+              { label: 'Status',   value: STATUS_LABEL[selectedBooking.status] || selectedBooking.status },
+            ].map((row, i) => (
+              <div key={i} className="mb-modal-row">
+                <span className="mb-modal-label">{row.label}</span>
+                <span className={`mb-modal-value ${row.label === 'Status' ? 'mb-modal-status' : ''}`}>
+                  {row.value}
+                </span>
+              </div>
+            ))}
+
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

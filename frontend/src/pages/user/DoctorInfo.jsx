@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import './DoctorInfo.css'
 import { supabase } from '../../config/supabaseClient'
+import api from '../../api/axios'
 
 export default function DoctorDetail() {
   const { id } = useParams()
@@ -11,17 +12,12 @@ export default function DoctorDetail() {
 
   useEffect(() => {
     const fetchDoctor = async () => {
-      const { data, error } = await supabase
-        .from('dentists')
-        .select('*')
-        .eq('id', id)
-        .single()
-      //error handling 
-      if (error) {
-        console.error('Error fetching doctor:', error)
-        setDoctor(null)
-      } else {
+      try {
+        const { data } = await api.get(`/dentists/${id}`)
         setDoctor(data)
+      } catch (err) {
+        console.error('Error fetching doctor:', err)
+        setDoctor(null)
       }
       setLoading(false)
     }
@@ -57,7 +53,9 @@ export default function DoctorDetail() {
       {/* PROFILE HEADER */}
       <div className="profile-header">
         <img
-          src={doctor.photo || 'https://via.placeholder.com/180x200?text=Dentist'}
+          src={doctor.image_path
+            ? supabase.storage.from('file_image').getPublicUrl(doctor.image_path).data.publicUrl
+            : 'https://placehold.co/180x200?text=Dentist'}
           alt={doctor.dentist_name}
           className="profile-img"
         />

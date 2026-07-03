@@ -15,9 +15,9 @@ const toTime = (mins) => {
   return `${h}:${m}:00`
 }
 
-export const getAvailableSlots = async (dentistId, serviceId, date) => {
+export const getAvailableSlots = async (dentistId, serviceIds, date) => {
   const [duration, schedule, booked] = await Promise.all([
-    slotRepo.getServiceDuration(serviceId),
+    slotRepo.getTotalDuration(serviceIds),
     slotRepo.getDentistSchedule(dentistId),
     slotRepo.getBookedSlots(dentistId, date),
   ])

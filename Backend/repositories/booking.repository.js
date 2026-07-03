@@ -6,6 +6,7 @@ export const getByPatientId = async (patientId) => {
     .select(`
       id, status, notes, created_at, appointment_date, start_time, end_time,
       dentists ( id, dentist_name, specialty ),
+      patients ( id, full_name, phone ),
       appointment_services ( services ( id, service_name, price, duration_minutes ) )
     `)
     .eq('patient_id', patientId)
@@ -68,4 +69,11 @@ export const updateStatus = async (id, status) => {
 
 export const cancel = async (id) => {
   return updateStatus(id, 'cancelled')
+}
+
+export const linkServices = async (appointmentId, serviceIds) => {
+  const { error } = await supabase
+    .from('appointment_services')
+    .insert(serviceIds.map(serviceId => ({ appointment_id: appointmentId, service_id: serviceId })))
+  if (error) throw error
 }

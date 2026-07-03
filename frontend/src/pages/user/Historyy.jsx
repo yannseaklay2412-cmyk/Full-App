@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../../config/supabaseClient'
+import api from '../../api/axios'
 import { useAuth } from '../../context/AuthContext'
 import './History.css'
 
@@ -14,33 +14,19 @@ export default function History() {
     if (!user) return
     const fetchHistory = async () => {
       setLoading(true)
-
-      // Step 1 — get patient id
-      const { data: patient } = await supabase
-        .from('patients')
-        .select('id')
-        .eq('email', user.email)
-        .maybeSingle()
-
-      if (!patient) { setLoading(false); return }
-
-      // Step 2 — fetch done appointments
-      const { data } = await supabase
-        .from('appointments')
-        .select(`
-          id, status, created_at,
-          dentists ( dentist_name ),
-          appointment_services ( services ( service_name, price ) )
-        `)
-        .eq('patient_id', patient.id)
-        .eq('status', 'done')
-        .order('created_at', { ascending: false })
-
-      if (data) setHistoryBookings(data)
+      try {
+        const { data } = await api.get('/bookings/mine')
+        setHistoryBookings((data.data || []).filter(b => b.status === 'done'))
+      } catch (err) {
+        console.error(err)
+      }
       setLoading(false)
     }
     fetchHistory()
   }, [user])
+
+  const serviceNames = (b) => b.appointment_services?.map(as => as.services?.service_name).filter(Boolean).join(', ') || '—'
+  const serviceTotal = (b) => b.appointment_services?.reduce((sum, as) => sum + (as.services?.price || 0), 0) || 0
 
   return (
     <div className="history-page">
@@ -82,9 +68,9 @@ export default function History() {
                 <tr key={b.id}>
                   <td>#{b.id.slice(0, 8)}</td>
                   <td>{b.dentists?.dentist_name}</td>
-                  <td>{b.appointment_services?.[0]?.services?.service_name}</td>
+                  <td>{serviceNames(b)}</td>
                   <td>{new Date(b.created_at).toLocaleDateString()}</td>
-                  <td>${b.appointment_services?.[0]?.services?.price}</td>
+                  <td>${serviceTotal(b)}</td>
                   <td><span className="history-badge">✅ Done</span></td>
                 </tr>
               ))}
