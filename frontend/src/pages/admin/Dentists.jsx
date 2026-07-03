@@ -209,10 +209,25 @@ export default function Dentists() {
   return (
     <AdminSidebar pageTitle="Dashboard" pageSubtitle="Home / Employees">
         <div style={{ padding: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+          {/* TABS + ADD BUTTON on same row */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {TABS.map(tab => (
+                <button key={tab} onClick={() => setActiveTab(tab)}
+                  style={{
+                    padding: '8px 24px', borderRadius: 8, fontSize: 13, fontWeight: 600,
+                    cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", border: 'none',
+                    background: activeTab === tab ? '#0d9488' : '#fff',
+                    color: activeTab === tab ? '#fff' : '#8a9fc4',
+                    boxShadow: activeTab === tab ? 'none' : '0 1px 4px rgba(0,0,0,0.08)'
+                  }}>
+                  {tab}
+                </button>
+              ))}
+            </div>
             <button
               onClick={() => { resetDentistForm(); resetServiceForm(); activeTab === 'Dentists' ? setShowDentistForm(true) : setShowServiceForm(true) }}
-              style={{ background: '#0d1b3e', border: 'none', color: '#fff', padding: '8px 20px', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
+              style={{ background: '#0d9488', border: 'none', color: '#fff', padding: '8px 20px', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
               + Add {activeTab === 'Dentists' ? 'Employee' : 'Service'}
             </button>
           </div>
@@ -223,22 +238,6 @@ export default function Dentists() {
               {error}
             </div>
           )}
-
-          {/* TABS */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
-            {TABS.map(tab => (
-              <button key={tab} onClick={() => setActiveTab(tab)}
-                style={{
-                  padding: '8px 24px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-                  cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", border: 'none',
-                  background: activeTab === tab ? '#0d1b3e' : '#fff',
-                  color: activeTab === tab ? '#fff' : '#8a9fc4',
-                  boxShadow: activeTab === tab ? 'none' : '0 1px 4px rgba(0,0,0,0.08)'
-                }}>
-                {tab}
-              </button>
-            ))}
-          </div>
 
           {/* ── DENTISTS TAB ── */}
           {activeTab === 'Dentists' && (
@@ -297,7 +296,7 @@ export default function Dentists() {
                   </div>
                   <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
                     <button onClick={saveDentist} disabled={dentistLoading}
-                      style={{ background: '#0d1b3e', border: 'none', color: '#fff', padding: '11px 28px', borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", opacity: dentistLoading ? 0.7 : 1 }}>
+                      style={{ background: '#0d9488', border: 'none', color: '#fff', padding: '11px 28px', borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", opacity: dentistLoading ? 0.7 : 1 }}>
                       {dentistLoading ? 'Saving...' : editingDentist ? 'Save Changes' : 'Add Employee'}
                     </button>
                     <button onClick={resetDentistForm}
@@ -311,10 +310,10 @@ export default function Dentists() {
               {/* Dentist Cards */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 24 }}>
                 {dentists.map(d => (
-                  <div key={d.id} style={{ background: '#fff', borderRadius: 18, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.10)', display: 'flex', flexDirection: 'column' }}>
+                  <div key={d.id} style={{ background: 'linear-gradient(160deg, #e8faf9 0%, #d0f5f2 60%, #c2f0ec 100%)', borderRadius: 18, overflow: 'hidden', boxShadow: '0 8px 32px rgba(13,27,62,0.15), 0 2px 8px rgba(13,27,62,0.08)', display: 'flex', flexDirection: 'column', transition: 'box-shadow 0.2s, transform 0.2s', border: '1px solid rgba(78,205,196,0.25)' }} onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 16px 48px rgba(13,27,62,0.22), 0 4px 12px rgba(13,27,62,0.1)'; e.currentTarget.style.transform = 'translateY(-4px)' }} onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 8px 32px rgba(13,27,62,0.15), 0 2px 8px rgba(13,27,62,0.08)'; e.currentTarget.style.transform = 'translateY(0)' }}>
 
                     {/* Large photo area */}
-                    <div style={{ position: 'relative', height: 220, background: 'linear-gradient(135deg, #0d1b3e 0%, #1a3566 100%)', overflow: 'hidden', flexShrink: 0 }}>
+                    <div style={{ position: 'relative', height: 280, background: 'linear-gradient(135deg, #0d1b3e 0%, #1a3566 100%)', overflow: 'hidden', flexShrink: 0 }}>
                       {d.image_path ? (
                         <img
                           src={getPublicUrl(d.image_path)}
@@ -339,7 +338,7 @@ export default function Dentists() {
                     </div>
 
                     {/* Info section */}
-                    <div style={{ padding: '16px 18px', flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ padding: '10px 18px', flex: 1, display: 'flex', flexDirection: 'column', gap: 4, background: 'transparent' }}>
                       {d.phone && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(78,205,196,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -445,7 +444,7 @@ export default function Dentists() {
                   </div>
                   <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
                     <button onClick={saveService} disabled={serviceLoading}
-                      style={{ background: '#0d1b3e', border: 'none', color: '#fff', padding: '11px 28px', borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", opacity: serviceLoading ? 0.7 : 1 }}>
+                      style={{ background: '#0d9488', border: 'none', color: '#fff', padding: '11px 28px', borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", opacity: serviceLoading ? 0.7 : 1 }}>
                       {serviceLoading ? 'Saving...' : editingService ? 'Save Changes' : 'Add Service'}
                     </button>
                     <button onClick={resetServiceForm}

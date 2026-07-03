@@ -220,7 +220,7 @@ const handleRegister = async (e) => {
         <div className="auth-logo" onClick={() => navigate('/')}>
           <div className="nav-logo">
             <span className="logo-icon">🦷</span>
-            <div style={{ marginLeft: '15px', fontFamily: 'Playfair Display' }}>SMILLY</div>
+            <div style={{ marginLeft: '15px', fontFamily: 'Playfair Display' }}>ToothTime</div>
           </div>
         </div>
         <ul className="auth-nav-links">

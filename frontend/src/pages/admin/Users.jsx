@@ -17,7 +17,7 @@ const sidebarItems = [
 ]
 
 const SIDEBAR = {
-  wrap:    { width: 180, background: '#0d1b3e', display: 'flex', flexDirection: 'column', flexShrink: 0, paddingBottom: 24 },
+  wrap:    { width: 180, background: '#0d9488', display: 'flex', flexDirection: 'column', flexShrink: 0, paddingBottom: 24 },
   logo:    { padding: '20px 20px 16px', borderBottom: '1px solid #243560' },
   logoBox: { background: '#4ecdc4', borderRadius: 10, width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0d1b3e' },
   sub:     { padding: '14px 20px 10px', borderBottom: '1px solid #243560' },
@@ -75,7 +75,7 @@ const handleBan = async (userId) => {
       throw new Error(body.message || `Server error ${res.status}`)
     }
 
-    // Update status locally — no need to refetch
+    // Update status locally  no need to refetch
     setUsers(prev => prev.map(u =>
       u.id === userId ? { ...u, is_banned: true } : u
     ))

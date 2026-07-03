@@ -61,7 +61,7 @@ export default function AdminSidebar({ pageTitle, pageSubtitle, children }) {
           </div>
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto' }}>
+        <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
           {children}
         </div>
       </div>
