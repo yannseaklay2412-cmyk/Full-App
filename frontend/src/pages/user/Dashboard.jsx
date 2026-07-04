@@ -12,24 +12,31 @@ export default function Dashboard() {
   const [bookings,        setBookings]        = useState([])
   const [historyBookings, setHistoryBookings] = useState([])
   const [selectedBooking, setSelectedBooking] = useState(null)
+  const [loadError,       setLoadError]       = useState('')
 
   useEffect(() => {
     if (!user) return
     const fetchData = async () => {
-      try {
-        const [profileRes, bookingsRes] = await Promise.all([
-          api.get('/patients/me'),
-          api.get('/bookings/mine'),
-        ])
+      setLoadError('')
+      const [profileResult, bookingsResult] = await Promise.allSettled([
+        api.get('/patients/me'),
+        api.get('/bookings/mine'),
+      ])
 
-        const patient  = profileRes.data.data
-        const apptData = bookingsRes.data.data
+      if (profileResult.status === 'fulfilled') {
+        setUserName(profileResult.value.data.data.full_name)
+      } else {
+        console.error(profileResult.reason)
+        setLoadError(prev => prev || `Couldn't load your profile: ${profileResult.reason.response?.data?.message || profileResult.reason.message}`)
+      }
 
-        setUserName(patient.full_name)
-        setBookings(apptData || [])
-        setHistoryBookings((apptData || []).filter(b => b.status === 'done').slice(0, 2))
-      } catch (err) {
-        console.error(err)
+      if (bookingsResult.status === 'fulfilled') {
+        const apptData = bookingsResult.value.data.data || []
+        setBookings(apptData)
+        setHistoryBookings(apptData.filter(b => b.status === 'done').slice(0, 2))
+      } else {
+        console.error(bookingsResult.reason)
+        setLoadError(prev => prev || `Couldn't load your bookings: ${bookingsResult.reason.response?.data?.message || bookingsResult.reason.message}`)
       }
     }
     fetchData()
@@ -76,6 +83,12 @@ export default function Dashboard() {
       </div>
 
       <div className="dash-content">
+
+        {loadError && (
+          <div style={{ background: 'rgba(255,107,107,0.1)', border: '1px solid rgba(255,107,107,0.4)', borderRadius: 10, padding: '10px 16px', marginBottom: 16, fontSize: 13, color: '#cc0000', fontWeight: 500 }}>
+            ✗ {loadError}
+          </div>
+        )}
 
         {/* Welcome Banner */}
         <div className="dash-banner">

@@ -30,12 +30,19 @@ export const register = async ({ full_name, email, phone, sex, password }) => {
     throw { status: 400, message: error.message }
   }
 
-  // Insert patient profile
+  // Insert role profile
   const { error: profileError } = await supabase
+    .from('profiles')
+    .insert({ id: data.user.id, email, role: 'patient' })
+
+  if (profileError) throw { status: 500, message: 'Failed to create profile' }
+
+  // Insert patient record
+  const { error: patientError } = await supabase
     .from('patients')
     .insert({ id: data.user.id, full_name, email, phone, sex })
 
-  if (profileError) throw { status: 500, message: 'Failed to create profile' }
+  if (patientError) throw { status: 500, message: 'Failed to create patient record' }
 
   return { message: 'Account created successfully' }
 }

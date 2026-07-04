@@ -2,7 +2,7 @@ import * as bookingRepo from '../repositories/booking.repository.js'
 import * as patientRepo from '../repositories/patient.repository.js'
 
 export const getMyBookings = async (email) => {
-  const patient = await patientRepo.getByEmail(email)
+  const patient = await patientRepo.findByEmail(email)
   if (!patient) throw { status: 404, message: 'Patient not found' }
   return bookingRepo.getByPatientId(patient.id)
 }

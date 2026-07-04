@@ -1,5 +1,4 @@
 
-import { supabase } from '../config/supabaseClient'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Login.css'
@@ -109,50 +108,14 @@ const handleRegister = async (e) => {
   setRegisterLoading(true)
 
   try {
-    // Step 1 - Create auth account
-    const { data, error } = await supabase.auth.signUp({
-      email: registerForm.email,
-      password: registerForm.password
+    await api.post('/auth/register', {
+      full_name: registerForm.name,
+      email:     registerForm.email,
+      phone:     registerForm.phonenumber,
+      sex:       registerForm.sex,
+      password:  registerForm.password,
     })
 
-    if (error) {
-      setRegisterError(error.message)
-      return
-    }
-
-    const userId = data.user.id
-
-    // Step 2 - Create profile
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert({
-        id: userId,
-        email: registerForm.email,
-        role: 'patient'
-      })
-
-    if (profileError) {
-      setRegisterError(profileError.message)
-      return
-    }
-
-    // Step 3 - Create patient record
-    const { error: patientError } = await supabase
-      .from('patients')
-      .insert({
-        id: userId,
-        full_name: registerForm.name,
-        email: registerForm.email,
-        phone: registerForm.phonenumber,
-        sex: registerForm.sex
-      })
-
-    if (patientError) {
-      setRegisterError(patientError.message)
-      return
-    }
-
-    // Step 4 - Success
     setRegisterSuccess(
       `Welcome, ${registerForm.name.split(' ')[0]}! Your account is ready. Please check your email to verify it.`
     )
@@ -173,7 +136,7 @@ const handleRegister = async (e) => {
 
   } catch (error) {
     console.error('Registration Error:', error)
-    setRegisterError(error.message || 'Registration failed.')
+    setRegisterError(error.response?.data?.message || 'Registration failed.')
   } finally {
     setRegisterLoading(false)
   }
