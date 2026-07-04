@@ -39,14 +39,14 @@ const STATUS_COLOR = {
 }
 
 const SIDEBAR = {
-  wrap:   { width: 180, background: '#0d1b3e', display: 'flex', flexDirection: 'column', flexShrink: 0, paddingBottom: 24 },
-  logo:   { padding: '20px 20px 16px', borderBottom: '1px solid #243560' },
-  logoBox:{ background: '#4ecdc4', borderRadius: 10, width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0d1b3e' },
-  sub:    { padding: '14px 20px 10px', borderBottom: '1px solid #243560' },
-  subTop: { fontSize: 10, color: '#8a9fc4', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 },
-  subBot: { fontSize: 11, color: '#4ecdc4', fontWeight: 500 },
+  wrap:   { width: 220, background: 'linear-gradient(180deg, #0d9488 0%, #0a7a74 100%)', display: 'flex', flexDirection: 'column', flexShrink: 0, paddingBottom: 24, position: 'sticky', top: 0, height: '100vh', overflowY: 'auto' },
+  logo:   { padding: '20px 20px 16px', borderBottom: '1px solid rgba(255,255,255,0.15)' },
+  logoBox:{ background: 'rgba(255,255,255,0.2)', borderRadius: 10, width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' },
+  sub:    { padding: '14px 20px 10px', borderBottom: '1px solid rgba(255,255,255,0.12)' },
+  subTop: { fontSize: 10, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 },
+  subBot: { fontSize: 11, color: '#fff', fontWeight: 500 },
   logout: { marginTop: 'auto', padding: '0 16px' },
-  logBtn: { width: '100%', background: 'rgba(255,107,107,0.1)', border: '1px solid rgba(255,107,107,0.25)', color: '#ff6b6b', padding: 9, borderRadius: 8, fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" },
+  logBtn: { width: '100%', background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: 9, borderRadius: 8, fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" },
 }
 
 export default function UserDetail() {
@@ -86,9 +86,9 @@ export default function UserDetail() {
 
   const navItem = (item) => ({
     padding: '11px 20px', fontSize: 13, cursor: 'pointer', transition: 'all 0.2s',
-    background: window.location.pathname === item.path ? 'rgba(78,205,196,0.1)' : 'transparent',
-    borderLeft: window.location.pathname === item.path ? '3px solid #4ecdc4' : '3px solid transparent',
-    color:      window.location.pathname === item.path ? '#4ecdc4' : '#8a9fc4',
+    background: window.location.pathname === item.path ? 'rgba(255,255,255,0.18)' : 'transparent',
+    borderLeft: window.location.pathname === item.path ? '3px solid #fff' : '3px solid transparent',
+    color:      window.location.pathname === item.path ? '#fff' : 'rgba(255,255,255,0.7)',
   })
 
   const today    = new Date().toISOString().split('T')[0]
@@ -119,7 +119,7 @@ export default function UserDetail() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'DM Sans', sans-serif", background: '#f0f2f5' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'DM Sans', sans-serif", background: 'linear-gradient(140deg, #e8faf9 0%, #d0f5f2 45%, #c2f0ec 100%)' }}>
         <aside style={SIDEBAR.wrap}>
           <div style={SIDEBAR.logo}><div style={SIDEBAR.logoBox}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -139,7 +139,7 @@ export default function UserDetail() {
 
   if (notFound) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'DM Sans', sans-serif", background: '#f0f2f5' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'DM Sans', sans-serif", background: 'linear-gradient(140deg, #e8faf9 0%, #d0f5f2 45%, #c2f0ec 100%)' }}>
         <aside style={SIDEBAR.wrap}>
           <div style={SIDEBAR.logo}><div style={SIDEBAR.logoBox}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -153,7 +153,7 @@ export default function UserDetail() {
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
           <p style={{ fontSize: 20, fontWeight: 700, color: '#0d1b3e' }}>Patient not found</p>
           <button onClick={() => navigate('/admin/users')}
-            style={{ background: '#0d1b3e', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>
+            style={{ background: '#0d9488', color: '#fff', border: 'none', padding: '10px 24px', borderRadius: 8, cursor: 'pointer', fontSize: 14, fontFamily: "'DM Sans', sans-serif" }}>
             ← Back to Records
           </button>
         </div>
@@ -164,7 +164,7 @@ export default function UserDetail() {
   if (!user) return null
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'DM Sans', sans-serif", background: '#f0f2f5' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'DM Sans', sans-serif", background: 'linear-gradient(140deg, #e8faf9 0%, #d0f5f2 45%, #c2f0ec 100%)' }}>
 
       {/* SIDEBAR */}
       <aside style={SIDEBAR.wrap}>
@@ -201,7 +201,7 @@ export default function UserDetail() {
             <p style={{ fontSize: 13, fontWeight: 600, color: '#0d1b3e' }}>Patient Detail</p>
           </div>
           <button onClick={() => navigate('/admin/users')}
-            style={{ background: '#0d1b3e', border: 'none', color: '#fff', padding: '7px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
+            style={{ background: '#0d9488', border: 'none', color: '#fff', padding: '7px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
             ← Back to Records
           </button>
         </div>
