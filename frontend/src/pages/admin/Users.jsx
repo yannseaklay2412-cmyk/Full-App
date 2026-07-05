@@ -154,14 +154,9 @@ const handleBan = async (userId) => {
               { label: 'All Users',      num: stats.total - stats.banned, color: '#4ecdc4' },
               { label: 'Banned',         num: stats.banned,              color: '#ff6b6b' },
             ].map((s, i) => (
-              <div key={i} style={{ background: '#fff', borderRadius: 12, padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 10, background: s.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: 14, height: 14, borderRadius: '50%', background: s.color }} />
-                </div>
-                <div>
-                  <p style={{ fontSize: 11, color: '#8a9fc4', marginBottom: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>{s.label}</p>
-                  <h3 style={{ fontSize: 24, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.num}</h3>
-                </div>
+              <div key={i} style={{ background: '#fff', borderRadius: 12, padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+                <p style={{ fontSize: 11, color: '#8a9fc4', marginBottom: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>{s.label}</p>
+                <h3 style={{ fontSize: 24, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.num}</h3>
               </div>
             ))}
           </div>

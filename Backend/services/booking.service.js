@@ -25,6 +25,7 @@ export const cancelBooking = async (id) => {
   if (!booking) throw { status: 404, message: 'Booking not found' }
   if (booking.status === 'cancelled') throw { status: 400, message: 'Booking already cancelled' }
   if (booking.status === 'done') throw { status: 400, message: 'Cannot cancel a completed booking' }
+  if (booking.status === 'expired') throw { status: 400, message: 'Cannot cancel an expired booking' }
   return bookingRepo.cancel(id)
 }
 
@@ -33,9 +34,13 @@ export const getAllBookings = async ({ status } = {}) => {
 }
 
 export const updateBookingStatus = async (id, status) => {
-  const allowed = ['pending', 'confirmed', 'done', 'cancelled']
+  const allowed = ['pending', 'confirmed', 'done', 'cancelled', 'expired']
   if (!allowed.includes(status)) throw { status: 400, message: `Invalid status. Must be one of: ${allowed.join(', ')}` }
   const booking = await bookingRepo.getById(id)
   if (!booking) throw { status: 404, message: 'Booking not found' }
   return bookingRepo.updateStatus(id, status)
+}
+
+export const expireOverdueBookings = async () => {
+  return bookingRepo.expireOverdue()
 }

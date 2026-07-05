@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import './Login.css'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
+import Toast from '../components/ui/Toast'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -178,6 +179,12 @@ const handleRegister = async (e) => {
   return (
     <div className="auth-page">
 
+      <Toast message={loginSuccess} type="success" onClose={() => setLoginSuccess('')} />
+      <Toast message={loginError} type="error" onClose={() => setLoginError('')} />
+      <Toast message={registerSuccess} type="success" onClose={() => setRegisterSuccess('')} />
+      <Toast message={registerError} type="error" onClose={() => setRegisterError('')} />
+      <Toast message={forgotError} type="error" onClose={() => setForgotError('')} />
+
       {/* NAVBAR */}
       <nav className="auth-nav">
         <div className="auth-logo" onClick={() => navigate('/')}>
@@ -305,15 +312,6 @@ const handleRegister = async (e) => {
                       </button>
                     </div>
                   </div>
-                  {loginError && <p className="auth-error">{loginError}</p>}
-                  {loginSuccess && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: 'rgba(78,205,196,0.1)', border: '1px solid rgba(78,205,196,0.3)', borderRadius: 10 }}>
-                      <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#2ec4b6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
-                      </div>
-                      <p style={{ fontSize: 13, color: '#2ec4b6', fontWeight: 500, margin: 0 }}>{loginSuccess}</p>
-                    </div>
-                  )}
                   <button type="submit" className="auth-btn" disabled={loginLoading || !!loginSuccess}>
                     {loginLoading ? <span className="auth-spinner"></span> : 'Sign In'}
                   </button>
@@ -409,15 +407,6 @@ const handleRegister = async (e) => {
                       </button>
                     </div>
                   </div>
-                  {registerError && <p className="auth-error">{registerError}</p>}
-                  {registerSuccess && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: 'rgba(78,205,196,0.1)', border: '1px solid rgba(78,205,196,0.3)', borderRadius: 10 }}>
-                      <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#2ec4b6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
-                      </div>
-                      <p style={{ fontSize: 13, color: '#2ec4b6', fontWeight: 500, margin: 0 }}>{registerSuccess}</p>
-                    </div>
-                  )}
                   <button type="submit" className="auth-btn" disabled={registerLoading}>
                     {registerLoading ? <span className="auth-spinner"></span> : 'Create Account'}
                   </button>
@@ -480,7 +469,6 @@ const handleRegister = async (e) => {
                           </button>
                         </div>
                       </div>
-                      {forgotError && <p className="auth-error">{forgotError}</p>}
                       <button type="submit" className="auth-btn" disabled={forgotLoading}>
                         {forgotLoading ? <span className="auth-spinner"></span> : 'Update Password'}
                       </button>

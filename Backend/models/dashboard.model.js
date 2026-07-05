@@ -1,44 +1,40 @@
-import pool from '../config/db.js'
+import { supabase } from '../config/supabase.js'
 
 const getStats = async () => {
-  // Total patients
-  const patientsResult = await pool.query(
-    `SELECT COUNT(*) FROM patients`
-  )
-  const totalPatients = parseInt(patientsResult.rows[0].count)
+  const [
+    { count: totalPatients, error: patientsError },
+    { count: totalServices, error: servicesError },
+    { data: appointments, error: appointmentsError },
+    { data: revenueRows, error: revenueError },
+  ] = await Promise.all([
+    supabase.from('patients').select('*', { count: 'exact', head: true }),
+    supabase.from('services').select('*', { count: 'exact', head: true }),
+    supabase.from('appointments').select('status'),
+    supabase
+      .from('appointments')
+      .select('appointment_services ( services ( price ) )')
+      .in('status', ['confirmed', 'done']),
+  ])
 
-  // Total services
-  const servicesResult = await pool.query(
-    `SELECT COUNT(*) FROM services`
-  )
-  const totalServices = parseInt(servicesResult.rows[0].count)
+  if (patientsError) throw patientsError
+  if (servicesError) throw servicesError
+  if (appointmentsError) throw appointmentsError
+  if (revenueError) throw revenueError
 
-  // All appointments with their status
-  const appointmentsResult = await pool.query(
-    `SELECT status FROM appointments`
-  )
-  const counts = appointmentsResult.rows
-
-  // Revenue: appointments -> appointment_services -> services
-  const revenueResult = await pool.query(
-    `SELECT s.price
-     FROM appointments a
-     JOIN appointment_services aps ON a.id = aps.appointment_id
-     JOIN services s ON aps.service_id = s.id
-     WHERE a.status IN ('confirmed', 'done')`
-  )
-  const totalRevenue = revenueResult.rows.reduce((sum, row) => sum + (parseFloat(row.price) || 0), 0)
+  const totalRevenue = revenueRows.reduce((sum, a) =>
+    sum + (a.appointment_services?.reduce((s, as) => s + (as.services?.price || 0), 0) || 0), 0)
 
   return {
-    totalPatients,
-    totalServices,
+    totalPatients: totalPatients || 0,
+    totalServices: totalServices || 0,
     totalRevenue,
     appointments: {
-      total: counts.length,
-      pending: counts.filter(a => a.status === 'pending').length,
-      confirmed: counts.filter(a => a.status === 'confirmed').length,
-      cancelled: counts.filter(a => a.status === 'cancelled').length,
-      done: counts.filter(a => a.status === 'done').length,
+      total: appointments.length,
+      pending: appointments.filter(a => a.status === 'pending').length,
+      confirmed: appointments.filter(a => a.status === 'confirmed').length,
+      cancelled: appointments.filter(a => a.status === 'cancelled').length,
+      done: appointments.filter(a => a.status === 'done').length,
+      expired: appointments.filter(a => a.status === 'expired').length,
     }
   }
 }

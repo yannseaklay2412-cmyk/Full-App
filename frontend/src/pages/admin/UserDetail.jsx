@@ -250,14 +250,9 @@ export default function UserDetail() {
               { label: 'Pending',   num: stats.pending,   color: '#f5c842' },
               { label: 'Cancelled', num: stats.cancelled, color: '#ff6b6b' },
             ].map((s, i) => (
-              <div key={i} style={{ background: '#fff', borderRadius: 12, padding: '14px 18px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 8, background: s.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: s.color }} />
-                </div>
-                <div>
-                  <p style={{ fontSize: 10, color: '#8a9fc4', textTransform: 'uppercase', letterSpacing: 0.5 }}>{s.label}</p>
-                  <h3 style={{ fontSize: 20, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.num}</h3>
-                </div>
+              <div key={i} style={{ background: '#fff', borderRadius: 12, padding: '14px 18px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+                <p style={{ fontSize: 10, color: '#8a9fc4', textTransform: 'uppercase', letterSpacing: 0.5 }}>{s.label}</p>
+                <h3 style={{ fontSize: 20, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.num}</h3>
               </div>
             ))}
           </div>

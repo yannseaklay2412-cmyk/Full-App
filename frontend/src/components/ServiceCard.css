@@ -1,0 +1,120 @@
+.sc-card {
+  display: flex;
+  align-items: stretch;
+  gap: 64px;
+  width: 100%;
+  font-family: 'Poppins', 'DM Sans', sans-serif;
+}
+
+/* LEFT: image placeholder — narrower than the text column */
+.sc-card-image {
+  flex: 0.7;
+  min-width: 0;
+  min-height: 220px;
+  background: #e8edf3;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9aa8bb;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  overflow: hidden;
+}
+
+.sc-card-image-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* RIGHT: text content */
+.sc-card-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* In the reversed layout, the image sits on the right — so push the text's
+   content to the right edge of its own box too, hugging the image instead
+   of sitting flush against the outer page border on the left. */
+.sc-card-reverse .sc-card-info {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.sc-card-name {
+  font-size: 26px;
+  font-weight: 800;
+  color: #123a6b;
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+
+.sc-card-description {
+  font-size: 14px;
+  color: #333333;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+/* Price + duration, inside a bordered box */
+.sc-card-details {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  border: 1px solid #dce4ee;
+  border-radius: 14px;
+  padding: 16px 22px;
+  width: fit-content;
+}
+
+.sc-card-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sc-card-detail-label {
+  font-size: 11px;
+  color: #8a9fc4;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sc-card-detail-value {
+  font-size: 17px;
+  font-weight: 700;
+  color: #123a6b;
+}
+
+/* Alternate layout: image on the right instead of the left.
+   Scoped to min-width so it never fights the mobile stacking rule below. */
+@media (min-width: 641px) {
+  .sc-card-reverse {
+    flex-direction: row-reverse;
+  }
+}
+
+/* MOBILE: stack image on top, text below */
+@media (max-width: 640px) {
+  .sc-card {
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+  }
+  .sc-card-image {
+    min-height: 180px;
+  }
+  .sc-card-reverse .sc-card-info {
+    align-items: flex-start;
+    text-align: left;
+  }
+  .sc-card-details {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

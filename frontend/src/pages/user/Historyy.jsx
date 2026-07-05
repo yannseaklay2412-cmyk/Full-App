@@ -69,7 +69,7 @@ export default function History() {
                   <td>#{b.id.slice(0, 8)}</td>
                   <td>{b.dentists?.dentist_name}</td>
                   <td>{serviceNames(b)}</td>
-                  <td>{new Date(b.created_at).toLocaleDateString()}</td>
+                  <td>{b.appointment_date ? new Date(b.appointment_date).toLocaleDateString() : '—'}</td>
                   <td>${serviceTotal(b)}</td>
                   <td><span className="history-badge">✅ Done</span></td>
                 </tr>

@@ -11,6 +11,7 @@ import dentistRoutes  from './routes/dentist.routes.js'
 import serviceRoutes  from './routes/service.routes.js'
 import timeslotRoutes from './routes/timeslot.routes.js'
 import adminRoutes    from './routes/admin.routes.js'
+import concernRoutes  from './routes/concern.routes.js'
 
 
 const app = express()
@@ -34,6 +35,7 @@ app.use('/api/dentists',  dentistRoutes)
 app.use('/api/services',  serviceRoutes)
 app.use('/api/timeslots', timeslotRoutes)
 app.use('/api/admin',     adminRoutes)
+app.use('/api/concerns',  concernRoutes)
 app.use('/api/timeslots', timeslotRoutes)
 
 

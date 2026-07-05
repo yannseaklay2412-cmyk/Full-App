@@ -71,6 +71,18 @@ export const cancel = async (id) => {
   return updateStatus(id, 'cancelled')
 }
 
+export const expireOverdue = async () => {
+  const today = new Date().toISOString().slice(0, 10)
+  const { data, error } = await supabase
+    .from('appointments')
+    .update({ status: 'expired' })
+    .eq('status', 'pending')
+    .lt('appointment_date', today)
+    .select('id')
+  if (error) throw error
+  return data || []
+}
+
 export const linkServices = async (appointmentId, serviceIds) => {
   const { error } = await supabase
     .from('appointment_services')

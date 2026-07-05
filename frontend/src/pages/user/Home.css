@@ -287,34 +287,6 @@
   background: #ecf7f6;
 }
 
-.services-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 25px;
-}
-
-.service-card {
-  background: white;
-  padding: 30px;
-  border-radius: var(--radius);
-  text-align: center;
-  transition: 0.3s;
-}
-
-.service-card:hover {
-  background: var(--primary);
-  color: white;
-}
-
-.service-name {
-  font-weight: 600;
-  margin-bottom: 10px;
-}
-
-.service-desc {
-  font-size: 13px;
-}
-
 /* ===== CONTACT ===== */
 .contact {
   padding: 60px;
@@ -449,7 +421,6 @@
 
   /* Grids → single column */
   .cards-grid,
-  .services-grid,
   .contact-cards,
   .footer-cols {
     grid-template-columns: 1fr;

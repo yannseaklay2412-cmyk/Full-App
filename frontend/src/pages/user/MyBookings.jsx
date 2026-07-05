@@ -136,6 +136,7 @@ export default function MyBookings() {
                       <p className="mb-doctor">{b.dentists?.dentist_name || '—'}</p>
                       <p className="mb-service">{serviceNames(b)}</p>
                       <div className="mb-meta">
+                        <span>🗓 {b.appointment_date ? new Date(b.appointment_date).toLocaleDateString() : '—'}</span>
                         <span>💰 ${serviceTotal(b)}</span>
                         <span>📝 {b.notes || 'No notes'}</span>
                       </div>
@@ -148,7 +149,7 @@ export default function MyBookings() {
                     >
                       {b.status}
                     </span>
-                    {b.status !== 'cancelled' && b.status !== 'done' && (
+                    {b.status !== 'cancelled' && b.status !== 'done' && b.status !== 'expired' && (
                       <button className="btn-cancel" onClick={e => { e.stopPropagation(); handleCancel(b.id) }}>
                         Cancel
                       </button>

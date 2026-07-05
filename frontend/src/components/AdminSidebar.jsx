@@ -7,6 +7,7 @@ const sidebarItems = [
   { label: 'Employees',   path: '/admin/dentists'      },
   { label: 'Appointment', path: '/admin/appointments'  },
   { label: 'Record',      path: '/admin/users'         },
+  { label: 'Concerns',    path: '/admin/concerns'      },
   { label: 'Setting',     path: '/admin/AdminSetting'  },
 ]
 

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import './Dashboard.css'
 import { useAuth } from '../../context/AuthContext'
+import ConcernBox from '../../components/ConcernBox'
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -104,6 +105,11 @@ export default function Dashboard() {
           <div className="dash-banner-icon">🦷</div>
         </div>
 
+        {/* Concern Box */}
+        <div style={{ marginBottom: 20 }}>
+          <ConcernBox />
+        </div>
+
         {/* Stats */}
         <div className="dash-stats">
           <div className="dash-stat-card confirmed">
@@ -145,7 +151,7 @@ export default function Dashboard() {
                       <p className="dash-appt-doctor">{b.dentists?.dentist_name}</p>
                       <p className="dash-appt-service">{serviceNames(b)}</p>
                       <div className="dash-appt-meta">
-                        <span>🗓 {new Date(b.created_at).toLocaleDateString()}</span>
+                        <span>🗓 {b.appointment_date ? new Date(b.appointment_date).toLocaleDateString() : '—'}</span>
                         <span>📌 {b.status}</span>
                       </div>
                     </div>
@@ -175,7 +181,7 @@ export default function Dashboard() {
                       <p className="dash-appt-doctor">{b.dentists?.dentist_name}</p>
                       <p className="dash-appt-service">{serviceNames(b)}</p>
                       <div className="dash-appt-meta">
-                        <span>🗓 {new Date(b.created_at).toLocaleDateString()}</span>
+                        <span>🗓 {b.appointment_date ? new Date(b.appointment_date).toLocaleDateString() : '—'}</span>
                         <span>💰 ${serviceTotal(b)}</span>
                       </div>
                     </div>

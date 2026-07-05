@@ -107,14 +107,9 @@ export default function Appointments() {
               { label: 'Done',      num: stats.done,      color: '#7c3aed' },
               { label: 'Cancelled', num: stats.cancelled, color: '#ff6b6b' },
             ].map((s, i) => (
-              <div key={i} style={{ background: '#fff', borderRadius: 12, padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 10, background: s.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: 14, height: 14, borderRadius: '50%', background: s.color }}></div>
-                </div>
-                <div>
-                  <p style={{ fontSize: 11, color: '#8a9fc4', marginBottom: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>{s.label}</p>
-                  <h3 style={{ fontSize: 24, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.num}</h3>
-                </div>
+              <div key={i} style={{ background: '#fff', borderRadius: 12, padding: '16px 20px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+                <p style={{ fontSize: 11, color: '#8a9fc4', marginBottom: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>{s.label}</p>
+                <h3 style={{ fontSize: 24, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.num}</h3>
               </div>
             ))}
           </div>
@@ -186,16 +181,19 @@ export default function Appointments() {
                         <p style={{ fontSize: 11, color: '#8a9fc4' }}>{b.dentists?.specialty || ''}</p>
                       </td>
                       <td style={{ padding: '13px 16px', fontSize: 13, color: '#666' }}>
-                        {b.appointment_timeslots?.[0]?.date
-                          ? formatDate(b.appointment_timeslots[0].date)
-                          : b.created_at ? formatDate(b.created_at) : '—'}
+                        <p style={{ fontWeight: 500, color: '#0d1b3e', marginBottom: 1 }}>
+                          {b.appointment_date ? formatDate(b.appointment_date) : '—'}
+                        </p>
+                        {b.created_at && (
+                          <p style={{ fontSize: 11, color: '#8a9fc4' }}>Booked {formatDate(b.created_at)}</p>
+                        )}
                       </td>
                       <td style={{ padding: '13px 16px' }}>
-                        {b.appointment_timeslots?.[0]?.timeslots?.start_time
+                        {b.start_time
                           ? <span style={{ fontSize: 12, fontWeight: 600, color: '#0d1b3e', background: 'rgba(78,205,196,0.1)', border: '1px solid rgba(78,205,196,0.3)', borderRadius: 6, padding: '3px 10px', whiteSpace: 'nowrap' }}>
-                              {b.appointment_timeslots[0].timeslots.start_time.slice(0, 5)}
+                              {b.start_time.slice(0, 5)}
                               {' – '}
-                              {b.appointment_timeslots[0].timeslots.end_time?.slice(0, 5)}
+                              {b.end_time?.slice(0, 5)}
                             </span>
                           : <span style={{ color: '#8a9fc4', fontSize: 12 }}>—</span>}
                       </td>
@@ -218,7 +216,7 @@ export default function Appointments() {
                               Mark Done
                             </button>
                           )}
-                          {b.status !== 'cancelled' && b.status !== 'done' && (
+                          {b.status !== 'cancelled' && b.status !== 'done' && b.status !== 'expired' && (
                             <button onClick={() => updateStatus(b.id, 'cancelled')}
                               style={{ background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.3)', color: '#ff6b6b', padding: '5px 12px', borderRadius: 6, fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
                               Cancel

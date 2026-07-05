@@ -23,6 +23,7 @@ import Appointments from '../pages/admin/Appointments'
 import Schedule from '../pages/admin/Schedule'
 import Dentists from '../pages/admin/Dentists'
 import AdminSetting from '../pages/admin/AdminSetting'
+import Concerns from '../pages/admin/Concerns'
 
 export default function AppRoutes() {
   return (
@@ -42,7 +43,7 @@ export default function AppRoutes() {
         <Route path="/book" element={<Book />} />
         <Route path="/my-bookings" element={<MyBookings />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/history" element={<History />} /> 
+        <Route path="/history" element={<History />} />
          <Route path="*" element={<NotFound />} /> 
       </Route>
 
@@ -54,6 +55,7 @@ export default function AppRoutes() {
         <Route path="/admin/appointments" element={<Appointments />} />
         <Route path="/admin/schedule" element={<Schedule />} />
         <Route path="/admin/dentists" element={<Dentists />} />
+        <Route path="/admin/concerns" element={<Concerns />} />
         <Route path="/admin/AdminSetting" element={<AdminSetting />} />
         <Route path="*" element={<NotFound />} />
       </Route>

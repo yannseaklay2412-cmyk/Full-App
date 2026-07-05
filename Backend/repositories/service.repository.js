@@ -3,7 +3,7 @@ import { supabase } from '../config/supabase.js'
 export const getAll = async () => {
   const { data, error } = await supabase
     .from('services')
-    .select('id, service_name, description, price, duration_minutes')
+    .select('id, service_name, description, price, duration_minutes, image_url')
     .order('service_name')
   if (error) throw error
   return data
@@ -12,7 +12,7 @@ export const getAll = async () => {
 export const getById = async (id) => {
   const { data, error } = await supabase
     .from('services')
-    .select('id, service_name, description, price, duration_minutes')
+    .select('id, service_name, description, price, duration_minutes, image_url')
     .eq('id', id)
     .single()
   if (error) throw error

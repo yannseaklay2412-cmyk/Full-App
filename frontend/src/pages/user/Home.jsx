@@ -6,13 +6,8 @@ import { supabase } from '../../config/supabaseClient'
 import api from '../../api/axios'
 
 import heroImage from '../../assets/images/dentist.png'
-import service1 from '../../assets/images/service1.jpg'
-import service2 from '../../assets/images/service2.jpg'
-import service3 from '../../assets/images/service3.jpg'
-import service4 from '../../assets/images/service4.jpg'
-import service5 from '../../assets/images/service5.jpg'
-import service6 from '../../assets/images/service6.jpg'
 import mapBg from '../../assets/images/map.jpg'
+import ServiceCard from '../../components/ServiceCard'
 
 
 export default function Home() {
@@ -219,23 +214,17 @@ export default function Home() {
       <section className="services" id="services">
         <h2 className="section-title">Our <span className="highlight">Services</span></h2>
         <p className="section-sub">Expert treatments for every patient.</p>
-        <div className="services-grid">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 48, alignItems: 'center' }}>
           {services.map((s, i) => (
-            <div className="service-card" key={s.id}>
-              <div
-                className="service-img-bg"
-                style={{ backgroundImage: `url(${s.image_url || [service1,service2,service3,service4,service5,service6][i] || service1})` }}
-              />
-              <div className="service-hover-overlay" />
-              <div className="service-content">
-                {/* <div className="service-icon-wrap">{s.icon || '👩‍⚕️'}</div> */}
-                <div className="service-icon-wrap">👩‍⚕️</div>
-                
-                <div className="service-divider" />
-                <h3 className="service-name">{s.service_name}</h3>  {/* ✅ was s.name */}
-                <p className="service-desc">{s.description}</p>      {/* ✅ was s.desc */}
-              </div>
-            </div>
+            <ServiceCard
+              key={s.id}
+              serviceName={s.service_name}
+              description={s.description}
+              price={`$${s.price}`}
+              duration={`${s.duration_minutes} min`}
+              reverse={i % 2 === 1}
+              image={s.image_url}
+            />
           ))}
         </div>
       </section>

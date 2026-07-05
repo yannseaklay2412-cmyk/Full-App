@@ -27,6 +27,7 @@ export default function AdminDashboard() {
   const [bookings, setBookings]       = useState([])
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDentist, setSelectedDentist] = useState(null)
+  const [hoveredBar, setHoveredBar] = useState(null)
   useEffect(() => {
     const load = async () => {
       try {
@@ -80,6 +81,53 @@ export default function AdminDashboard() {
   const dentistAppointments = selectedDentist
     ? bookings.filter(b => b.dentist_id === selectedDentist.id || b.dentists?.id === selectedDentist.id)
     : []
+
+  // Income earned per month (from completed appointments), January through December of the current year
+  const chartYear = new Date().getFullYear()
+  const monthlyIncome = (() => {
+    const months = []
+    for (let m = 0; m < 12; m++) {
+      months.push({ key: `${chartYear}-${m}`, label: new Date(chartYear, m, 1).toLocaleDateString('en-US', { month: 'short' }), revenue: 0 })
+    }
+    bookings.forEach(b => {
+      if (b.status !== 'done' || !b.appointment_date) return
+      const d = new Date(b.appointment_date)
+      if (d.getFullYear() === chartYear) {
+        const total = b.appointment_services?.reduce((sum, as) => sum + (as.services?.price || 0), 0) || 0
+        months[d.getMonth()].revenue += total
+      }
+    })
+    return months
+  })()
+
+  const formatMoney = (n) => `$${Math.round(n).toLocaleString()}`
+  const yearlyIncome = monthlyIncome.reduce((sum, m) => sum + m.revenue, 0)
+
+  const maxRevenue = Math.max(1, ...monthlyIncome.map(m => m.revenue))
+  const currentMonthIndex = new Date().getMonth()
+  const thisMonthRevenue = monthlyIncome[currentMonthIndex]?.revenue || 0
+  const prevMonthRevenue = currentMonthIndex > 0 ? (monthlyIncome[currentMonthIndex - 1]?.revenue || 0) : 0
+  const incomeTrendUp = thisMonthRevenue >= prevMonthRevenue
+  const incomeTrendPct = prevMonthRevenue === 0
+    ? (thisMonthRevenue > 0 ? 100 : 0)
+    : Math.round(((thisMonthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100)
+
+  // Line-chart geometry (percentage-based, so it scales with the card)
+  const niceMax = (() => {
+    if (maxRevenue <= 5) return Math.max(maxRevenue, 1)
+    const magnitude = 10 ** Math.floor(Math.log10(maxRevenue))
+    const residual = maxRevenue / magnitude
+    const step = residual <= 1 ? 1 : residual <= 2 ? 2 : residual <= 5 ? 5 : 10
+    return step * magnitude
+  })()
+  const chartTopPad = 18, chartBottomPad = 10, chartPlotH = 100 - chartTopPad - chartBottomPad
+  const chartXPad = 4
+  const chartPoints = monthlyIncome.map((m, i) => ({
+    ...m,
+    x: chartXPad + i * ((100 - 2 * chartXPad) / (monthlyIncome.length - 1)),
+    y: chartTopPad + (1 - m.revenue / niceMax) * chartPlotH,
+  }))
+  const chartLinePath = chartPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x},${p.y}`).join(' ')
 
   const sortedDentists = [...dentists].sort((a, b) => {
     const countA = bookings.filter(bk => bk.dentist_id === a.id || bk.dentists?.id === a.id).length
@@ -136,30 +184,59 @@ export default function AdminDashboard() {
             </div>
 
             <div className="ad-card">
-              <div className="ad-card-header"><h3>Recent Activity</h3></div>
+              <div className="ad-card-header">
+                <div>
+                  <h3>Income</h3>
+                  <p className="ad-chart-sub">Jan – Dec {chartYear}</p>
+                </div>
+                {bookings.length > 0 && (
+                  <span className={`ad-trend-badge ${incomeTrendUp ? 'up' : 'down'}`}>
+                    {incomeTrendUp ? '▲' : '▼'} {Math.abs(incomeTrendPct)}% vs last month
+                  </span>
+                )}
+              </div>
               {bookings.length === 0 ? (
                 <div className="ad-empty">No activity yet</div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  {[...bookings].sort((a, b) => b.id - a.id).slice(0, 5).map((b, i, arr) => (
-                    <div key={b.id} style={{ display: 'flex', gap: 12, padding: '10px 0', borderBottom: i < arr.length - 1 ? '1px solid #f0f2f5' : 'none' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: statusColor[b.status], marginTop: 3 }}></div>
-                        {i < arr.length - 1 && <div style={{ width: 2, height: '100%', minHeight: 24, background: '#f0f2f5', marginTop: 4 }}></div>}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: '#0d1b3e', marginBottom: 2 }}>
-                          {b.patients?.full_name || '—'} booked with {b.dentists?.dentist_name || '—'}
-                        </p>
-                        <p style={{ fontSize: 11, color: '#8a9fc4' }}>
-                          {b.date || b.created_at?.split('T')[0]} · {b.start_time || ''}
-                        </p>
-                      </div>
-                      <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 99, border: `1px solid ${statusColor[b.status]}`, color: statusColor[b.status], fontWeight: 600, textTransform: 'capitalize', alignSelf: 'flex-start', flexShrink: 0 }}>
-                        {b.status}
-                      </span>
+                <div className="ad-chart-line-wrap">
+                  <div className="ad-chart-line-row">
+                    <div className="ad-chart-yaxis">
+                      <span>{formatMoney(niceMax)}</span>
+                      <span>{formatMoney(niceMax / 2)}</span>
+                      <span>$0</span>
                     </div>
-                  ))}
+                    <div className="ad-chart-plot">
+                      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="ad-chart-svg">
+                        <line x1="0" y1={chartTopPad} x2="100" y2={chartTopPad} className="ad-chart-grid" vectorEffect="non-scaling-stroke" />
+                        <line x1="0" y1={chartTopPad + chartPlotH / 2} x2="100" y2={chartTopPad + chartPlotH / 2} className="ad-chart-grid" vectorEffect="non-scaling-stroke" />
+                        <line x1="0" y1={chartTopPad + chartPlotH} x2="100" y2={chartTopPad + chartPlotH} className="ad-chart-grid" vectorEffect="non-scaling-stroke" />
+                        <path d={chartLinePath} className="ad-chart-line-path" vectorEffect="non-scaling-stroke" />
+                      </svg>
+                      {chartPoints.map((p, i) => (
+                        <div key={p.key} className="ad-chart-pt-hit"
+                          style={{ left: `${p.x}%`, top: `${p.y}%` }}
+                          tabIndex={0}
+                          onMouseEnter={() => setHoveredBar(i)}
+                          onMouseLeave={() => setHoveredBar(null)}
+                          onFocus={() => setHoveredBar(i)}
+                          onBlur={() => setHoveredBar(null)}>
+                          <div className="ad-chart-dot" />
+                          {hoveredBar === i && (
+                            <div className="ad-chart-tooltip">{p.label}: <strong>{formatMoney(p.revenue)}</strong></div>
+                          )}
+                          {i === currentMonthIndex && hoveredBar !== i && (
+                            <span className="ad-chart-endlabel">{formatMoney(p.revenue)}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="ad-chart-xlabels">
+                    {monthlyIncome.map(m => <span key={m.key}>{m.label}</span>)}
+                  </div>
+                  <div className="ad-chart-total">
+                    Total income in {chartYear}: <strong>{formatMoney(yearlyIncome)}</strong>
+                  </div>
                 </div>
               )}
             </div>
