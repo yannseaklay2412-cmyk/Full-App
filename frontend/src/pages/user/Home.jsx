@@ -8,6 +8,7 @@ import api from '../../api/axios'
 import heroImage from '../../assets/images/dentist.png'
 import mapBg from '../../assets/images/map.jpg'
 import ServiceCard from '../../components/ServiceCard'
+import SymptomChatWidget from '../../components/SymptomChatWidget'
 
 
 export default function Home() {
@@ -294,6 +295,8 @@ export default function Home() {
           <p>© 2025 Smile Dental Clinic. All rights reserved.</p>
         </div>
       </footer>
+
+      <SymptomChatWidget />
 
     </div>
   )

@@ -15,6 +15,7 @@ import UserDashboard from '../pages/user/Dashboard'
 import Book from '../pages/user/Book'
 import MyBookings from '../pages/user/MyBookings'
 import Profile from '../pages/user/Profile'
+import SymptomTriage from '../pages/user/symptomTriage'
 
 import AdminDashboard from '../pages/admin/Dashboard'
 import Users from '../pages/admin/Users'
@@ -44,7 +45,8 @@ export default function AppRoutes() {
         <Route path="/my-bookings" element={<MyBookings />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/history" element={<History />} />
-         <Route path="*" element={<NotFound />} /> 
+        <Route path="/symptom-triage" element={<SymptomTriage />} />
+         <Route path="*" element={<NotFound />} />
       </Route>
 
       {/* Admin routes */}

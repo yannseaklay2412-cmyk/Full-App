@@ -79,6 +79,7 @@ export default function Dashboard() {
           <button className="dash-nav-btn" onClick={() => navigate('/')}>Home</button>
           <button className="dash-nav-btn" onClick={() => navigate('/book')}>Book</button>
           <button className="dash-nav-btn" onClick={() => navigate('/my-bookings')}>My Bookings</button>
+          <button className="dash-nav-btn" onClick={() => navigate('/symptom-triage')}>Symptom Check</button>
           <button className="dash-nav-btn signout" onClick={() => { logout(); navigate('/') }}>Sign Out</button>
         </div>
       </div>

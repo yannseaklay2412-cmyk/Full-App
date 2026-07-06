@@ -12,6 +12,7 @@ import serviceRoutes  from './routes/service.routes.js'
 import timeslotRoutes from './routes/timeslot.routes.js'
 import adminRoutes    from './routes/admin.routes.js'
 import concernRoutes  from './routes/concern.routes.js'
+import triageRoutes   from './routes/triage.js'
 
 
 const app = express()
@@ -37,6 +38,7 @@ app.use('/api/timeslots', timeslotRoutes)
 app.use('/api/admin',     adminRoutes)
 app.use('/api/concerns',  concernRoutes)
 app.use('/api/timeslots', timeslotRoutes)
+app.use('/api',           triageRoutes)
 
 
 // ── 404 & Error ───────────────────────────────────────────
