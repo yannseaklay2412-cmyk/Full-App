@@ -89,3 +89,14 @@ export const linkServices = async (appointmentId, serviceIds) => {
     .insert(serviceIds.map(serviceId => ({ appointment_id: appointmentId, service_id: serviceId })))
   if (error) throw error
 }
+// → inserts ONE row per selected service into `appointment_services`
+//  (this is what lets one appointment have multiple services)
+
+
+
+// what linkServices does: it takes an appointmentId 
+// and an array of serviceIds, and inserts rows into 
+// the appointment_services table to link the appointment
+//  with the selected services. Each serviceId results in
+//  one row being inserted, associating that service with 
+// the appointment

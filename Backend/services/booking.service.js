@@ -19,6 +19,9 @@ export const createBooking = async (email, { dentist_id, service_ids, notes, ful
   if (service_ids?.length) await bookingRepo.linkServices(booking.id, service_ids)
   return booking
 }
+// upsert patient info if provided, then create booking, then link services if provided
+// This allows patients to update their info when booking an appointment, and also book multiple services at once
+// The bookingRepo.linkServices function handles the many-to-many relationship between appointments and services
 
 export const cancelBooking = async (id) => {
   const booking = await bookingRepo.getById(id)
