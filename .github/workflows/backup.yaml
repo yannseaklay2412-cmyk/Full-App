@@ -1,26 +1,28 @@
 name: supabase-backup
 
+# When this workflow runs:
 on:
   push:
-    branches: [main, dev]
+    branches: [main, dev]         # every time someone pushes to main or dev
   pull_request:
-    branches: [main, dev]
-  workflow_dispatch:
+    branches: [main, dev]         # every time a PR is opened/updated against main or dev
+  workflow_dispatch:              # lets you trigger it manually from the Actions tab
   schedule:
-    - cron: "0 0 * * *" # Runs every day at midnight
+    - cron: "0 0 * * *"           # also runs automatically every day at midnight (UTC)
 
 env:
-  BACKUP_ENABLED: true
+  BACKUP_ENABLED: true            # fallback default (overridden by the repo Variable below)
 
 jobs:
   run_db_backup:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest        # spins up a temporary Ubuntu VM on GitHub's servers
     permissions:
-      contents: write
+      contents: write             # allows this job to push new commits back to the repo
     env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      BACKUP_ENABLED: ${{ vars.BACKUP_ENABLED }} # Repository variable (true or false)
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}       # your DB connection string, from repo Secrets
+      BACKUP_ENABLED: ${{ vars.BACKUP_ENABLED }}      # on/off switch, from repo Variables (true or false)
     steps:
+      # Kill switch: if BACKUP_ENABLED isn't "true", stop here and skip every step below
       - name: Check if backups are enabled
         run: |
           if [ "$BACKUP_ENABLED" != "true" ]; then
@@ -28,32 +30,52 @@ jobs:
             exit 0
           fi
 
+      # Pulls your repo's code onto this temporary VM so the workflow can commit into it later
       - name: Checkout repository
         if: env.BACKUP_ENABLED == 'true'
         uses: actions/checkout@v3
 
+      # Installs the Supabase CLI on this VM (needed to run `supabase db dump`)
       - name: Setup Supabase CLI
         if: env.BACKUP_ENABLED == 'true'
         uses: supabase/setup-cli@v1
         with:
           version: latest
 
+      # Makes sure the output folder exists before we try to write files into it
       - name: Create timestamp folder
         if: env.BACKUP_ENABLED == 'true'
         run: mkdir -p Database/backups
 
+      # Dumps role/permission settings only (small file, no table data)
       - name: Backup roles
         if: env.BACKUP_ENABLED == 'true'
         run: supabase db dump --db-url "$SUPABASE_URL" -f Database/backups/roles.sql --role-only
 
+      # Dumps table structure only (CREATE TABLE statements), scoped to our own "public" schema
       - name: Backup schema
         if: env.BACKUP_ENABLED == 'true'
         run: supabase db dump --db-url "$SUPABASE_URL" -f Database/backups/schema.sql --schema public
 
+      # Dumps actual row data (COPY statements), also scoped to "public" so Supabase's internal
+      # auth/storage schemas never end up in here
       - name: Backup data
         if: env.BACKUP_ENABLED == 'true'
         run: supabase db dump --db-url "$SUPABASE_URL" -f Database/backups/data.sql --data-only --use-copy --schema public
 
+      # Encrypts each .sql file into a .sql.gpg file, then deletes the plaintext version
+      # so only the encrypted file ever gets committed
+      - name: Encrypt backups
+        if: env.BACKUP_ENABLED == 'true'
+        env:
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+        run: |
+          for f in Database/backups/roles.sql Database/backups/schema.sql Database/backups/data.sql; do
+            gpg --batch --yes --passphrase "$BACKUP_ENCRYPTION_KEY" --symmetric --cipher-algo AES256 -o "$f.gpg" "$f"
+            rm "$f"
+          done
+
+      # Commits the encrypted .sql.gpg files above and pushes them back to the repo
       - name: Commit backups
         if: env.BACKUP_ENABLED == 'true'
         uses: stefanzweifel/git-auto-commit-action@v4
