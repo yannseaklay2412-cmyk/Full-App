@@ -48,11 +48,11 @@ jobs:
 
       - name: Backup schema
         if: env.BACKUP_ENABLED == 'true'
-        run: supabase db dump --db-url "$SUPABASE_URL" -f Database/backups/schema.sql
+        run: supabase db dump --db-url "$SUPABASE_URL" -f Database/backups/schema.sql --schema public
 
       - name: Backup data
         if: env.BACKUP_ENABLED == 'true'
-        run: supabase db dump --db-url "$SUPABASE_URL" -f Database/backups/data.sql --data-only --use-copy
+        run: supabase db dump --db-url "$SUPABASE_URL" -f Database/backups/data.sql --data-only --use-copy --schema public
 
       - name: Commit backups
         if: env.BACKUP_ENABLED == 'true'
