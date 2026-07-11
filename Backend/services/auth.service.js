@@ -81,50 +81,24 @@ export const logout = async () => {
   return { message: 'Logged out successfully' }
 }
 
-export const forgotPassword = async (email, newPassword) => {
+export const forgotPassword = async (email) => {
   if (!email) throw { status: 400, message: 'Email is required' }
-  if (!newPassword || newPassword.length < 6)
-    throw { status: 400, message: 'Password must be at least 6 characters' }
 
   const user = await authRepo.findUserByEmail(email)
   if (!user) throw { status: 404, message: 'We could not find an account with that email.' }
 
-  // Generate a token
+  // Generate a token — the password itself is never stored, only proof the user owns the email
   const rawToken = crypto.randomBytes(32).toString('hex')
   const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex')
   const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString()
 
-  // Store token + new password temporarily — applied only when user confirms
-  await authRepo.saveResetToken(email, tokenHash, expiresAt, newPassword)
+  await authRepo.saveResetToken(email, tokenHash, expiresAt)
 
-  // Send email with confirm button link
-  const confirmLink = `${process.env.FRONTEND_URL}/confirm-password?token=${rawToken}`
-  await sendPasswordConfirmEmail(email, confirmLink)
+  // Send email with reset link — user sets their new password after clicking through
+  const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${rawToken}`
+  await sendPasswordConfirmEmail(email, resetLink)
 
-  return { message: 'A confirmation email has been sent. Click the button in your email to apply the change.' }
-}
-
-export const confirmPasswordChange = async (rawToken) => {
-  if (!rawToken) throw { status: 400, message: 'Token is required' }
-
-  const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex')
-  const record = await authRepo.findValidToken(tokenHash)
-  if (!record) throw { status: 400, message: 'This confirmation link is invalid or has expired.' }
-
-  const user = await authRepo.findUserByEmail(record.email)
-  if (!user) throw { status: 404, message: 'Account not found.' }
-
-  // Now apply the password change
-  const { error } = await supabase.auth.admin.updateUserById(user.id, { password: record.new_password })
-  if (error) throw { status: 500, message: 'Failed to update password' }
-
-  // Mark token as used so it cannot be clicked again
-  await authRepo.markTokenUsed(record.id)
-
-  // Notify user that their password was changed
-  await sendPasswordUpdatedEmail(record.email)
-
-  return { message: 'Password updated successfully.' }
+  return { message: 'A reset email has been sent. Click the link in your email to set a new password.' }
 }
 
 export const resetPassword = async (rawToken, newPassword) => {
@@ -152,6 +126,9 @@ export const resetPassword = async (rawToken, newPassword) => {
 
   // 5. Mark the token as used so it cannot be reused
   await authRepo.markTokenUsed(record.id)
+
+  // Notify the user their password was changed
+  await sendPasswordUpdatedEmail(record.email)
 
   return { message: 'Password updated successfully' }
 }

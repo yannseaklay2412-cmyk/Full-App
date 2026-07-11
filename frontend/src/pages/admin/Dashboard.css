@@ -51,14 +51,6 @@
   border-bottom: 1px solid rgba(255,255,255,0.15);
 }
 
-.ad-logo-icon {
-  width: 40px; height: 40px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  color: #fff;
-}
-
 .ad-sidebar-label {
   padding: 14px 20px 10px;
   border-bottom: 1px solid rgba(255,255,255,0.12);

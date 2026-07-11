@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import '../pages/admin/Dashboard.css'
+import { LOGO_URL } from '../constants'
 
 const sidebarItems = [
   { label: 'Dashboard',   path: '/admin'               },
@@ -18,12 +19,9 @@ export default function AdminSidebar({ pageTitle, pageSubtitle, children }) {
   return (
     <div className="ad-wrap">
       <aside className="ad-sidebar">
-        <div className="ad-sidebar-logo">
-          <div className="ad-logo-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 2C8 2 5 5 5 9c0 2 .5 4 1.5 5.5L8 20h8l1.5-5.5C18.5 13 19 11 19 9c0-4-3-7-7-7z"/>
-            </svg>
-          </div>
+        <div className="ad-sidebar-logo" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <img src={LOGO_URL} alt="ToothTime logo" style={{ width: 44, height: 44, objectFit: 'contain' }} />
+          <span style={{ fontSize: '20px', fontWeight: 600, color: '#fff' }}>ToothTime</span>
         </div>
         <div className="ad-sidebar-label">
           <p className="ad-sidebar-top">Dashboard</p>

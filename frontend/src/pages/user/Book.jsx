@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import './Book.css'
+import { LOGO_URL } from '../../constants'
 
 const STEPS = ['Dentist', 'Service', 'Date & Time', 'Your Info', 'Confirm']
 
@@ -131,8 +132,8 @@ export default function Book() {
       <div className="book-topbar">
         <button className="book-back-btn" onClick={() => navigate('/dashboard')}>← Dashboard</button>
         <div className="nav-logo">
-          <div className="logo-icon">🦷</div>
-          <div style={{ marginLeft: '15px', fontFamily: 'Poppins' }}>
+          <img src={LOGO_URL} alt="ToothTime logo" className="logo-icon" style={{ width: 48, height: 48, objectFit: 'contain', background: 'none' }} />
+          <div style={{ marginLeft: '8px', fontFamily: 'Poppins', fontSize: '22px', fontWeight: 600 }}>
             <span style={{ color: '#1e1e1e' }}>Tooth</span>
             <span style={{ color: '#2ec4b6' }}>Time</span>
           </div>

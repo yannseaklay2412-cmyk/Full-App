@@ -1,12 +1,5 @@
 import * as authService from '../services/auth.service.js'
 
-export const confirmPasswordChange = async (req, res, next) => {
-  try {
-    const result = await authService.confirmPasswordChange(req.body.token)
-    res.status(200).json({ success: true, ...result })
-  } catch (err) { next(err) }
-}
-
 export const register = async (req, res, next) => {
   try {
     const result = await authService.register(req.body)
@@ -30,8 +23,8 @@ export const logout = async (req, res, next) => {
 
 export const forgotPassword = async (req, res, next) => {
   try {
-    const { email, password } = req.body
-    const result = await authService.forgotPassword(email, password)
+    const { email } = req.body
+    const result = await authService.forgotPassword(email)
     res.status(200).json({ success: true, ...result })
   } catch (err) { next(err) }
 }

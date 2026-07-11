@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../config/supabaseClient'
 import api from '../../api/axios'
 
+import { LOGO_URL } from '../../constants'
 import heroImage from '../../assets/images/dentist.png'
 import mapBg from '../../assets/images/map.jpg'
 import ServiceCard from '../../components/ServiceCard'
@@ -104,8 +105,8 @@ export default function Home() {
       {/* NAVBAR */}
       <nav className="navbar">
         <div className="nav-logo">
-          <span className="logo-icon">🦷</span>
-          <div style={{ marginLeft: '15px', fontFamily: 'Poppins' }}>
+          <img src={LOGO_URL} alt="ToothTime logo" className="logo-icon" style={{ width: 48, height: 48, objectFit: 'contain', background: 'none' }} />
+          <div style={{ marginLeft: '8px', fontFamily: 'Poppins', fontSize: '22px', fontWeight: 600 }}>
             <span style={{ color: '#1e1e1e' }}>Tooth</span>
             <span style={{ color: '#2ec4b6' }}>Time</span>
           </div>

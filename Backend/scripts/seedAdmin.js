@@ -19,16 +19,12 @@ const { data, error } = await supabase.auth.signUp({
 if (error) {
   console.error(' Error creating admin auth user:', error.message);
 } else {
-  const { error: insertError } = await supabase
-    .from('admin')
-    .insert({
-      admin_name: 'Admin',
-      email: process.env.ADMIN_EMAIL,
-      telegram: null,
-    });
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .insert({ id: data.user.id, email: process.env.ADMIN_EMAIL, role: 'admin' });
 
-  if (insertError) {
-    console.error(' Error inserting admin record:', insertError.message);
+  if (profileError) {
+    console.error(' Error creating admin profile:', profileError.message);
   } else {
     console.log(' Admin created successfully!');
   }

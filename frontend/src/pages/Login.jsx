@@ -5,6 +5,7 @@ import './Login.css'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
 import Toast from '../components/ui/Toast'
+import { LOGO_URL } from '../constants'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -24,10 +25,6 @@ export default function Login() {
   const [showRegConfirm, setShowRegConfirm] = useState(false)
 
   const [forgotEmail, setForgotEmail] = useState('')
-  const [forgotNewPass, setForgotNewPass] = useState('')
-  const [forgotConfirmPass, setForgotConfirmPass] = useState('')
-  const [showForgotPass, setShowForgotPass] = useState(false)
-  const [showForgotConfirm, setShowForgotConfirm] = useState(false)
   const [forgotError, setForgotError] = useState('')
   const [forgotSent, setForgotSent] = useState(false)
   const [forgotLoading, setForgotLoading] = useState(false)
@@ -147,13 +144,10 @@ const handleRegister = async (e) => {
     e.preventDefault()
     setForgotError('')
     if (!forgotEmail) { setForgotError('Please enter your email address.'); return }
-    if (!forgotNewPass) { setForgotError('Please enter a new password.'); return }
-    if (forgotNewPass.length < 6) { setForgotError('Password must be at least 6 characters.'); return }
-    if (forgotNewPass !== forgotConfirmPass) { setForgotError('Passwor4s do not match.'); return }
 
     setForgotLoading(true)
     try {
-      await api.post('/auth/forgot-password', { email: forgotEmail, password: forgotNewPass })
+      await api.post('/auth/forgot-password', { email: forgotEmail })
       setForgotSent(true)
     } catch (err) {
       setForgotError(err.response?.data?.message || 'Something went wrong. Please try again.')
@@ -189,8 +183,8 @@ const handleRegister = async (e) => {
       <nav className="auth-nav">
         <div className="auth-logo" onClick={() => navigate('/')}>
           <div className="nav-logo">
-            <span className="logo-icon">🦷</span>
-            <div style={{ marginLeft: '15px', fontFamily: 'Playfair Display' }}>ToothTime</div>
+            <img src={LOGO_URL} alt="ToothTime logo" className="logo-icon" style={{ width: 48, height: 48, objectFit: 'contain', background: 'none' }} />
+            <div style={{ marginLeft: '8px', fontFamily: 'Playfair Display', fontSize: '22px', fontWeight: 600 }}>ToothTime</div>
           </div>
         </div>
         <ul className="auth-nav-links">
@@ -439,43 +433,13 @@ const handleRegister = async (e) => {
                           autoFocus
                         />
                       </div>
-                      <div className="auth-field">
-                        <label>New Password</label>
-                        <div className="auth-pass-wrap">
-                          <input
-                            type={showForgotPass ? 'text' : 'password'}
-                            placeholder="Enter new password"
-                            value={forgotNewPass}
-                            onChange={e => setForgotNewPass(e.target.value)}
-                            className="auth-input"
-                          />
-                          <button type="button" className="pass-toggle" onClick={() => setShowForgotPass(!showForgotPass)}>
-                            {showForgotPass ? <EyeOffIcon /> : <EyeIcon />}
-                          </button>
-                        </div>
-                      </div>
-                      <div className="auth-field">
-                        <label>Confirm Password</label>
-                        <div className="auth-pass-wrap">
-                          <input
-                            type={showForgotConfirm ? 'text' : 'password'}
-                            placeholder="Re-enter new password"
-                            value={forgotConfirmPass}
-                            onChange={e => setForgotConfirmPass(e.target.value)}
-                            className="auth-input"
-                          />
-                          <button type="button" className="pass-toggle" onClick={() => setShowForgotConfirm(!showForgotConfirm)}>
-                            {showForgotConfirm ? <EyeOffIcon /> : <EyeIcon />}
-                          </button>
-                        </div>
-                      </div>
                       <button type="submit" className="auth-btn" disabled={forgotLoading}>
-                        {forgotLoading ? <span className="auth-spinner"></span> : 'Update Password'}
+                        {forgotLoading ? <span className="auth-spinner"></span> : 'Send Reset Link'}
                       </button>
                     </form>
                     <p className="auth-switch">
                       Remember it?{' '}
-                      <span onClick={() => { setTab('signin'); setForgotError(''); setForgotEmail(''); setForgotNewPass(''); setForgotConfirmPass('') }}>
+                      <span onClick={() => { setTab('signin'); setForgotError(''); setForgotEmail('') }}>
                         Back to Sign In
                       </span>
                     </p>
@@ -485,11 +449,11 @@ const handleRegister = async (e) => {
                     <div className="forgot-sent-icon">✉️</div>
                     <h2>Check your inbox!</h2>
                     <p>
-                      A confirmation email was sent to <strong>{forgotEmail}</strong>. Click the button inside to apply your new password.
+                      A reset link was sent to <strong>{forgotEmail}</strong>. Click it to set your new password.
                     </p>
                     <button
                       className="auth-btn"
-                      onClick={() => { setTab('signin'); setForgotSent(false); setForgotEmail(''); setForgotNewPass(''); setForgotConfirmPass('') }}
+                      onClick={() => { setTab('signin'); setForgotSent(false); setForgotEmail('') }}
                     >
                       Sign In Now
                     </button>

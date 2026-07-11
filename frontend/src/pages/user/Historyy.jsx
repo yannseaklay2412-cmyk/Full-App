@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import { useAuth } from '../../context/AuthContext'
 import './History.css'
+import { LOGO_URL } from '../../constants'
 
 export default function History() {
   const navigate = useNavigate()
@@ -34,8 +35,8 @@ export default function History() {
       <div className="mb-topbar">
         <button className="mb-back" onClick={() => navigate('/dashboard')}>← Dashboard</button>
         <div className="nav-logo">
-          <span className="logo-icon">🦷</span>
-          <div style={{ marginLeft: '15px', fontFamily: 'Poppins' }}>
+          <img src={LOGO_URL} alt="ToothTime logo" className="logo-icon" style={{ width: 48, height: 48, objectFit: 'contain', background: 'none' }} />
+          <div style={{ marginLeft: '8px', fontFamily: 'Poppins', fontSize: '22px', fontWeight: 600 }}>
             <span style={{ color: '#1e1e1e' }}>Tooth</span>
             <span style={{ color: '#2ec4b6' }}>Time</span>
           </div>

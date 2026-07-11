@@ -62,6 +62,71 @@
   color: #c43c3c;
 }
 
+/* ── Notification Bell ── */
+.dash-notif-wrap {
+  position: relative;
+}
+
+.dash-notif-bell {
+  position: relative;
+  background: #f5f7fa;
+  border: 1px solid #e4eaf2;
+  color: #4a5e7a;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.dash-notif-bell:hover {
+  background: #e8f4f3;
+  border-color: #2bb5ac;
+}
+
+.dash-notif-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #e05555;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+}
+
+.dash-notif-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 340px;
+  max-height: 420px;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid #e4eaf2;
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  padding: 16px;
+  z-index: 50;
+}
+
+.dash-notif-header {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a2b4a;
+  margin-bottom: 12px;
+}
+
 /* ── Content ── */
 .dash-content {
   max-width: 1100px;

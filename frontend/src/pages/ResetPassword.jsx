@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import api from '../api/axios'
 import './Login.css'
 import './ResetPassword.css'
+import { LOGO_URL } from '../constants'
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams()
@@ -100,7 +101,7 @@ export default function ResetPassword() {
     <div className="auth-page">
       <div className="rp-center">
         <div className="rp-logo" onClick={() => navigate('/')}>
-          <span className="logo-icon">🦷</span>
+          <img src={LOGO_URL} alt="ToothTime logo" className="logo-icon" style={{ width: 48, height: 48, objectFit: 'contain', background: 'none' }} />
           <span className="rp-logo-text">
             <span style={{ color: '#1e1e1e' }}>Tooth</span>
             <span style={{ color: '#2ec4b6' }}>Time</span>

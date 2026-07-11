@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../api/axios'
 import './Dashboard.css'
 import { useAuth } from '../../context/AuthContext'
 import ConcernBox from '../../components/ConcernBox'
+import { LOGO_URL } from '../../constants'
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -14,6 +15,8 @@ export default function Dashboard() {
   const [historyBookings, setHistoryBookings] = useState([])
   const [selectedBooking, setSelectedBooking] = useState(null)
   const [loadError,       setLoadError]       = useState('')
+  const [showNotifications, setShowNotifications] = useState(false)
+  const notifRef = useRef(null)
 
   useEffect(() => {
     if (!user) return
@@ -43,6 +46,14 @@ export default function Dashboard() {
     fetchData()
   }, [user])
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifications(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   const confirmed = bookings.filter(b => b.status === 'confirmed').length
   const pending   = bookings.filter(b => b.status === 'pending').length
   const cancelled = bookings.filter(b => b.status === 'cancelled').length
@@ -70,8 +81,8 @@ export default function Dashboard() {
       {/* Topbar */}
       <div className="dash-topbar">
         <div className="nav-logo">
-          <span className="logo-icon">🦷</span>
-          <div style={{ marginLeft: '15px', fontFamily: 'Poppins' }}>
+          <img src={LOGO_URL} alt="ToothTime logo" className="logo-icon" style={{ width: 48, height: 48, objectFit: 'contain', background: 'none' }} />
+          <div style={{ marginLeft: '8px', fontFamily: 'Poppins', fontSize: '22px', fontWeight: 600 }}>
             <span style={{ color: '#1e1e1e' }}>Tooth</span>
             <span style={{ color: '#2ec4b6' }}>Time</span>
           </div>
@@ -79,6 +90,42 @@ export default function Dashboard() {
           <button className="dash-nav-btn" onClick={() => navigate('/')}>Home</button>
           <button className="dash-nav-btn" onClick={() => navigate('/book')}>Book</button>
           <button className="dash-nav-btn" onClick={() => navigate('/my-bookings')}>My Bookings</button>
+
+          <div className="dash-notif-wrap" ref={notifRef}>
+            <button className="dash-notif-bell" onClick={() => setShowNotifications(v => !v)}>
+              🔔
+              {upcoming.length > 0 && <span className="dash-notif-badge">{upcoming.length}</span>}
+            </button>
+
+            {showNotifications && (
+              <div className="dash-notif-dropdown">
+                <div className="dash-notif-header">Notifications</div>
+                {upcoming.length === 0 ? (
+                  <div className="dash-empty">
+                    <p>No new notifications.</p>
+                  </div>
+                ) : (
+                  <div className="dash-appt-list">
+                    {upcoming.map(b => (
+                      <div className="dash-appt-card" key={b.id}>
+                        <div className="dash-appt-icon">🦷</div>
+                        <div className="dash-appt-info">
+                          <p className="dash-appt-doctor">{b.dentists?.dentist_name}</p>
+                          <p className="dash-appt-service">{serviceNames(b)}</p>
+                          <div className="dash-appt-meta">
+                            <span>🗓 {b.appointment_date ? new Date(b.appointment_date).toLocaleDateString() : '—'}</span>
+                            <span>📌 {b.status}</span>
+                          </div>
+                        </div>
+                        <button className="dash-cancel-btn" onClick={() => handleCancel(b.id)}>Cancel</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <button className="dash-nav-btn signout" onClick={() => { logout(); navigate('/') }}>Sign Out</button>
         </div>
       </div>
@@ -131,37 +178,6 @@ export default function Dashboard() {
         </div>
 
         <div className="dash-grid">
-          {/* Upcoming Appointments */}
-          <div className="dash-card full-width">
-            <div className="dash-card-header">
-              <h2 className="dash-card-title">📅 Upcoming Appointments</h2>
-              <button className="dash-view-all" onClick={() => navigate('/my-bookings')}>View all →</button>
-            </div>
-            {upcoming.length === 0 ? (
-              <div className="dash-empty">
-                <p>No upcoming appointments.</p>
-                <button className="dash-btn-primary small" onClick={() => navigate('/book')}>Book Now</button>
-              </div>
-            ) : (
-              <div className="dash-appt-list">
-                {upcoming.map(b => (
-                  <div className="dash-appt-card" key={b.id}>
-                    <div className="dash-appt-icon">🦷</div>
-                    <div className="dash-appt-info">
-                      <p className="dash-appt-doctor">{b.dentists?.dentist_name}</p>
-                      <p className="dash-appt-service">{serviceNames(b)}</p>
-                      <div className="dash-appt-meta">
-                        <span>🗓 {b.appointment_date ? new Date(b.appointment_date).toLocaleDateString() : '—'}</span>
-                        <span>📌 {b.status}</span>
-                      </div>
-                    </div>
-                    <button className="dash-cancel-btn" onClick={() => handleCancel(b.id)}>Cancel</button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
           {/* Appointment History */}
           <div className="dash-card full-width">
             <div className="dash-card-header">

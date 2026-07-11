@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axios'
 import './SymptomChatWidget.css'
+import { CHATBOT_LOGO_URL } from '../constants'
 
 export default function SymptomChatWidget() {
   const { user } = useAuth()
@@ -75,7 +76,7 @@ export default function SymptomChatWidget() {
   return (
     <>
       <button className="chat-fab" onClick={toggleOpen} aria-label="Symptom checker">
-        🤖
+        <img src={CHATBOT_LOGO_URL} alt="Symptom checker" style={{ width: 70, height: 70, objectFit: 'contain' }} />
       </button>
 
       {open && (

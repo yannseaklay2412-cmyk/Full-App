@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
 import './MyBookings.css'
+import { LOGO_URL } from '../../constants'
 
 const STATUS_COLORS = {
   confirmed: { bg: 'rgba(78,205,196,0.12)', color: '#4ecdc4', border: '#4ecdc4' },
@@ -78,8 +79,8 @@ export default function MyBookings() {
       <div className="mb-topbar">
         <button className="mb-back" onClick={() => navigate('/dashboard')}>← Dashboard</button>
         <div className="nav-logo">
-          <span className="logo-icon">🦷</span>
-          <div style={{ marginLeft: '15px', fontFamily: 'Poppins' }}>
+          <img src={LOGO_URL} alt="ToothTime logo" className="logo-icon" style={{ width: 48, height: 48, objectFit: 'contain', background: 'none' }} />
+          <div style={{ marginLeft: '8px', fontFamily: 'Poppins', fontSize: '22px', fontWeight: 600 }}>
             <span style={{ color: '#1e1e1e' }}>Tooth</span>
             <span style={{ color: '#2ec4b6' }}>Time</span>
           </div>
