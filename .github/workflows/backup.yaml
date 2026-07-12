@@ -17,7 +17,7 @@ jobs:
   run_db_backup:
     runs-on: ubuntu-latest        # spins up a temporary Ubuntu VM on GitHub's servers
     permissions:
-      contents: write             # allows this job to push new commits back to the repo
+      contents: read              # this job no longer commits anything back to the repo
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}       # your DB connection string, from repo Secrets
       BACKUP_ENABLED: ${{ vars.BACKUP_ENABLED }}      # on/off switch, from repo Variables (true or false)
@@ -30,7 +30,7 @@ jobs:
             exit 0
           fi
 
-      # Pulls your repo's code onto this temporary VM so the workflow can commit into it later
+      # Pulls your repo's code onto this temporary VM (needed for the restore.sh path etc.)
       - name: Checkout repository
         if: env.BACKUP_ENABLED == 'true'
         uses: actions/checkout@v3
@@ -75,22 +75,36 @@ jobs:
             rm "$f"
           done
 
-      # Hard safety net: refuse to commit anything if a plaintext .sql file is
+      # Hard safety net: refuse to upload anything if a plaintext .sql file is
       # still sitting here — this is what would repeat last night's leak if the
       # encrypt step ever fails partway (bad key, gpg error, etc.)
       - name: Verify no plaintext backups remain
         if: success() && env.BACKUP_ENABLED == 'true'
         run: |
           if ls Database/backups/*.sql >/dev/null 2>&1; then
-            echo "::error::Plaintext .sql file(s) found in Database/backups — aborting before commit."
+            echo "::error::Plaintext .sql file(s) found in Database/backups — aborting before upload."
             ls Database/backups/*.sql
             exit 1
           fi
 
-      # Commits the encrypted .sql.gpg files above and pushes them back to the repo
-      # (success() here means this only runs if every step above actually succeeded)
-      - name: Commit backups
+      # Installs rclone, the CLI tool used below to talk to Google Drive
+      - name: Install rclone
         if: success() && env.BACKUP_ENABLED == 'true'
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: Supabase backup
+        run: curl https://rclone.org/install.sh | sudo bash
+
+      # Uploads the encrypted .sql.gpg files straight to a Google Drive folder,
+      # authenticating as the service account whose key is in GDRIVE_SERVICE_ACCOUNT_JSON.
+      # Nothing gets committed back to GitHub — backups now live only in Drive.
+      - name: Upload backups to Google Drive
+        if: success() && env.BACKUP_ENABLED == 'true'
+        env:
+          GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
+          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+        run: |
+          echo "$GDRIVE_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/gdrive-sa.json"
+          export RCLONE_CONFIG_GDRIVE_TYPE=drive
+          export RCLONE_CONFIG_GDRIVE_SCOPE=drive
+          export RCLONE_CONFIG_GDRIVE_SERVICE_ACCOUNT_FILE="$RUNNER_TEMP/gdrive-sa.json"
+          export RCLONE_CONFIG_GDRIVE_ROOT_FOLDER_ID="$GDRIVE_FOLDER_ID"
+          rclone copy Database/backups/ gdrive: -v
+          rm -f "$RUNNER_TEMP/gdrive-sa.json"

@@ -25,3 +25,6 @@ Thumbs.db
 # Editor
 .vscode/
 .idea/
+
+# Backups now live in Google Drive, not the repo
+Database/backups/
