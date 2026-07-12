@@ -75,9 +75,22 @@ jobs:
             rm "$f"
           done
 
+      # Hard safety net: refuse to commit anything if a plaintext .sql file is
+      # still sitting here — this is what would repeat last night's leak if the
+      # encrypt step ever fails partway (bad key, gpg error, etc.)
+      - name: Verify no plaintext backups remain
+        if: success() && env.BACKUP_ENABLED == 'true'
+        run: |
+          if ls Database/backups/*.sql >/dev/null 2>&1; then
+            echo "::error::Plaintext .sql file(s) found in Database/backups — aborting before commit."
+            ls Database/backups/*.sql
+            exit 1
+          fi
+
       # Commits the encrypted .sql.gpg files above and pushes them back to the repo
+      # (success() here means this only runs if every step above actually succeeded)
       - name: Commit backups
-        if: env.BACKUP_ENABLED == 'true'
+        if: success() && env.BACKUP_ENABLED == 'true'
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: Supabase backup
