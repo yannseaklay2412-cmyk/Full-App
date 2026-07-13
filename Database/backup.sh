@@ -5,13 +5,21 @@ set -euo pipefail
 # No automation, no GitHub, no Google Drive. Dumps the database, encrypts it,
 # and saves the result straight onto this machine.
 #
-# Usage:
-#   SUPABASE_URL=<db connection string> \
-#   BACKUP_ENCRYPTION_KEY=<gpg passphrase> \
+# Reads SUPABASE_URL / BACKUP_ENCRYPTION_KEY from Database/.env if present
+# (see Database/.env.example), so you can just run:
 #   ./Database/backup.sh
+# Database/.env, if present, wins over anything set on the command line —
+# don't mix the two, pick one way of supplying these values.
 
-: "${SUPABASE_URL:?Set SUPABASE_URL to the database connection string}"
-: "${BACKUP_ENCRYPTION_KEY:?Set BACKUP_ENCRYPTION_KEY to the GPG passphrase to encrypt with}"
+if [ -f "Database/.env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "Database/.env"
+  set +a
+fi
+
+: "${SUPABASE_URL:?Set SUPABASE_URL to the database connection string (env var or Database/.env)}"
+: "${BACKUP_ENCRYPTION_KEY:?Set BACKUP_ENCRYPTION_KEY to the GPG passphrase to encrypt with (env var or Database/.env)}"
 
 OUT_DIR="Database/backups"
 STAMP=$(date +%Y-%m-%d_%H-%M-%S)

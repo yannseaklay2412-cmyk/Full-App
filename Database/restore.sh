@@ -5,14 +5,23 @@ set -euo pipefail
 # Database/backup.sh (Database/backups/{roles,schema,data}_<timestamp>.sql.gpg).
 # Uses the most recent backup found unless BACKUP_STAMP is given explicitly.
 #
-# Usage:
-#   BACKUP_ENCRYPTION_KEY=<gpg passphrase> \
-#   DB_URL=<target connection string> \
-#   [BACKUP_STAMP=2026-07-13_14-00-00] \
+# Reads BACKUP_ENCRYPTION_KEY / DB_URL from Database/.env if present
+# (see Database/.env.example), so you can just run:
 #   ./Database/restore.sh
+# Database/.env, if present, wins over anything set on the command line —
+# don't mix the two, pick one way of supplying these values.
+#
+# Optional override regardless of source: BACKUP_STAMP=2026-07-13_14-00-00
 
-: "${BACKUP_ENCRYPTION_KEY:?Set BACKUP_ENCRYPTION_KEY to the GPG passphrase used for backups}"
-: "${DB_URL:?Set DB_URL to the target database connection string}"
+if [ -f "Database/.env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "Database/.env"
+  set +a
+fi
+
+: "${BACKUP_ENCRYPTION_KEY:?Set BACKUP_ENCRYPTION_KEY to the GPG passphrase used for backups (env var or Database/.env)}"
+: "${DB_URL:?Set DB_URL to the target database connection string (env var or Database/.env)}"
 
 BACKUP_DIR="Database/backups"
 
