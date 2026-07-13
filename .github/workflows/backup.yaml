@@ -93,18 +93,18 @@ jobs:
         run: curl https://rclone.org/install.sh | sudo bash
 
       # Uploads the encrypted .sql.gpg files straight to a Google Drive folder,
-      # authenticating as the service account whose key is in GDRIVE_SERVICE_ACCOUNT_JSON.
+      # authenticating as YOU (via an rclone OAuth token in GDRIVE_RCLONE_CONFIG) rather
+      # than a service account — personal Google accounts give service accounts no storage
+      # quota of their own, so uploads must be owned by a real account.
       # Nothing gets committed back to GitHub — backups now live only in Drive.
       - name: Upload backups to Google Drive
         if: success() && env.BACKUP_ENABLED == 'true'
         env:
-          GDRIVE_SERVICE_ACCOUNT_JSON: ${{ secrets.GDRIVE_SERVICE_ACCOUNT_JSON }}
+          GDRIVE_RCLONE_CONFIG: ${{ secrets.GDRIVE_RCLONE_CONFIG }}
           GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
         run: |
-          echo "$GDRIVE_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/gdrive-sa.json"
-          export RCLONE_CONFIG_GDRIVE_TYPE=drive
-          export RCLONE_CONFIG_GDRIVE_SCOPE=drive
-          export RCLONE_CONFIG_GDRIVE_SERVICE_ACCOUNT_FILE="$RUNNER_TEMP/gdrive-sa.json"
+          echo "$GDRIVE_RCLONE_CONFIG" > "$RUNNER_TEMP/rclone.conf"
+          export RCLONE_CONFIG="$RUNNER_TEMP/rclone.conf"
           export RCLONE_CONFIG_GDRIVE_ROOT_FOLDER_ID="$GDRIVE_FOLDER_ID"
           rclone copy Database/backups/ gdrive: -v
-          rm -f "$RUNNER_TEMP/gdrive-sa.json"
+          rm -f "$RUNNER_TEMP/rclone.conf"
