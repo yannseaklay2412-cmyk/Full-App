@@ -50,8 +50,10 @@ for name in roles schema data; do
   gpg --batch --yes --passphrase "$BACKUP_ENCRYPTION_KEY" --decrypt -o "$WORK_DIR/$name.sql" "$src"
 done
 
-echo "Applying roles.sql..."
-psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$WORK_DIR/roles.sql"
+echo "Applying roles.sql (best-effort: on a real Supabase target, roles like"
+echo "anon/authenticated/service_role are already created by the platform, so"
+echo "'already exists' errors here are expected and safe to skip past)..."
+psql "$DB_URL" -f "$WORK_DIR/roles.sql" || true
 
 echo "Applying schema.sql..."
 psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$WORK_DIR/schema.sql"

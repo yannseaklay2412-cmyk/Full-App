@@ -26,13 +26,16 @@ STAMP=$(date +%Y-%m-%d_%H-%M-%S)
 mkdir -p "$OUT_DIR"
 
 echo "Dumping roles..."
-supabase db dump --db-url "$SUPABASE_URL" -f "$OUT_DIR/roles.sql" --role-only
+pg_dumpall --dbname="$SUPABASE_URL" --roles-only -f "$OUT_DIR/roles.sql"
 
 echo "Dumping schema..."
-supabase db dump --db-url "$SUPABASE_URL" -f "$OUT_DIR/schema.sql" --schema public
+pg_dump --dbname="$SUPABASE_URL" --schema-only --schema=public -f "$OUT_DIR/schema.sql"
+# The "public" schema always already exists on any Postgres/Supabase database,
+# so restoring this statement would fail with "already exists" every time.
+sed -i '/^CREATE SCHEMA public;$/d' "$OUT_DIR/schema.sql"
 
 echo "Dumping data..."
-supabase db dump --db-url "$SUPABASE_URL" -f "$OUT_DIR/data.sql" --data-only --use-copy --schema public
+pg_dump --dbname="$SUPABASE_URL" --data-only --schema=public -f "$OUT_DIR/data.sql"
 
 echo "Encrypting..."
 for name in roles schema data; do
