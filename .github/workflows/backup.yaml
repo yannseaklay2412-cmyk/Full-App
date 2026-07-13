@@ -10,17 +10,18 @@ on:
   schedule:
     - cron: "0 0 * * *"           # also runs automatically every day at midnight (UTC)
 
-env:
-  BACKUP_ENABLED: true            # fallback default (overridden by the repo Variable below)
-
 jobs:
   run_db_backup:
     runs-on: ubuntu-latest        # spins up a temporary Ubuntu VM on GitHub's servers
     permissions:
       contents: read              # this job no longer commits anything back to the repo
     env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}       # your DB connection string, from repo Secrets
-      BACKUP_ENABLED: ${{ vars.BACKUP_ENABLED }}      # on/off switch, from repo Variables (true or false)
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}                  # your DB connection string, from repo Secrets
+      # On/off switch from the repo Variable. The `|| 'true'` fallback matters: if the
+      # BACKUP_ENABLED Variable was never set, vars.BACKUP_ENABLED evaluates to an empty
+      # string, which used to get treated as "disabled" (silently, with a green checkmark,
+      # no actual backup) -- this makes an unset Variable default to enabled instead.
+      BACKUP_ENABLED: ${{ vars.BACKUP_ENABLED || 'true' }}
     steps:
       # Kill switch: if BACKUP_ENABLED isn't "true", stop here and skip every step below
       - name: Check if backups are enabled
