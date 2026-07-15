@@ -55,7 +55,7 @@ const login = async (email, password) => {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) return { error: error.message }
 
-  // 2. Check role / ban status — guarded against checkRole throwing
+  // 2. Check role — guarded against checkRole throwing
   let profile
   try {
     profile = await checkRole(data.user.email)
@@ -64,7 +64,14 @@ const login = async (email, password) => {
     return { error: 'Could not verify account. Please try again.' }
   }
 
-  if (profile?.is_banned) {
+  // 2b. Check ban status — lives on the patients table, not profiles
+  const { data: patientRow } = await supabase
+    .from('patients')
+    .select('is_banned')
+    .eq('email', email)
+    .maybeSingle()
+
+  if (patientRow?.is_banned) {
     await supabase.auth.signOut()
     setUser(null)
     setRole(null)

@@ -1,12 +1,4 @@
 import * as bookingService from '../services/booking.service.js'
-import dashboardmodel from '../models/dashboard.model.js'
-
-export const getDashboard = async (req, res, next) => {
-  try {
-    const data = await dashboardmodel.getStats()   // was "DashboardModel" — wrong casing, would crash
-    res.status(200).json({ success: true, data })
-  } catch (err) { next(err) }
-}
 
 export const getMyBookings = async (req, res, next) => {
   try {

@@ -6,6 +6,18 @@ import { useAuth } from '../../context/AuthContext'
 import ConcernBox from '../../components/ConcernBox'
 import { LOGO_URL } from '../../constants'
 
+// Convert "08:00:00" (DB time) → "08:00 AM" (display)
+const formatTime = (t) => {
+  if (!t) return ''
+  const [hStr, mStr] = t.split(':')
+  let h = parseInt(hStr, 10)
+  const m   = mStr
+  const ampm = h >= 12 ? 'PM' : 'AM'
+  if (h > 12) h -= 12
+  if (h === 0) h = 12
+  return `${String(h).padStart(2, '0')}:${m} ${ampm}`
+}
+
 export default function Dashboard() {
   const navigate = useNavigate()
   const { logout, user } = useAuth()
@@ -114,6 +126,7 @@ export default function Dashboard() {
                           <p className="dash-appt-service">{serviceNames(b)}</p>
                           <div className="dash-appt-meta">
                             <span>🗓 {b.appointment_date ? new Date(b.appointment_date).toLocaleDateString() : '—'}</span>
+                            <span>🕐 {b.start_time ? `${formatTime(b.start_time)}${b.end_time ? ` – ${formatTime(b.end_time)}` : ''}` : '—'}</span>
                             <span>📌 {b.status}</span>
                           </div>
                         </div>

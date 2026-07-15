@@ -7,26 +7,6 @@ import './Dashboard.css'
 
 const API = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || 'http://localhost:5000'
 
-const sidebarItems = [
-  { label: 'Dashboard',   path: '/admin'              },
-  { label: 'Schedule',    path: '/admin/schedule'     },
-  { label: 'Employees',   path: '/admin/dentists'     },
-  { label: 'Appointment', path: '/admin/appointments' },
-  { label: 'Record',      path: '/admin/users'        },
-  { label: 'Setting',     path: '/admin/AdminSetting'      },
-]
-
-const SIDEBAR = {
-  wrap:    { width: 180, background: '#0d9488', display: 'flex', flexDirection: 'column', flexShrink: 0, paddingBottom: 24 },
-  logo:    { padding: '20px 20px 16px', borderBottom: '1px solid #243560' },
-  logoBox: { background: '#4ecdc4', borderRadius: 10, width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0d1b3e' },
-  sub:     { padding: '14px 20px 10px', borderBottom: '1px solid #243560' },
-  subTop:  { fontSize: 10, color: '#8a9fc4', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 },
-  subBot:  { fontSize: 11, color: '#4ecdc4', fontWeight: 500 },
-  logout:  { marginTop: 'auto', padding: '0 16px' },
-  logBtn:  { width: '100%', background: 'rgba(255,107,107,0.1)', border: '1px solid rgba(255,107,107,0.25)', color: '#ff6b6b', padding: 9, borderRadius: 8, fontSize: 12, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" },
-}
-
 export default function Users() {
   const navigate = useNavigate()
   const [users, setUsers]       = useState([])

@@ -1,19 +1,7 @@
-#!/usr/bin/env bash
+
 set -euo pipefail
-
-# Manual, local-only backup — run this by hand whenever you want a backup.
-# No automation, no GitHub, no Google Drive. Dumps the database, encrypts it,
-# and saves the result straight onto this machine.
-#
-# Reads SUPABASE_URL / BACKUP_ENCRYPTION_KEY from Database/.env if present
-# (see Database/.env.example), so you can just run:
-#   ./Database/backup.sh
-# Database/.env, if present, wins over anything set on the command line —
-# don't mix the two, pick one way of supplying these values.
-
 if [ -f "Database/.env" ]; then
   set -a
-  # shellcheck disable=SC1091
   source "Database/.env"
   set +a
 fi
