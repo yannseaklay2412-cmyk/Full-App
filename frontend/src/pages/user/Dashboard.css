@@ -177,6 +177,72 @@
   margin: 0 0 10px;
   letter-spacing: -0.5px;
   color: #1a2b4a;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dash-name-edit-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  opacity: 0.5;
+  padding: 0;
+  line-height: 1;
+}
+
+.dash-name-edit-btn:hover {
+  opacity: 1;
+}
+
+.dash-name-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+
+.dash-name-input {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a2b4a;
+  border: 2px solid #2ec4b6;
+  border-radius: 8px;
+  padding: 6px 12px;
+  max-width: 280px;
+}
+
+.dash-name-save-btn,
+.dash-name-cancel-btn {
+  border: none;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dash-name-save-btn {
+  background: #2ec4b6;
+  color: #fff;
+}
+
+.dash-name-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dash-name-cancel-btn {
+  background: #f1f2f6;
+  color: #666;
+}
+
+.dash-name-error {
+  font-size: 13px;
+  color: #cc0000;
+  margin: -4px 0 12px;
 }
 
 .dash-welcome-desc {
@@ -248,45 +314,27 @@
 
 .dash-stat-card {
   border-radius: 14px;
-  padding: 20px 24px;
+  padding: 18px 20px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  border: 2px solid #e4eaf2;
+  align-items: center;
+  justify-content: space-between;
+  border: 1.5px solid #cdece7;
   background: #ffffff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
-.dash-stat-card.confirmed {
-  background: #cdf9f4;
-  border-color: #0aa999;
-}
-
-.dash-stat-card.pending {
-  background: #fefae8;
-  border-color: #c4a732;
-}
-
-.dash-stat-card.cancelled {
-  background: #fff0f0;
-  border-color: #f73131;
-}
-
-.dash-stat-card.total {
-  background: #cfd5dd;
-  border-color: #0e0e0f;
+.dash-stat-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .dash-stat-num {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 800;
   line-height: 1;
+  color: #0d9488;
 }
-
-.dash-stat-card.confirmed .dash-stat-num { color: #2bb5ac; }
-.dash-stat-card.pending   .dash-stat-num { color: #c9960a; }
-.dash-stat-card.cancelled .dash-stat-num { color: #e05555; }
-.dash-stat-card.total     .dash-stat-num { color: #1a2b4a; }
 
 .dash-stat-label {
   font-size: 12px;
@@ -294,6 +342,11 @@
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.8px;
+}
+
+.dash-stat-icon {
+  color: #b8c4d9;
+  flex-shrink: 0;
 }
 
 /* ── Main Grid ── */
@@ -328,6 +381,9 @@
   font-weight: 700;
   margin: 0 0 18px;
   color: #1a2b4a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .dash-card-header .dash-card-title {
@@ -358,75 +414,114 @@
   gap: 14px;
 }
 
-/* ── Appointment Cards ── */
-.dash-appt-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.dash-appt-card {
-  display: flex;
-  align-items: center;
+/* ── Upcoming Appointments ── */
+.dash-upcoming-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 14px;
-  background: #f8fffe;
-  border: 1px solid #d4f0ed;
-  border-radius: 12px;
-  padding: 14px 16px;
 }
 
-.dash-appt-icon {
-  font-size: 24px;
-  width: 42px;
-  height: 42px;
-  background: #e8faf8;
-  border-radius: 10px;
+.dash-upcoming-card {
+  background: #ffffff;
+  border: 1.5px solid #cdece7;
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.dash-upcoming-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: #2bb5ac;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
-.dash-appt-info {
-  flex: 1;
-}
-
-.dash-appt-doctor {
+.dash-upcoming-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 14px;
   font-weight: 700;
-  margin: 0 0 2px;
   color: #1a2b4a;
 }
 
-.dash-appt-service {
-  font-size: 12px;
-  color: #8a9bb5;
-  margin: 0 0 6px;
-}
-
-.dash-appt-meta {
-  display: flex;
-  gap: 12px;
-  font-size: 12px;
-  color: #a0b0c4;
-}
-
-.dash-cancel-btn {
-  background: #ffffff;
-  border: 1px solid #fcd4d4;
-  color: #e05555;
+.dash-upcoming-action {
+  background: #2bb5ac;
+  border: none;
+  color: #fff;
   padding: 6px 14px;
-  border-radius: 8px;
+  border-radius: 20px;
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
-  transition: all 0.2s;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+
+.dash-upcoming-action:hover {
+  opacity: 0.85;
+}
+
+.dash-upcoming-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #4a5e7a;
+  margin-bottom: 6px;
+}
+
+.dash-upcoming-row svg {
+  color: #2bb5ac;
   flex-shrink: 0;
 }
 
-.dash-cancel-btn:hover {
-  background: #fef0f0;
+/* ── Appointment History ── */
+.dash-history-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 4px;
+  border-bottom: 1px solid #eef2f7;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.dash-history-row:last-child {
+  border-bottom: none;
+}
+
+.dash-history-row:hover {
+  background: #f8fffe;
+}
+
+.dash-history-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a2b4a;
+}
+
+.dash-history-check {
+  color: #2bb5ac;
+  flex-shrink: 0;
+}
+
+.dash-history-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #8a9bb5;
+  flex-shrink: 0;
 }
 
 /* ── Quick Actions ── */
@@ -644,6 +739,10 @@
   }
 
   .dash-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-upcoming-grid {
     grid-template-columns: 1fr;
   }
 
