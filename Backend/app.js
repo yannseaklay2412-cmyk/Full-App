@@ -1,6 +1,8 @@
 import express from 'express'
 import cors from 'cors'
 import morgan from 'morgan'
+import swaggerUi from 'swagger-ui-express'
+import { swaggerSpec } from './config/swagger.js'
 import { notFound, errorHandler } from './middleware/error.middleware.js'
 import patientRoutes from './routes/patient.routes.js'
 
@@ -26,6 +28,9 @@ app.use(morgan('dev'))
 app.get('/health', (req, res) => {
   res.json({ success: true, message: '🦷 Smilly API is running!' })
 })
+
+// ── API Docs ──────────────────────────────────────────────
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
 // ── API Routes ────────────────────────────────────────────
 app.use('/api/auth',      authRoutes)

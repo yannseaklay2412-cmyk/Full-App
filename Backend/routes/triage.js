@@ -6,6 +6,40 @@ const router = express.Router();
 const GEMINI_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
+/**
+ * @swagger
+ * tags:
+ *   name: Triage
+ *   description: AI symptom-triage chatbot
+ */
+
+/**
+ * @swagger
+ * /triage:
+ *   post:
+ *     summary: Ask the AI dental triage assistant a question / continue a triage chat
+ *     tags: [Triage]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [history]
+ *             properties:
+ *               history:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     role: { type: string, enum: [user, model] }
+ *                     text: { type: string }
+ *     responses:
+ *       200:
+ *         description: >
+ *           JSON response with status one of
+ *           asking | done | redirect | insufficient | unavailable
+ */
 router.post("/triage", protect, async (req, res) => {
   try {
     const { history } = req.body; // [{ role: "user"|"model", text: "..." }]
