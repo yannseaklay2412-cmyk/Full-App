@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import '../pages/admin/Dashboard.css'
 import { LOGO_URL } from '../constants'
+import { supabase } from '../config/supabaseClient'
 
 const sidebarItems = [
   { label: 'Dashboard',   path: '/admin'               },
@@ -15,6 +16,11 @@ const sidebarItems = [
 export default function AdminSidebar({ pageTitle, pageSubtitle, children }) {
   const navigate = useNavigate()
   const location = useLocation()
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    navigate('/login')
+  }
 
   return (
     <div className="ad-wrap">
@@ -39,7 +45,7 @@ export default function AdminSidebar({ pageTitle, pageSubtitle, children }) {
           ))}
         </nav>
         <div style={{ padding: '0 16px', marginTop: 'auto' }}>
-          <button className="ad-logout-btn" onClick={() => { localStorage.removeItem('token'); navigate('/login') }}>
+          <button className="ad-logout-btn" onClick={handleLogout}>
             Logout
           </button>
         </div>
@@ -54,7 +60,7 @@ export default function AdminSidebar({ pageTitle, pageSubtitle, children }) {
             </div>
           </div>
           <div className="ad-topbar-right">
-            <button className="ad-signin-btn" onClick={() => { localStorage.removeItem('token'); navigate('/login') }}>
+            <button className="ad-signin-btn" onClick={handleLogout}>
               Sign Out
             </button>
           </div>

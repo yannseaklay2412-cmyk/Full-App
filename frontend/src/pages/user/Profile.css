@@ -342,3 +342,33 @@ select.profile-input {
     padding: 14px 16px;
   }
 }
+
+@media (max-width: 480px) {
+  .profile-content {
+    padding: 24px 16px;
+  }
+
+  .profile-hero-card {
+    padding: 18px;
+  }
+
+  .profile-hero-actions {
+    width: 100%;
+  }
+
+  .profile-edit-btns {
+    flex-direction: row;
+  }
+
+  .profile-edit-btns button {
+    flex: 1;
+  }
+
+  .profile-bottom-save {
+    flex-direction: column-reverse;
+  }
+
+  .profile-bottom-save button {
+    width: 100%;
+  }
+}

@@ -26,7 +26,7 @@ app.use(morgan('dev'))
 
 // ── Health Check ──────────────────────────────────────────
 app.get('/health', (req, res) => {
-  res.json({ success: true, message: '🦷 Smilly API is running!' })
+  res.json({ success: true, message: 'ToothTime API is running!' })
 })
 
 // ── API Docs ──────────────────────────────────────────────

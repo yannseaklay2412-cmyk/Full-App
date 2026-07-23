@@ -62,6 +62,84 @@
   color: #c43c3c;
 }
 
+.dash-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Hamburger button (hidden on desktop) */
+.dash-manu {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #1a2b4a;
+  line-height: 1;
+  padding: 4px 6px;
+}
+
+/* ===== MOBILE DRAWER ===== */
+.dash-drawer-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 998;
+}
+
+.dash-drawer-overlay.overlay-show {
+  display: block;
+}
+
+.dash-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 280px;
+  max-width: 80vw;
+  height: 100vh;
+  background: #ffffff;
+  z-index: 999;
+  padding: 80px 24px 30px;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+}
+
+.dash-drawer.drawer-open {
+  transform: translateX(0);
+}
+
+.dash-drawer-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  list-style: none;
+}
+
+.dash-drawer-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 15px;
+  color: #1a2b4a;
+  cursor: pointer;
+  text-align: left;
+  padding: 14px 4px;
+  width: 100%;
+  transition: color 0.2s;
+}
+
+.dash-drawer-btn:hover {
+  color: #2bb5ac;
+}
+
+.dash-drawer-btn.signout {
+  color: #e05555;
+}
+
 /* ── Notification Bell ── */
 .dash-notif-wrap {
   position: relative;
@@ -109,7 +187,7 @@
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  width: 420px;
+  width: min(420px, calc(100vw - 32px));
   max-height: 420px;
   overflow-y: auto;
   background: #ffffff;
@@ -766,8 +844,43 @@
     padding: 14px 16px;
   }
 
-  .dash-nav-btn {
-    padding: 6px 10px;
-    font-size: 12px;
+  .dash-nav {
+    display: none;
+  }
+
+  .dash-manu {
+    display: block;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .dash-banner {
+    padding: 20px 16px;
+  }
+
+  .dash-welcome-name {
+    font-size: 22px;
+    flex-wrap: wrap;
+  }
+
+  .dash-name-edit-row {
+    flex-wrap: wrap;
+  }
+
+  .dash-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-tips-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-content {
+    padding: 16px;
+  }
+
+  .dash-notif-dropdown {
+    right: -16px;
   }
 }

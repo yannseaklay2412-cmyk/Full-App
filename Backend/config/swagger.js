@@ -6,7 +6,7 @@ const options = {
     info: {
       title: 'ToothTime API',
       version: '1.0.0',
-      description: 'REST API for the Smilly dental clinic booking system',
+      description: 'REST API for the ToothTime dental clinic booking system',
     },
     servers: [
       { url: `http://localhost:${process.env.PORT || 5000}/api`, description: 'Local server' },

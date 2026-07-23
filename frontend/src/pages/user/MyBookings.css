@@ -366,3 +366,12 @@
   .mb-card-right { flex-direction: row; align-items: center; width: 100%; justify-content: space-between; }
   .mb-modal { padding: 24px; }
 }
+
+@media (max-width: 480px) {
+  .mb-content { padding: 32px 16px; gap: 24px; }
+  .mb-title { font-size: 24px; }
+  .mb-card { padding: 16px; }
+  .mb-card-icon { width: 44px; height: 44px; font-size: 22px; }
+  .mb-meta { flex-wrap: wrap; gap: 8px 16px; }
+  .btn-newbook { width: 100%; text-align: center; }
+}

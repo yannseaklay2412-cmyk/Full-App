@@ -47,3 +47,25 @@
 .notfound-btn:hover {
   background: #0d9488;
 }
+
+@media (max-width: 480px) {
+  .notfound-page {
+    padding: 40px 20px;
+  }
+
+  .notfound-icon {
+    font-size: 44px;
+  }
+
+  .notfound-code {
+    font-size: 52px;
+  }
+
+  .notfound-title {
+    font-size: 20px;
+  }
+
+  .notfound-btn {
+    width: 100%;
+  }
+}

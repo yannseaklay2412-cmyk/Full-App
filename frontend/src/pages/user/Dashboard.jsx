@@ -73,6 +73,7 @@ export default function Dashboard() {
   const [loadError,       setLoadError]       = useState('')
   const [showNotifications, setShowNotifications] = useState(false)
   const notifRef = useRef(null)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const [editingName, setEditingName] = useState(false)
   const [nameInput,   setNameInput]   = useState('')
@@ -166,6 +167,22 @@ export default function Dashboard() {
   return (
     <div className="dash-page">
 
+      {/* Drawer overlay */}
+      <div
+        className={`dash-drawer-overlay ${menuOpen ? 'overlay-show' : ''}`}
+        onClick={() => setMenuOpen(false)}
+      />
+
+      {/* Mobile Drawer */}
+      <div className={`dash-drawer ${menuOpen ? 'drawer-open' : ''}`}>
+        <ul className="dash-drawer-links">
+          <button className="dash-drawer-btn" onClick={() => { setMenuOpen(false); navigate('/') }}>Home</button>
+          <button className="dash-drawer-btn" onClick={() => { setMenuOpen(false); navigate('/book') }}>Book</button>
+          <button className="dash-drawer-btn" onClick={() => { setMenuOpen(false); navigate('/my-bookings') }}>My Bookings</button>
+          <button className="dash-drawer-btn signout" onClick={() => { setMenuOpen(false); logout(); navigate('/') }}>Sign Out</button>
+        </ul>
+      </div>
+
       {/* Topbar */}
       <div className="dash-topbar">
         <div className="nav-logo">
@@ -178,7 +195,10 @@ export default function Dashboard() {
           <button className="dash-nav-btn" onClick={() => navigate('/')}>Home</button>
           <button className="dash-nav-btn" onClick={() => navigate('/book')}>Book</button>
           <button className="dash-nav-btn" onClick={() => navigate('/my-bookings')}>My Bookings</button>
+          <button className="dash-nav-btn signout" onClick={() => { logout(); navigate('/') }}>Sign Out</button>
+        </div>
 
+        <div className="dash-topbar-right">
           <div className="dash-notif-wrap" ref={notifRef}>
             <button className="dash-notif-bell" onClick={() => setShowNotifications(v => !v)}>
               🔔
@@ -215,7 +235,7 @@ export default function Dashboard() {
             )}
           </div>
 
-          <button className="dash-nav-btn signout" onClick={() => { logout(); navigate('/') }}>Sign Out</button>
+          <button className="dash-manu" onClick={() => setMenuOpen(v => !v)}>≡</button>
         </div>
       </div>
 

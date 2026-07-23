@@ -3,8 +3,6 @@ import { supabase } from '../config/supabase.js'
 import * as patientRepo from '../repositories/patient.repository.js'
 import * as authRepo from '../repositories/auth.repository.js'
 import { sendPasswordConfirmEmail, sendPasswordUpdatedEmail } from './email.service.js'
-import jwt from 'jsonwebtoken'
-import { jwtConfig } from '../config/jwt.js'
 
 export const register = async ({ full_name, email, phone, sex, password }) => {
   if (!full_name || !email || !phone || !sex || !password)
@@ -62,17 +60,10 @@ export const login = async ({ email, password }) => {
   const { data: user } = await supabase
     .from('profiles').select('role').eq('email', data.user.email).maybeSingle()
 
-  // const role = user?.role == 'admin' ? 'admin' : 'patient' 
+  // const role = user?.role == 'admin' ? 'admin' : 'patient'
   const role = user?.role === 'admin' ? 'admin' : 'patient'
 
-  // Generate JWT
-  const token = jwt.sign(
-    { id: data.user.id, email: data.user.email, role },
-    jwtConfig.secret,
-    { expiresIn: jwtConfig.expiresIn }
-  )
-
-  return { token, role, user: { id: data.user.id, email: data.user.email } }
+  return { role, user: { id: data.user.id, email: data.user.email } }
 }
 
 export const logout = async () => {

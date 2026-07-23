@@ -82,40 +82,12 @@ const login = async (email, password) => {
   setUser(data.user)
   setRole(userRole)
 
-  // 3. Get JWT from backend — with proper error handling
-  try {
-    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    })
-
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}))
-      console.error('Backend login failed:', errData.message || res.status)
-      // Still return success — Supabase login worked, JWT just failed
-      return { data, role: userRole }
-    }
-
-    const backendData = await res.json()
-
-    if (backendData.token) {
-      localStorage.setItem('token', backendData.token)
-    } else {
-      console.warn('Backend did not return a token')
-    }
-  } catch (fetchErr) {
-    // Backend unreachable — don't block the user from logging in
-    console.warn('Could not reach backend for JWT:', fetchErr.message)
-  }
-
   return { data, role: userRole }
 }
 
   // ── Logout ─────────────────────────────────────────────────────────────
   const logout = async () => {
     await supabase.auth.signOut()
-    localStorage.removeItem('token')
     setUser(null)
     setRole(null)
   }

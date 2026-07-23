@@ -53,30 +53,32 @@ export default function History() {
             <button className="mb-back" onClick={() => navigate('/book')}>Book Now</button>
           </div>
         ) : (
-          <table className="history-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Dentist</th>
-                <th>Service</th>
-                <th>Date</th>
-                <th>Price</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {historyBookings.map(b => (
-                <tr key={b.id}>
-                  <td>#{b.id.slice(0, 8)}</td>
-                  <td>{b.dentists?.dentist_name}</td>
-                  <td>{serviceNames(b)}</td>
-                  <td>{b.appointment_date ? new Date(b.appointment_date).toLocaleDateString() : '—'}</td>
-                  <td>${serviceTotal(b)}</td>
-                  <td><span className="history-badge">✅ Done</span></td>
+          <div className="history-table-wrap">
+            <table className="history-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Dentist</th>
+                  <th>Service</th>
+                  <th>Date</th>
+                  <th>Price</th>
+                  <th>Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {historyBookings.map(b => (
+                  <tr key={b.id}>
+                    <td>#{b.id.slice(0, 8)}</td>
+                    <td>{b.dentists?.dentist_name}</td>
+                    <td>{serviceNames(b)}</td>
+                    <td>{b.appointment_date ? new Date(b.appointment_date).toLocaleDateString() : '—'}</td>
+                    <td>${serviceTotal(b)}</td>
+                    <td><span className="history-badge">✅ Done</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

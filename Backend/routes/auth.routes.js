@@ -56,7 +56,7 @@ router.post('/register',        register)
  *               password: { type: string, format: password }
  *     responses:
  *       200:
- *         description: Returns a JWT token, role, and user info
+ *         description: Returns the user's role and basic user info
  */
 router.post('/login',           login)
 

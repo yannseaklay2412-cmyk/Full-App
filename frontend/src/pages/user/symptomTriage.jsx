@@ -1,5 +1,6 @@
 import { useState } from "react";
 import api from "../../api/axios";
+import "./SymptomTriage.css";
 
 export default function SymptomTriage() {
   const [history, setHistory] = useState([]);
@@ -35,32 +36,37 @@ export default function SymptomTriage() {
 
   return (
     <div className="triage">
-      {history.map((m, i) => (
-        <div key={i} className={m.role === "user" ? "bubble-user" : "bubble-ai"}>
-          {m.text}
-        </div>
-      ))}
-      {loading && <div className="bubble-ai">Thinking…</div>}
-      {error && <div className="bubble-ai error">{error}</div>}
+      <div className="triage-messages">
+        {history.length === 0 && !result && (
+          <p className="triage-intro">Describe what you're feeling and we'll suggest the right service for your visit.</p>
+        )}
+        {history.map((m, i) => (
+          <div key={i} className={m.role === "user" ? "triage-bubble-user" : "triage-bubble-ai"}>
+            {m.text}
+          </div>
+        ))}
+        {loading && <div className="triage-bubble-ai">Thinking…</div>}
+        {error && <div className="triage-bubble-ai triage-error">{error}</div>}
 
-      {result && (
-        <div className={`result ${result.urgent ? "urgent" : ""}`}>
-          <h3>Recommended: {result.service}</h3>
-          <p>{result.reason}</p>
-          {result.urgent && <p>⚠️ This may be urgent — please seek care now.</p>}
-          <small>A dentist will confirm during your visit.</small>
-        </div>
-      )}
+        {result && (
+          <div className={`triage-result ${result.urgent ? "urgent" : ""}`}>
+            <h3>Recommended: {result.service}</h3>
+            <p>{result.reason}</p>
+            {result.urgent && <p>⚠️ This may be urgent — please seek care now.</p>}
+            <small>A dentist will confirm during your visit.</small>
+          </div>
+        )}
+      </div>
 
       {!result && (
-        <div className="input-row">
+        <div className="triage-input-row">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && send()}
             placeholder="Describe your symptom…"
           />
-          <button onClick={send}>Send</button>
+          <button onClick={send} disabled={loading || !input.trim()}>Send</button>
         </div>
       )}
     </div>

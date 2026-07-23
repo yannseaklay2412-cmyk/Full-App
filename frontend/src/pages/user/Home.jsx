@@ -168,7 +168,7 @@ export default function Home() {
             <span className="highlight">SMILE START</span> HERE
           </h1>
           <p className="hero-desc">
-            Comprehensive dental and orthodontic care for the whole family. From routine checkups to advanced cosmetic treatments — we've got your smile covered.
+            Comprehensive dental and orthodontic care for the whole family. From routine checkups to advanced cosmetic treatments we've got your smile covered.
           </p>
           {/* ✅ Hero CTA also checks login */}
           <button className="btn-book" onClick={handleBooking}>

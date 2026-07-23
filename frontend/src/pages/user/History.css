@@ -16,13 +16,21 @@
   color: #1a2c2e;
 }
 
+.history-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
 .history-table {
   width: 100%;
+  min-width: 560px;
   border-collapse: collapse;
   background: #fff;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
 }
 
 .history-table thead {
@@ -63,6 +71,23 @@
   text-align: center;
   padding: 60px;
   color: #6c757d;
+}
+
+@media (max-width: 600px) {
+  .history-content {
+    margin: 24px auto;
+    padding: 0 16px;
+  }
+
+  .history-table th,
+  .history-table td {
+    padding: 12px 14px;
+    font-size: 0.85rem;
+  }
+
+  .history-empty {
+    padding: 40px 16px;
+  }
 }
 .success-overlay {
   position: fixed; inset: 0;
